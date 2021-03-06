@@ -26,7 +26,7 @@ class CommandHandler
 
     hasAggregate(aggregateName)
     {
-        return Object.prototype.hasOwnProperty.call(this.#aggregates, aggregateName);
+        return Object.prototype.hasOwnProperty.call(this.#blackrik._aggregates, aggregateName);
     }
 
     async handle({blackrik, body}, res)
@@ -39,7 +39,7 @@ class CommandHandler
         if(!this.hasAggregate(aggregateName))
             return res.sendStatus(400).end(); //TODO error for invalid aggregate
 
-        const {commands, projection} = this.#aggregates[aggregateName];
+        const {commands, projection} = this.#blackrik._aggregates[aggregateName];
 
         if(!Object.prototype.hasOwnProperty.call(commands, type))
             return res.sendStatus(400).end(); //TODO error for unknown command
