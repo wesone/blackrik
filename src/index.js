@@ -30,6 +30,21 @@ class Blackrik
     _eventBus;
     _aggregates;
 
+    static get ADAPTERS()
+    {
+        return {
+            EVENTBUS: {
+                Kafka: './adapters/eventbus-kafka'
+            },
+            EVENTSTORE: {
+                MySQL: './adapters/eventstore-mysql'
+            },
+            READMODEL: {
+                MySQL: './adapters/readmodel-mysql'
+            }
+        }
+    }
+
     static get HTTP_METHODS()
     {
         return [
