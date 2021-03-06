@@ -15,7 +15,12 @@ blackrik = new Blackrik({
                     };
                 }
             },
-            projection: {}
+            projection: {
+                default: () => ({}),
+                'USER_CREATED': (state, event) => ({
+                    ...state
+                })
+            }
         }
     ],
     readModels: [

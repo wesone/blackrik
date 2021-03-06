@@ -16,8 +16,7 @@ class Server
 
         this.#app = express();
         this._addDefaultSettings();
-        if(!this.config.skipDefaultMiddlewares)
-            this._addDefaultMiddlewares();
+        this._addDefaultMiddlewares();
     }
 
     _addDefaultSettings()
@@ -27,15 +26,21 @@ class Server
 
     _addDefaultMiddlewares()
     {
+        // https://www.npmjs.com/package/express-ws
+        /* const expressWs =  */require('express-ws')(this.#app);
+
         // https://www.npmjs.com/package/body-parser
         const bodyParser = require('body-parser');
         this.#app.use(bodyParser.json({type: ['application/json']}));
         
-        // https://www.npmjs.com/package/helmet
-        this.#app.use(require('helmet')());
-        
-        // https://www.npmjs.com/package/compression
-        this.#app.use(require('compression')());
+        if(!this.config.skipDefaultMiddlewares)
+        {
+            // https://www.npmjs.com/package/helmet
+            this.#app.use(require('helmet')());
+            
+            // https://www.npmjs.com/package/compression
+            this.#app.use(require('compression')());
+        }
     }
 
     use(...args)
@@ -48,10 +53,14 @@ class Server
         return this.#app.route(...args);
     }
 
+    ws(...args)
+    {
+        return this.#app.ws(...args);
+    }
+
     start()
     {
-        this.#server = this.#app.listen(this.config.port);
-        console.log('Application started on port', this.config.port);
+        this.#server = this.#app.listen(this.config.port, () => console.log('Application started on port', this.config.port));
     }
 
     async stop()

@@ -6,17 +6,6 @@ const Aggregates = require('./core/Aggregates');
 const CommandHandler = require('./core/CommandHandler');
 const QueryHandler = require('./core/QueryHandler');
 
-const AVAILABLE_HTTP_METHODS = [
-    'head',
-    'options',
-    'get',
-    'post',
-    'put',
-    'patch',
-    'delete',
-    'all'
-];
-
 class Blackrik
 {
     #config = {
@@ -35,7 +24,21 @@ class Blackrik
     #server;
 
     _eventBus;
-    #aggregates;
+    _aggregates;
+
+    static get HTTP_METHODS()
+    {
+        return [
+            'head',
+            'options',
+            'get',
+            'post',
+            'put',
+            'patch',
+            'delete',
+            'all'
+        ];
+    }
 
     constructor(config)
     {
@@ -43,6 +46,8 @@ class Blackrik
 
         this._eventBus = new EventBus(); //TODO add eventbus options
         this._processAggregates();
+        this._processReadModels();
+        this._processSagas();
 
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();
@@ -52,7 +57,18 @@ class Blackrik
 
     _processAggregates()
     {
-        this.#aggregates = Aggregates.transform(this.config.aggregates);
+        this._aggregates = Aggregates.transform(this.config.aggregates);
+        //TODO subscribe to projection events
+    }
+
+    _processReadModels()
+    {
+        //TODO subscribe to events
+    }
+
+    _processSagas()
+    {
+        //TODO subscribe to events
     }
 
     _processMiddlewares()
@@ -67,7 +83,7 @@ class Blackrik
 
     _processAPI()
     {
-        this.#server.route('/commands').post(new CommandHandler(this.#aggregates));
+        this.#server.route('/commands').post(new CommandHandler(this));
         this.#server.route('/query').get(new QueryHandler());
 
         const {routes} = this.config.server;
@@ -75,7 +91,7 @@ class Blackrik
             throw Error('config.server.routes needs to be an array.');
         routes.forEach(({method, path, callback}) => {
             method = method.toLowerCase();
-            if(!AVAILABLE_HTTP_METHODS.includes(method))
+            if(!this.constructor.HTTP_METHODS.includes(method))
                 throw Error(`Method '${method.toUpperCase()}' is invalid.`);
             if(typeof callback !== 'function')
                 throw Error('Parameter \'callback\' needs to be of type function.');

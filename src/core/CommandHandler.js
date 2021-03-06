@@ -2,11 +2,11 @@ const Aggregates = require('./Aggregates');
 
 class CommandHandler 
 {
-    #aggregates;
+    #blackrik;
 
-    constructor(aggregates)
+    constructor(blackrik)
     {
-        this.#aggregates = aggregates;
+        this.#blackrik = blackrik;
         //TODO if a projection contains events, subscribe and execute projections accordingly
         return this.handle.bind(this);
     }
