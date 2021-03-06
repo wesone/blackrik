@@ -22,10 +22,10 @@ class Aggregate
         this.projection = projection;
     }
 
-    load(aggregateId)
+    _loadEvents(id)
     {
-        //TODO load all events from eventstore that belong to aggreagteId
-        const events = [
+        //TODO load all events from eventstore that belong to aggregateId
+        return [
             {
                 type: 'USER_UPDATED',
                 payload: {
@@ -51,15 +51,24 @@ class Aggregate
                 }
             }
         ];
+    }
 
-        const projection = this.projection;
-        let store = projection.init();
+    _reduceEvents(events)
+    {
+        let state = typeof this.projection.init === 'function' 
+            ? this.projection.init()
+            : {};
         events.forEach(event => {
             const {type: eventType} = event;
-            if(Object.prototype.hasOwnProperty.call(projection, eventType))
-                store = projection[eventType](store, event);
+            if(Object.prototype.hasOwnProperty.call(this.projection, eventType))
+                state = this.projection[eventType](state, event);
         });
-        return store;
+        return state;
+    }
+
+    load(aggregateId)
+    {
+        return this._reduceEvents(this._loadEvents(aggregateId));
     }
 }
 

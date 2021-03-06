@@ -29,6 +29,13 @@ class CommandHandler
         return Object.prototype.hasOwnProperty.call(this.#blackrik._aggregates, aggregateName);
     }
 
+    buildContext()
+    {
+        return Object.freeze({
+            blackrik: this.#blackrik
+        });
+    }
+
     async handle({blackrik, body}, res)
     {
         const command = this.createCommand(body);
@@ -45,15 +52,14 @@ class CommandHandler
         if(!Object.prototype.hasOwnProperty.call(commands, type))
             return res.sendStatus(400).end(); //TODO error for unknown command
         
-        const state = await aggregate.load(aggregateId);
-        const context = Object.freeze({
-            blackrik
-        });
         let event = null;
-
         try
         {
-            event = await commands[type](command, state, context);  
+            event = await commands[type](
+                command, 
+                await aggregate.load(aggregateId), 
+                buildContext()
+            );  
         }
         catch(e)
         {

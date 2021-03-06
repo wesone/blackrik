@@ -43,37 +43,11 @@ class Blackrik
     constructor(config)
     {
         this.config = merge(this.#config, config);
-
-        this._eventBus = new EventBus(); //TODO add eventbus options
-        this._processAggregates();
-        this._processReadModels();
-        this._processSagas();
-
-        this.#server = new Server(this.config.server.config);
-        this._processMiddlewares();
-        this._processAPI();
-        this.#server.start();
     }
 
     _processAggregates()
     {
         this._aggregates = Aggregate.fromArray(this.config.aggregates);
-
-        //TODO outsource
-        Object.values(this._aggregates).forEach(({projection}) => {
-            Object.keys(projection).forEach(type => {
-                if(type === 'default')
-                    return;
-                //TODO subscribe to type
-                const callback = async event => {
-                    //TODO load aggregate state
-                    const state = {};
-                    const handler = projection[type];
-                    const newState = await handler(state, event);
-                    //TODO persist newState
-                };
-            });
-        });
     }
 
     _processReadModels()
@@ -81,9 +55,21 @@ class Blackrik
         //TODO subscribe to events
     }
 
-    _processSagas()
+    async _processSagas()
     {
-        //TODO subscribe to events
+        //TODO outsource
+        //TODO subscribe to events (keep in mind to detect whether we have a replay or not)
+        const store = {}; //TODO get a store adapter
+        const promises = [];
+        this.config.sagas.forEach(({source}) => {
+            promises.push(source.init());
+            Object.entries(source).forEach(([eventType, handler]) => {
+                const callback = async event => {
+                    await handler(store, event);
+                };
+            });
+        });
+        return Promise.all(promises);
     }
 
     _processMiddlewares()
@@ -131,6 +117,21 @@ class Blackrik
     // {
 
     // }
+
+    async start()
+    {
+        this._eventBus = new EventBus(); //TODO add eventbus options
+        this._processAggregates();
+        this._processReadModels();
+        await this._processSagas();
+
+        this.#server = new Server(this.config.server.config);
+        this._processMiddlewares();
+        this._processAPI();
+        this.#server.start();
+
+        return this;
+    }
 }
 
 module.exports = Blackrik;
