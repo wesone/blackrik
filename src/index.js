@@ -58,12 +58,28 @@ class Blackrik
     _processAggregates()
     {
         this._aggregates = Aggregates.transform(this.config.aggregates);
-        //TODO subscribe to projection events
+
+        //TODO outsource
+        Object.values(this._aggregates).forEach(({projection}) => {
+            Object.keys(projection).forEach(type => {
+                if(type === 'default')
+                    return;
+                //TODO subscribe to type
+                const callback = async event => {
+                    //TODO load aggregate state
+                    const state = {};
+                    const handler = projection[type];
+                    const newState = await handler(state, event);
+                    //TODO persist newState
+                }
+            });
+        });
     }
 
     _processReadModels()
     {
         //TODO subscribe to events
+        this.config.readModels.forEach(readModel)
     }
 
     _processSagas()
