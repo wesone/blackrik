@@ -2,7 +2,7 @@ const Server = require('./core/Server');
 const merge = require('./utils/merge');
 
 const EventBus = require('./core/EventBus');
-const Aggregates = require('./core/Aggregates');
+const Aggregate = require('./core/Aggregate');
 const CommandHandler = require('./core/CommandHandler');
 const QueryHandler = require('./core/QueryHandler');
 
@@ -57,7 +57,7 @@ class Blackrik
 
     _processAggregates()
     {
-        this._aggregates = Aggregates.transform(this.config.aggregates);
+        this._aggregates = Aggregate.fromArray(this.config.aggregates);
 
         //TODO outsource
         Object.values(this._aggregates).forEach(({projection}) => {
@@ -71,7 +71,7 @@ class Blackrik
                     const handler = projection[type];
                     const newState = await handler(state, event);
                     //TODO persist newState
-                }
+                };
             });
         });
     }
@@ -79,7 +79,6 @@ class Blackrik
     _processReadModels()
     {
         //TODO subscribe to events
-        this.config.readModels.forEach(readModel)
     }
 
     _processSagas()

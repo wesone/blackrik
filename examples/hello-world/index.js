@@ -18,6 +18,10 @@ blackrik = new Blackrik({
                 init: () => ({}),
                 'USER_CREATED': (state, event) => ({
                     ...state
+                }),
+                'USER_UPDATED': (state, {payload}) => ({
+                    ...state,
+                    ...payload
                 })
             }
         }

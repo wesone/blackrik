@@ -1,4 +1,4 @@
-const Aggregates = require('./Aggregates');
+const Aggregate = require('./Aggregate');
 
 class CommandHandler 
 {
@@ -39,12 +39,13 @@ class CommandHandler
         if(!this.hasAggregate(aggregateName))
             return res.sendStatus(400).end(); //TODO error for invalid aggregate
 
-        const {commands, projection} = this.#blackrik._aggregates[aggregateName];
+        const aggregate = this.#blackrik._aggregates[aggregateName];
+        const {commands} = aggregate;
 
         if(!Object.prototype.hasOwnProperty.call(commands, type))
             return res.sendStatus(400).end(); //TODO error for unknown command
         
-        const state = Aggregates.load(aggregateId); //TODO load aggregate from state if aggregate does not exist use default state from projection
+        const state = await aggregate.load(aggregateId);
         const context = Object.freeze({
             blackrik
         });
