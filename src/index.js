@@ -1,7 +1,6 @@
 const Server = require('./core/Server');
 const merge = require('./utils/merge');
 
-const EventBus = require('./core/EventBus');
 const Aggregate = require('./core/Aggregate');
 const CommandHandler = require('./core/CommandHandler');
 const QueryHandler = require('./core/QueryHandler');
@@ -12,6 +11,11 @@ class Blackrik
         aggregates: [],
         readModels: [],
         sagas: [],
+        readModelAdapters: {},
+        eventStoreAdapter: {},
+        eventBusAdapter: {
+            module: './adapters/eventbus-kafka'
+        },
         server: {
             config: {
                 port: 3000,
@@ -40,9 +44,19 @@ class Blackrik
         ];
     }
 
-    constructor(config)
+    constructor(...configs)
     {
-        this.config = merge(this.#config, config);
+        this.config = merge(this.#config, ...configs);
+        //TODO validate config
+    }
+
+    _initEventBus()
+    {
+        const {module, params} = this.config.eventBusAdapter;
+        const create = require(module);
+        if(typeof create !== 'function')
+            throw Error(`EventBus '${module}' needs to be of type function.`);
+        this._eventBus = create(params);
     }
 
     _processAggregates()
@@ -120,7 +134,8 @@ class Blackrik
 
     async start()
     {
-        this._eventBus = new EventBus(); //TODO add eventbus options
+        this._initEventBus();
+
         this._processAggregates();
         this._processReadModels();
         await this._processSagas();
