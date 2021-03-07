@@ -1,6 +1,8 @@
 const Server = require('./core/Server');
 const merge = require('./utils/merge');
 
+const EventBus = require('./core/EventBus');
+
 const Aggregate = require('./core/Aggregate');
 const CommandHandler = require('./core/CommandHandler');
 const QueryHandler = require('./core/QueryHandler');
@@ -89,8 +91,10 @@ class Blackrik
 
     _initEventBus()
     {
-        if(!(this._eventBus = this._createAdapter(this.config.eventBusAdapter)))
+        const bus = this._createAdapter(this.config.eventBusAdapter);
+        if(!bus)
             throw Error(`EventBus adapter '${this.config.eventBusAdapter.module}' is invalid.`);
+        this._eventBus = new EventBus(this, bus);
     }
 
     _initEventStore()
