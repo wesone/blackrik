@@ -1,5 +1,3 @@
-const Aggregate = require('./Aggregate');
-
 class CommandHandler 
 {
     #blackrik;
@@ -7,7 +5,6 @@ class CommandHandler
     constructor(blackrik)
     {
         this.#blackrik = blackrik;
-        //TODO if a projection contains events, subscribe and execute projections accordingly
         return this.handle.bind(this);
     }
 
@@ -58,12 +55,12 @@ class CommandHandler
             event = await commands[type](
                 command, 
                 await aggregate.load(aggregateId), 
-                buildContext()
+                this.buildContext()
             );  
         }
         catch(e)
         {
-            res.status(e.status || 500).send(e.message || e);
+            return res.status(e.status || 500).send(e.message || e);
         }
 
         if(event)

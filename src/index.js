@@ -11,8 +11,14 @@ class Blackrik
         aggregates: [],
         readModels: [],
         sagas: [],
-        readModelAdapters: {},
-        eventStoreAdapter: {},
+        readModelAdapters: {
+            default: {
+                module: './adapters/readmodel-mysql'
+            }
+        },
+        eventStoreAdapter: {
+            module: './adapters/eventstore-mysql'
+        },
         eventBusAdapter: {
             module: './adapters/eventbus-kafka'
         },
@@ -28,7 +34,12 @@ class Blackrik
     #server;
 
     _eventBus;
-    _aggregates;
+    _eventStore;
+    _stores = {};
+
+    _aggregates = {};
+    _readModels = {};
+    _sagas = {};
 
     static get ADAPTERS()
     {
@@ -42,7 +53,7 @@ class Blackrik
             READMODEL: {
                 MySQL: './adapters/readmodel-mysql'
             }
-        }
+        };
     }
 
     static get HTTP_METHODS()
@@ -65,13 +76,27 @@ class Blackrik
         //TODO validate config
     }
 
+    _createAdapter(adapter)
+    {
+        if(!adapter)
+            return null;
+        const {module, args} = adapter;
+        const create = require(module);
+        if(typeof create === 'function')
+            return create(args);
+        return null;
+    }
+
     _initEventBus()
     {
-        const {module, params} = this.config.eventBusAdapter;
-        const create = require(module);
-        if(typeof create !== 'function')
-            throw Error(`EventBus '${module}' needs to be of type function.`);
-        this._eventBus = create(params);
+        if(!(this._eventBus = this._createAdapter(this.config.eventBusAdapter)))
+            throw Error(`EventBus adapter '${this.config.eventBusAdapter.module}' is invalid.`);
+    }
+
+    _initEventStore()
+    {
+        if(!(this._eventStore = this._createAdapter(this.config.eventStoreAdapter)))
+            throw Error(`EventStore adapter '${this.config.eventStoreAdapter.module}' is invalid.`);
     }
 
     _processAggregates()
@@ -79,31 +104,62 @@ class Blackrik
         this._aggregates = Aggregate.fromArray(this.config.aggregates);
     }
 
-    _processReadModels()
+    _createReadModelAdapter(adapterName)
     {
-        //TODO subscribe to events
+        if(!adapterName)
+            adapterName = 'default';
+        if(!this._stores[adapterName] && !(this._stores[adapterName] = this._createAdapter(this.config.readModelAdapters[adapterName])))
+            throw Error(`ReadModel adapter '${adapterName}' is invalid.`);
+    }
+
+    _createReadModelSubscriptions(eventMap, store)
+    {
+        Object.entries(eventMap).forEach(([eventType, handler]) => {
+            this._eventBus.subscribe(eventType, async event => {
+                await handler(store, event);
+            });
+        });
+    }
+
+    async _processReadModels()
+    {
+        const promises = [];
+        this.config.readModels.forEach(readModel => {
+            const {name, projection, adapter} = readModel;
+            this._createReadModelAdapter(adapter);
+
+            //TODO validation
+            this._readModels[name] = readModel;
+
+            //TODO outsource
+            const store = this._stores[adapter];
+            promises.push(projection.init(store));
+            this._createReadModelSubscriptions(projection, store);
+        });
+        return Promise.all(promises);
     }
 
     async _processSagas()
     {
-        //TODO outsource
-        //TODO subscribe to events (keep in mind to detect whether we have a replay or not)
-        const store = {}; //TODO get a store adapter
         const promises = [];
-        this.config.sagas.forEach(({source}) => {
-            promises.push(source.init());
-            Object.entries(source).forEach(([eventType, handler]) => {
-                const callback = async event => {
-                    await handler(store, event);
-                };
-            });
+        this.config.sagas.forEach(saga => {
+            const {name, source, adapter} = saga;
+            this._createReadModelAdapter(adapter);
+
+            //TODO validation
+            this._sagas[name] = saga;
+
+            //TODO outsource
+            const store = this._stores[adapter];
+            promises.push(source.init(store));
+            this._createReadModelSubscriptions(source, store); //TODO detect replay
         });
         return Promise.all(promises);
     }
 
     _processMiddlewares()
     {
-        this.#server.use((req, res, next) => (req.blackrik = Object.freeze(this)) && next());
+        this.#server.use((...[req, , next]) => (req.blackrik = Object.freeze(this)) && next());
 
         const {middlewares} = this.config.server;
         if(!Array.isArray(middlewares))
@@ -114,7 +170,7 @@ class Blackrik
     _processAPI()
     {
         this.#server.route('/commands').post(new CommandHandler(this));
-        this.#server.route('/query').get(new QueryHandler());
+        this.#server.route('/query/:readModel/:resolver').get(new QueryHandler(this));
 
         const {routes} = this.config.server;
         if(!Array.isArray(routes))
@@ -150,9 +206,10 @@ class Blackrik
     async start()
     {
         this._initEventBus();
+        this._initEventStore();
 
         this._processAggregates();
-        this._processReadModels();
+        await this._processReadModels();
         await this._processSagas();
 
         this.#server = new Server(this.config.server.config);

@@ -13,7 +13,7 @@ Blackrik is a CQRS and Event-Sourcing Framework.
 ### Installation
 TODO 
 
-### How to use
+### Usage
 TODO
 
 ## Documentation
