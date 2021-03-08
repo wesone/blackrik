@@ -167,8 +167,6 @@ class Blackrik
         this.#server.use((...[req, , next]) => (req.blackrik = Object.freeze(this)) && next());
 
         const {middlewares} = this.config.server;
-        if(!Array.isArray(middlewares))
-            throw Error('config.server.middlewares needs to be an array.');
         middlewares.forEach(middleware => this.#server.use(...(Array.isArray(middleware) ? middleware : [middleware])));
     }
 
@@ -178,14 +176,10 @@ class Blackrik
         this.#server.route('/query/:readModel/:resolver').get(new QueryHandler(this));
 
         const {routes} = this.config.server;
-        if(!Array.isArray(routes))
-            throw Error('config.server.routes needs to be an array.');
         routes.forEach(({method, path, callback}) => {
             method = method.toLowerCase();
             if(!this.constructor.HTTP_METHODS.includes(method))
                 throw Error(`Method '${method.toUpperCase()}' is invalid.`);
-            if(typeof callback !== 'function')
-                throw Error('Parameter \'callback\' needs to be of type function.');
             if(!path.startsWith('/'))
                 path = '/' + path;
             //TODO should we check for reserved routes (e.g. /commands) and throw?
