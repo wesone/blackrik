@@ -22,6 +22,12 @@ services:
     depends_on:
       - db
 
+  # Note: Soon, ZooKeeper will no longer be required by Apache Kafka.
+  zookeeper:
+    image: zookeeper:3.6.2
+    ports:
+      - "2181:2181"
+
   kafka:
     image: wurstmeister/kafka:2.13-2.7.0
     ports:
