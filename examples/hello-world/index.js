@@ -40,7 +40,7 @@ const Blackrik = require('../../');
                     get: async (store, args) => {
                         return {
                             test: 42
-                        }
+                        };
                     }
                 },
                 adapter: 'default'

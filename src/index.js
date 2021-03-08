@@ -1,6 +1,7 @@
-const Server = require('./core/Server');
 const merge = require('./utils/merge');
+const {validateConfig} = require('./utils/validation');
 
+const Server = require('./core/Server');
 const EventBus = require('./core/EventBus');
 
 const Aggregate = require('./core/Aggregate');
@@ -75,7 +76,7 @@ class Blackrik
     constructor(...configs)
     {
         this.config = merge(this.#config, ...configs);
-        //TODO validate config
+        validateConfig(this.config);
     }
 
     _createAdapter(adapter)
