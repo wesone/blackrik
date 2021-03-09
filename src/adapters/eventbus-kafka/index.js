@@ -1,6 +1,3 @@
-module.exports = options => {
-    return {
-        subscribe: () => {},
-        publish: () => {}
-    };
-};
+const Adapter = require('./Adapter');
+
+module.exports = options => new Adapter(options);
