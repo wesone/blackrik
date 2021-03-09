@@ -8,7 +8,7 @@ class Aggregate
             if(!name || !name.length)
                 throw Error('Missing property \'name\' inside aggregate.');
             if(transformed[name])
-                throw Error('Duplicate aggregate name.');
+                throw Error(`Duplicate aggregate name '${name}'.`);
             //TODO validate commands
             transformed[name] = new this(aggregate);
         });
