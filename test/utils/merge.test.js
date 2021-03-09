@@ -1,4 +1,4 @@
-import merge from '../../src/utils/merge';
+const merge = require('../../src/utils/merge');
 
 test('Merge two objects', () => {
     const obj1 = { test1: 1 };

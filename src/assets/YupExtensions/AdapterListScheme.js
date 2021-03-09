@@ -31,7 +31,7 @@ class AdapterListScheme extends BaseSchema
     {
         if(!this._isObject(value))
             return false;
-        return Object.values(value).every(this._isAdapter.bind(this))
+        return Object.values(value).every(this._isAdapter.bind(this));
     }
 }
 
