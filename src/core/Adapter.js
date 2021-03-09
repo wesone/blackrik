@@ -6,9 +6,9 @@ class Adapter
             return null;
         const {module, args} = config;
         const create = require(module);
-        if(typeof create === 'function')
-            return create(args);
-        return null;
+        if(typeof create !== 'function')
+            return null;
+        return create(args);
     }
 }
 

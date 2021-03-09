@@ -205,7 +205,7 @@ class Blackrik
 
     executeCommand(command)
     {
-
+        //TODO handle req, res objects
     }
 
     // scheduleCommand(crontime, command)
