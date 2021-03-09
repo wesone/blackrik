@@ -12,14 +12,14 @@ class EventBus
         return event;
     }
 
-    sendEvent()
+    async sendEvent()
     {
-        //TODO this.bus.publish(event);
+        await this.bus.publish(event);
     }
 
-    subscribe(type, callback)
+    async subscribe(type, callback)
     {
-        //TODO this.bus.subscribe(type, callback);
+        await this.bus.subscribe(type, callback);
     }
 
     async publish(event)

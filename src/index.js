@@ -80,15 +80,16 @@ class Blackrik
         validateConfig(this.config);
     }
 
-    _initEventBus()
+    async _initEventBus()
     {
         const bus = Adapter.create(this.config.eventBusAdapter);
         if(!bus)
             throw Error(`EventBus adapter '${this.config.eventBusAdapter.module}' is invalid.`);
+        await bus.init();
         this._eventBus = new EventBus(this, bus);
     }
 
-    _initEventStore()
+    async _initEventStore()
     {
         if(!(this._eventStore = Adapter.create(this.config.eventStoreAdapter)))
             throw Error(`EventStore adapter '${this.config.eventStoreAdapter.module}' is invalid.`);
@@ -106,13 +107,17 @@ class Blackrik
         return this._stores[adapterName];
     }
 
-    _createSubscriptions(eventMap, store)
+    async _createSubscriptions(eventMap, store)
     {
+        const promises = [];
         Object.entries(eventMap).forEach(([eventType, handler]) => {
-            this._eventBus.subscribe(eventType, async event => {
-                await handler(store, event);
-            });
+            promises.push(
+                this._eventBus.subscribe(eventType, async event => {
+                    await handler(store, event);
+                })
+            );
         });
+        return Promise.all(promises);
     }
 
     async _registerSubscribers(name, source, adapter)
@@ -124,7 +129,7 @@ class Blackrik
         if(this._subscribers[name])
             throw Error(`Duplicate ReadModel or Saga name '${name}'.`);
         await source.init(store);
-        this._createSubscriptions(source, store);
+        await this._createSubscriptions(source, store);
         return (this._subscribers[name] = {
             source,
             adapter
@@ -220,8 +225,8 @@ class Blackrik
 
     async start()
     {
-        this._initEventBus();
-        this._initEventStore();
+        await this._initEventBus();
+        await this._initEventStore();
 
         this._processAggregates();
         await this._processSubscribers();
