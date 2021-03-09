@@ -8,5 +8,5 @@ test('Merge two objects', () => {
         test2: 'test2'
     };
     const merged = merge(obj1, obj2);
-    expect(merged).toEqual(expected);
+    expect(merged).toStrictEqual(expected);
 });
