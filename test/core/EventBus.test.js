@@ -1,6 +1,5 @@
 import EventBus from '../../src/core/EventBus';
 
-test('Merge two objects', () => {
-    // const aggregate = new Aggregate({ name: 'test', commands: [], projection: {} });
+test('EventBus test', () => {
     expect(null).toEqual(null);
 });

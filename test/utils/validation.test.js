@@ -31,15 +31,11 @@ const template = {
             name: 'users',
             projection: {
                 init: store => {},
-                'USER_CREATED': async (store, event) => {
-                
-                }
+                'USER_CREATED': async (store, event) => {}
             },
             resolvers: {
                 get: async (store, args) => {
-                    return {
-                        test: 42
-                    };
+                    return { test: 42 };
                 }
             },
             adapter: 'default'
@@ -50,9 +46,7 @@ const template = {
             name: 'saga-user',
             source: {
                 init: store => {},
-                'USER_CREATED': async (store, event) => {
-                
-                }
+                'USER_CREATED': async (store, event) => {}
             },
             adapter: 'default'
         }
@@ -86,7 +80,7 @@ const template = {
                 }
             },
             {
-            // this route should not get called as /commands is reserved
+                // this route should not get called as /commands is reserved
                 method: 'POST',
                 path: '/commands',
                 callback: (req, res) => {
@@ -96,7 +90,6 @@ const template = {
         ]
     }
 };
-
 
 test('Validate config scheme', () => {
     expect(() => validateConfig(template)).not.toThrow();

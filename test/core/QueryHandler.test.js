@@ -1,6 +1,5 @@
 import QueryHandler from '../../src/core/QueryHandler';
 
-test('Merge two objects', () => {
-    // const aggregate = new Aggregate({ name: 'test', commands: [], projection: {} });
+test('QueryHandler test', () => {
     expect(null).toEqual(null);
 });
