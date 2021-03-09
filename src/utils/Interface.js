@@ -6,7 +6,7 @@ class Interface
             return;
         Object.entries(properties).forEach(([property, type]) => {
             if(typeof this[property] !== type)
-                throw Error(`Property '${property}' needs to be of type '${type}'.`);
+                throw Error(`Add property '${property}' (type '${type}').`);
         });
     }
 }
