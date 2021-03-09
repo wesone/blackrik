@@ -1,4 +1,4 @@
-import merge from '../../src/utils/merge';
+const merge = require('../../src/utils/merge');
 
 test('Merge two objects', () => {
     const obj1 = { test1: 1 };
@@ -8,5 +8,5 @@ test('Merge two objects', () => {
         test2: 'test2'
     };
     const merged = merge(obj1, obj2);
-    expect(merged).toEqual(expected);
+    expect(merged).toStrictEqual(expected);
 });
