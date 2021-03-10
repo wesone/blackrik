@@ -1,10 +1,11 @@
 const EventBusAdapterInterface = require('../EventBusAdapterInterface');
 
 const {Kafka} = require('kafkajs');
+const ConsumerList = require('./ConsumerList');
 
 class Adapter extends EventBusAdapterInterface
 {
-    listeners = {};
+    listeners;
     producer;
     consumer;
 
@@ -13,6 +14,7 @@ class Adapter extends EventBusAdapterInterface
         super();
         this.args = {...args};
         this.validateArgs();
+        this.listeners = new ConsumerList();
     }
 
     validateArgs()
@@ -23,23 +25,10 @@ class Adapter extends EventBusAdapterInterface
             throw Error('EventBus-Kafka please provide at least one broker inside the \'brokers\' array.');
     }
 
-    addListener(type, listener)
-    {
-        if(this.listeners[type] === undefined)
-            this.listeners[type] = [];
-        this.listeners[type].push(listener);
-    }
-
-    executeListeners(type, event)
-    {
-        if(this.listeners[type] && this.listeners[type].length)
-            this.listeners[type].forEach(listener => listener(event));
-    }
-
     onMessage({topic, /* partition, */ message})
     {
         const event = JSON.parse(message.value.toString());
-        this.executeListeners(topic, event);
+        this.listeners.execute(topic, event);
     }
 
     async init()
@@ -68,7 +57,7 @@ class Adapter extends EventBusAdapterInterface
         if(typeof callback !== 'function')
         throw Error(`Second parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
 
-        this.addListener(type, callback);
+        this.listeners.add(type, callback);
         await this.consumer.subscribe({topic: type});
     }
 
