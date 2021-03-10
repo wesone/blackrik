@@ -1,6 +1,7 @@
 const merge = require('./utils/merge');
 const {validateConfig} = require('./utils/validation');
-const defaultAdapters = require('./adapters');
+const defaultAdapters = Object.freeze(require('./adapters'));
+const httpMethods = Object.freeze(require('./resources/httpMethods'));
 
 const Server = require('./core/Server');
 const Adapter = require('./core/Adapter');
@@ -48,21 +49,12 @@ class Blackrik
 
     static get ADAPTERS()
     {
-        return {...defaultAdapters};
+        return defaultAdapters;
     }
 
     static get HTTP_METHODS()
     {
-        return [
-            'head',
-            'options',
-            'get',
-            'post',
-            'put',
-            'patch',
-            'delete',
-            'all'
-        ];
+        return httpMethods;
     }
 
     constructor(...configs)
