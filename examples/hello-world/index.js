@@ -58,7 +58,7 @@ const Blackrik = require('../../');
                 adapter: 'default'
             }
         ],
-        readModelAdapters: {},
+        readModelStoreAdapters: {},
         eventStoreAdapter: {},
         eventBusAdapter: {
             args: {

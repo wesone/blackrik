@@ -15,9 +15,9 @@ class Blackrik
         aggregates: [],
         readModels: [],
         sagas: [],
-        readModelAdapters: {
+        readModelStoreAdapters: {
             default: {
-                module: __dirname + '/adapters/readmodel-mysql'
+                module: __dirname + '/adapters/readmodelstore-mysql'
             }
         },
         eventStoreAdapter: {
@@ -55,7 +55,7 @@ class Blackrik
                 MySQL: __dirname + '/adapters/eventstore-mysql'
             },
             READMODEL: {
-                MySQL: __dirname + '/adapters/readmodel-mysql'
+                MySQL: __dirname + '/adapters/readmodelstore-mysql'
             }
         };
     }
@@ -102,7 +102,7 @@ class Blackrik
 
     _createReadModelStore(adapterName)
     {
-        if(!this._stores[adapterName] && !(this._stores[adapterName] = Adapter.create(this.config.readModelAdapters[adapterName])))
+        if(!this._stores[adapterName] && !(this._stores[adapterName] = Adapter.create(this.config.readModelStoreAdapters[adapterName])))
             throw Error(`ReadModel adapter '${adapterName}' is invalid.`);
         return this._stores[adapterName];
     }
