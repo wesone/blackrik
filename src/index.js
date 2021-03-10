@@ -231,6 +231,8 @@ class Blackrik
         this._processAggregates();
         await this._processSubscribers();
 
+        await this._eventBus.start();
+
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();
         this._processAPI();

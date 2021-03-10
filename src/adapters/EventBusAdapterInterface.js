@@ -6,6 +6,7 @@ class EventBusAdapterInterface extends Interface
     {
         super({
             init: 'function',
+            start: 'function',
             subscribe: 'function',
             publish: 'function'
         });

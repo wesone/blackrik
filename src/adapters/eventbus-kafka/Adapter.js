@@ -11,7 +11,7 @@ class Adapter extends EventBusAdapterInterface
     constructor(args)
     {
         super();
-        this.args = args;
+        this.args = {...args};
         this.validateArgs();
     }
 
@@ -19,10 +19,8 @@ class Adapter extends EventBusAdapterInterface
     {
         if(!this.args)
             throw Error('EventBus-Kafka needs arguments.');
-        if(!this.args.host)
-            throw Error('EventBus-Kafka missing argument: host.');
-        if(!this.args.port)
-            throw Error('EventBus-Kafka missing argument: port.');
+        if(!this.args.brokers || !Array.isArray(this.args.brokers) || !this.args.brokers.length)
+            throw Error('EventBus-Kafka please provide at least one broker inside the \'brokers\' array.');
     }
 
     addListener(type, listener)
@@ -32,28 +30,32 @@ class Adapter extends EventBusAdapterInterface
         this.listeners[type].push(listener);
     }
 
-    executeListeners(type)
+    executeListeners(type, event)
     {
-        //TODO execute all listeners of 'type'
+        if(this.listeners[type] && this.listeners[type].length)
+            this.listeners[type].forEach(listener => listener(event));
     }
 
-    onMessage({ message })
+    onMessage({topic, /* partition, */ message})
     {
-        console.log(`received message: ${message.value}`);
-        // this.executeListeners(type);
+        const event = JSON.parse(message.value.toString());
+        this.executeListeners(topic, event);
     }
 
     async init()
     {
-        const clientId = 'test'; //TODO construct clientid
-        const brokers = [`${this.args.host}:${this.args.port}`];
-        const kafka = new Kafka({clientId, brokers});
+        this.args.clientId = this.args.clientId || 'blackrik-application';
+        const kafka = new Kafka(this.args);
 
         this.producer = kafka.producer();
         await this.producer.connect();
 
-        this.consumer = kafka.consumer({groupId: clientId});
+        this.consumer = kafka.consumer({groupId: this.args.clientId});
         await this.consumer.connect();
+    }
+
+    async start()
+    {
         await this.consumer.run({
             eachMessage: this.onMessage.bind(this)
         });
@@ -74,13 +76,12 @@ class Adapter extends EventBusAdapterInterface
     {
         try
         {
-            //TODO test this
             await this.producer.send({
-                topic,
+                topic: event.type,
                 messages: [
                     {
-                        key: '1234',
-                        value: 'this is a message',
+                        // key: '1234',
+                        value: JSON.stringify(event)
                     }
                 ]
             });
