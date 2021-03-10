@@ -13,11 +13,11 @@ describe('Testing Adapter.create', () => {
         expect(adapter).toEqual(testMsg);
     });
 
-    test('Create Adapter without config - failure', () => {
+    test('Create Adapter without config', () => {
         expect(Adapter.create(undefined)).toEqual(null);
     });
 
-    test('Create Adapter without args - failure', () => {
+    test('Create Adapter without args', () => {
         const config = {
             module: modulePath,
             args: null,

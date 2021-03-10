@@ -5,56 +5,22 @@ const Blackrik = require('../../');
         aggregates: [
             {
                 name: 'user',
-                commands: {
-                    create: async (command, state, context) => {
-                        return {
-                            type: 'USER_CREATED',
-                            correlationId: '0',
-                            causationId: '0',
-                            payload: {}
-                        };
-                    }
-                },
-                projection: {
-                    init: () => ({}),
-                    'USER_CREATED': (state, event) => ({
-                        ...state
-                    }),
-                    'USER_UPDATED': (state, {payload}) => ({
-                        ...state,
-                        ...payload
-                    })
-                }
+                commands: require('./aggregates/user.commands'),
+                projection: require('./aggregates/user.projection')
             }
         ],
         readModels: [
             {
                 name: 'users',
-                projection: {
-                    init: store => {},
-                    'USER_CREATED': async (store, event) => {
-                        console.log('ReadModel projection executed', event);
-                    }
-                },
-                resolvers: {
-                    get: async (store, args) => {
-                        return {
-                            test: 42
-                        };
-                    }
-                },
+                projection: require('./readModels/users.projection'),
+                resolvers: require('./readModels/users.resolvers'),
                 adapter: 'default'
             }
         ],
         sagas: [
             {
-                name: 'saga-user',
-                source: {
-                    init: store => {},
-                    'USER_CREATED': async (store, event) => {
-                        console.log('Saga executed', event);
-                    }
-                },
+                name: 'saga-users',
+                source: require('./sagas/users'),
                 adapter: 'default'
             }
         ],

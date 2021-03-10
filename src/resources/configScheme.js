@@ -9,6 +9,8 @@ yup.middleware = () => new MiddlewareScheme();
 const AdapterListScheme = require('./YupExtensions/AdapterListScheme');
 yup.adapterList = () => new AdapterListScheme();
 
+const httpMethods = require('./httpMethods');
+
 module.exports = yup.object({
     aggregates: yup.array(
         yup.object({
@@ -52,7 +54,7 @@ module.exports = yup.object({
         ),
         routes: yup.array(
             yup.object({
-                method: yup.string().required(),
+                method: yup.string().lowercase().oneOf(httpMethods).required(),
                 path: yup.string().required(),
                 callback: yup.function().required()
             })
