@@ -1,5 +1,6 @@
 const merge = require('./utils/merge');
 const {validateConfig} = require('./utils/validation');
+const defaultAdapters = require('./adapters');
 
 const Server = require('./core/Server');
 const Adapter = require('./core/Adapter');
@@ -15,16 +16,16 @@ class Blackrik
         aggregates: [],
         readModels: [],
         sagas: [],
-        readModelAdapters: {
+        readModelStoreAdapters: {
             default: {
-                module: __dirname + '/adapters/readmodel-mysql'
+                module: defaultAdapters.READMODELSTORE.MySQL
             }
         },
         eventStoreAdapter: {
-            module: __dirname + '/adapters/eventstore-mysql'
+            module: defaultAdapters.EVENTSTORE.MySQL
         },
         eventBusAdapter: {
-            module: __dirname + '/adapters/eventbus-kafka'
+            module: defaultAdapters.EVENTBUS.Kafka
         },
         server: {
             config: {
@@ -47,17 +48,7 @@ class Blackrik
 
     static get ADAPTERS()
     {
-        return {
-            EVENTBUS: {
-                Kafka: __dirname + '/adapters/eventbus-kafka'
-            },
-            EVENTSTORE: {
-                MySQL: __dirname + '/adapters/eventstore-mysql'
-            },
-            READMODEL: {
-                MySQL: __dirname + '/adapters/readmodel-mysql'
-            }
-        };
+        return {...defaultAdapters};
     }
 
     static get HTTP_METHODS()
@@ -102,7 +93,7 @@ class Blackrik
 
     _createReadModelStore(adapterName)
     {
-        if(!this._stores[adapterName] && !(this._stores[adapterName] = Adapter.create(this.config.readModelAdapters[adapterName])))
+        if(!this._stores[adapterName] && !(this._stores[adapterName] = Adapter.create(this.config.readModelStoreAdapters[adapterName])))
             throw Error(`ReadModel adapter '${adapterName}' is invalid.`);
         return this._stores[adapterName];
     }
@@ -230,6 +221,8 @@ class Blackrik
 
         this._processAggregates();
         await this._processSubscribers();
+
+        await this._eventBus.start();
 
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();

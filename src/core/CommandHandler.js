@@ -1,3 +1,5 @@
+const Event = require('./Event');
+
 class CommandHandler 
 {
     #blackrik;
@@ -63,8 +65,11 @@ class CommandHandler
             return res.status(e.status || 500).send(e.message || e);
         }
 
-        if(event)
-            blackrik._eventBus.publish(event);
+        if(!event)
+            return;
+
+        event = new Event(event);
+        blackrik._eventBus.publish(event);
         res.json(event);
     }
 }

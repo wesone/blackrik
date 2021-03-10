@@ -1,59 +1,50 @@
 const EventBusAdapterInterface = require('../EventBusAdapterInterface');
 
 const {Kafka} = require('kafkajs');
+const ConsumerList = require('./ConsumerList');
 
 class Adapter extends EventBusAdapterInterface
 {
-    listeners = {};
+    listeners;
     producer;
     consumer;
 
     constructor(args)
     {
         super();
-        this.args = args;
+        this.args = {...args};
         this.validateArgs();
+        this.listeners = new ConsumerList();
     }
 
     validateArgs()
     {
         if(!this.args)
             throw Error('EventBus-Kafka needs arguments.');
-        if(!this.args.host)
-            throw Error('EventBus-Kafka missing argument: host.');
-        if(!this.args.port)
-            throw Error('EventBus-Kafka missing argument: port.');
+        if(!this.args.brokers || !Array.isArray(this.args.brokers) || !this.args.brokers.length)
+            throw Error('EventBus-Kafka please provide at least one broker inside the \'brokers\' array.');
     }
 
-    addListener(type, listener)
+    onMessage({topic, /* partition, */ message})
     {
-        if(this.listeners[type] === undefined)
-            this.listeners[type] = [];
-        this.listeners[type].push(listener);
-    }
-
-    executeListeners(type)
-    {
-        //TODO execute all listeners of 'type'
-    }
-
-    onMessage({ message })
-    {
-        console.log(`received message: ${message.value}`);
-        // this.executeListeners(type);
+        const event = JSON.parse(message.value.toString());
+        this.listeners.execute(topic, event);
     }
 
     async init()
     {
-        const clientId = 'test'; //TODO construct clientid
-        const brokers = [`${this.args.host}:${this.args.port}`];
-        const kafka = new Kafka({clientId, brokers});
+        this.args.clientId = this.args.clientId || 'blackrik-application';
+        const kafka = new Kafka(this.args);
 
         this.producer = kafka.producer();
         await this.producer.connect();
 
-        this.consumer = kafka.consumer({groupId: clientId});
+        this.consumer = kafka.consumer({groupId: this.args.clientId});
         await this.consumer.connect();
+    }
+
+    async start()
+    {
         await this.consumer.run({
             eachMessage: this.onMessage.bind(this)
         });
@@ -64,9 +55,9 @@ class Adapter extends EventBusAdapterInterface
         if(typeof type !== 'string')
             throw Error(`First parameter of subscribe needs to be of type string (given type: ${typeof type}).`);
         if(typeof callback !== 'function')
-        throw Error(`Second parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
+            throw Error(`Second parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
 
-        this.addListener(type, callback);
+        this.listeners.add(type, callback);
         await this.consumer.subscribe({topic: type});
     }
 
@@ -74,21 +65,20 @@ class Adapter extends EventBusAdapterInterface
     {
         try
         {
-            //TODO test this
             await this.producer.send({
-                topic,
+                topic: event.type,
                 messages: [
                     {
-                        key: '1234',
-                        value: 'this is a message',
+                        // key: '1234',
+                        value: JSON.stringify(event)
                     }
                 ]
             });
         }
         catch(err)
         {
-			console.error('Could not publish event...', err);
-		}
+            console.error('Could not publish event...', err);
+        }
     }
 }
 

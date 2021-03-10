@@ -1,15 +1,18 @@
 class Aggregate
 {
+    static isValid({name/* , commands, projection */})
+    {
+        if(!name || !name.length)
+            throw Error('Missing property \'name\' inside aggregate.');
+    }
+
     static fromArray(aggregates)
     {
         const transformed = {};
         aggregates.forEach(aggregate => {
             const {name} = aggregate;
-            if(!name || !name.length)
-                throw Error('Missing property \'name\' inside aggregate.');
             if(transformed[name])
                 throw Error(`Duplicate aggregate name '${name}'.`);
-            //TODO validate commands
             transformed[name] = new this(aggregate);
         });
         return transformed;
@@ -20,6 +23,7 @@ class Aggregate
         this.name = name;
         this.commands = commands;
         this.projection = projection;
+        this.constructor.isValid(this);
     }
 
     _loadEvents(id)

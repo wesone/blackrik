@@ -33,7 +33,7 @@ const Blackrik = require('../../');
                 projection: {
                     init: store => {},
                     'USER_CREATED': async (store, event) => {
-                        
+                        console.log('ReadModel projection executed', event);
                     }
                 },
                 resolvers: {
@@ -52,18 +52,17 @@ const Blackrik = require('../../');
                 source: {
                     init: store => {},
                     'USER_CREATED': async (store, event) => {
-                        
+                        console.log('Saga executed', event);
                     }
                 },
                 adapter: 'default'
             }
         ],
-        readModelAdapters: {},
+        readModelStoreAdapters: {},
         eventStoreAdapter: {},
         eventBusAdapter: {
             args: {
-                host: 'localhost',
-                port: 9092
+                brokers: ['localhost:9092']
             }
         },
         server: {

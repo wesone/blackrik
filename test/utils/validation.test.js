@@ -51,7 +51,7 @@ const template = {
             adapter: 'default'
         }
     ],
-    readModelAdapters: {},
+    readModelStoreAdapters: {},
     eventStoreAdapter: {
         module: 'Muss String sein sagt er',
     },

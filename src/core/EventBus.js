@@ -6,13 +6,18 @@ class EventBus
         this.bus = bus;
     }
 
+    async start()
+    {
+        await this.bus.start();
+    }
+
     async persistEvent(event)
     {
         //TODO this.blackrik._eventStore.save(event);
         return event;
     }
 
-    async sendEvent()
+    async sendEvent(event)
     {
         await this.bus.publish(event);
     }
@@ -24,7 +29,6 @@ class EventBus
 
     async publish(event)
     {
-        console.log('PUBLISH', event);
         return this.persistEvent(event)
             .then(this.sendEvent.bind(this));
     }
