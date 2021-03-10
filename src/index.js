@@ -1,5 +1,6 @@
 const merge = require('./utils/merge');
 const {validateConfig} = require('./utils/validation');
+const defaultAdapters = require('./adapters');
 
 const Server = require('./core/Server');
 const Adapter = require('./core/Adapter');
@@ -17,14 +18,14 @@ class Blackrik
         sagas: [],
         readModelStoreAdapters: {
             default: {
-                module: __dirname + '/adapters/readmodelstore-mysql'
+                module: defaultAdapters.READMODELSTORE.MySQL
             }
         },
         eventStoreAdapter: {
-            module: __dirname + '/adapters/eventstore-mysql'
+            module: defaultAdapters.EVENTSTORE.MySQL
         },
         eventBusAdapter: {
-            module: __dirname + '/adapters/eventbus-kafka'
+            module: defaultAdapters.EVENTBUS.Kafka
         },
         server: {
             config: {
@@ -47,17 +48,7 @@ class Blackrik
 
     static get ADAPTERS()
     {
-        return {
-            EVENTBUS: {
-                Kafka: __dirname + '/adapters/eventbus-kafka'
-            },
-            EVENTSTORE: {
-                MySQL: __dirname + '/adapters/eventstore-mysql'
-            },
-            READMODEL: {
-                MySQL: __dirname + '/adapters/readmodelstore-mysql'
-            }
-        };
+        return {...defaultAdapters};
     }
 
     static get HTTP_METHODS()
