@@ -55,7 +55,7 @@ class Adapter extends EventBusAdapterInterface
         if(typeof type !== 'string')
             throw Error(`First parameter of subscribe needs to be of type string (given type: ${typeof type}).`);
         if(typeof callback !== 'function')
-        throw Error(`Second parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
+            throw Error(`Second parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
 
         this.listeners.add(type, callback);
         await this.consumer.subscribe({topic: type});
@@ -77,8 +77,8 @@ class Adapter extends EventBusAdapterInterface
         }
         catch(err)
         {
-			console.error('Could not publish event...', err);
-		}
+            console.error('Could not publish event...', err);
+        }
     }
 }
 
