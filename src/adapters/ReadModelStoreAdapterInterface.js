@@ -1,6 +1,6 @@
 const Interface = require('../utils/Interface');
 
-class ReadModelAdapterInterface extends Interface
+class ReadModelStoreAdapterInterface extends Interface
 {
     constructor()
     {
@@ -17,4 +17,4 @@ class ReadModelAdapterInterface extends Interface
     }
 }
 
-module.exports = ReadModelAdapterInterface;
+module.exports = ReadModelStoreAdapterInterface;

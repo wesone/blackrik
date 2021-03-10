@@ -58,9 +58,14 @@ const Blackrik = require('../../');
                 adapter: 'default'
             }
         ],
-        readModelAdapters: {},
+        readModelStoreAdapters: {},
         eventStoreAdapter: {},
-        eventBusAdapter: {},
+        eventBusAdapter: {
+            args: {
+                host: 'localhost',
+                port: 9092
+            }
+        },
         server: {
             config: {
                 port: 3000,
