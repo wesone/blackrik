@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-=======
-import { test } from '../../src/assets/configScheme';
 import Aggregate from '../../src/core/Aggregate';
 
 describe('Testing fromArray', () => {
@@ -46,4 +43,3 @@ describe('Testing load', () => {
         
     });
 });
->>>>>>> 1006a06ff6e67e231c5e5f1ac865a6335b3c430f
