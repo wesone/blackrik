@@ -1,4 +1,3 @@
-import { test } from '../../src/assets/configScheme';
 import Aggregate from '../../src/core/Aggregate';
 
 describe('Testing fromArray', () => {
