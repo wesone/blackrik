@@ -1,4 +1,3 @@
-import { test } from '../../src/assets/configScheme';
 import Aggregate from '../../src/core/Aggregate';
 
 describe('Testing fromArray', () => {
@@ -32,15 +31,71 @@ describe('Testing _loadEvents', () => {
 });
 
 describe('Testing _reduceEvents', () => {
-    test('', () => {
-        const testAggregate = new Aggregate({name: 'Noice name'});
-        
+    const events = [
+        {
+            type: 'USER_UPDATED',
+            payload: {
+                name: '1'
+            }
+        },
+        {
+            type: 'USER_UPDATED',
+            payload: {
+                name: '2'
+            }
+        },
+        {
+            type: 'USER_UPDATED',
+            payload: {
+                name: '3'
+            }
+        },
+        {
+            type: 'USER_UPDATED',
+            payload: {
+                name: '4'
+            }
+        }
+    ];
+    test('Test correct reduction of event list', () => {
+        const mockProjection = { 
+            init: jest.fn(() => {}),
+            'USER_CREATED': (state, event) => ({
+                ...state
+            }),
+            'USER_UPDATED': (state, {payload}) => ({
+                ...state,
+                ...payload
+            })
+        };
+        const testAggregate = new Aggregate({name: 'Noice name', projection: mockProjection});
+        expect(testAggregate._reduceEvents(events)).toEqual({name: '4'});
+        // init function called once
+        expect(mockProjection.init.mock.calls.length).toBe(1);
+    });
+    test('Test correct reduction without init function', () => {
+        const mockProjection1 = { 
+            init: 'This is no function',
+            // 'USER_CREATED': () => jest.fn(state, event) {
+            //     ...state
+            // },
+            'USER_CREATED': (state, event) => ({
+                ...state
+            }),
+            'USER_UPDATED': (state, {payload}) => ({
+                ...state,
+                ...payload
+            })
+        };
+        const testAggregate = new Aggregate({name: 'Noice name', projection: mockProjection1});
+        expect(testAggregate._reduceEvents(events)).toEqual({name: '4'});
     });
 });
 
-describe('Testing load', () => {
-    test('', () => {
-        const testAggregate = new Aggregate({name: 'Noice name'});
+// Already testet _reduceEvents and _loadEvents
+// describe('Testing load', () => {
+//     test('', () => {
+//         const testAggregate = new Aggregate({name: 'Noice name'});
         
-    });
-});
+//     });
+// });
