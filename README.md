@@ -1,7 +1,7 @@
 # Blackrik
 
 ## What is Blackrik?
-Blackrik is a CQRS and Event-Sourcing Framework.
+Blackrik is a CQRS and Event-Sourcing Framework for Node.js.
 
 ### Stuff to read
 - [CQRS](https://martinfowler.com/bliki/CQRS.html) - A pattern for a separated write (command) and read (query) side

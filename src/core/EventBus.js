@@ -6,16 +6,31 @@ class EventBus
         this.bus = bus;
     }
 
-    subscribe(type, callback)
+    async start()
     {
-        //TODO this.bus.subscribe(type, callback);
+        await this.bus.start();
     }
 
-    publish(event)
+    async persistEvent(event)
     {
         //TODO this.blackrik._eventStore.save(event);
-        //TODO this.bus.publish(event);
-        console.log('PUBLISH', event);
+        return event;
+    }
+
+    async sendEvent(event)
+    {
+        await this.bus.publish(event);
+    }
+
+    async subscribe(type, callback)
+    {
+        await this.bus.subscribe(type, callback);
+    }
+
+    async publish(event)
+    {
+        return this.persistEvent(event)
+            .then(this.sendEvent.bind(this));
     }
 }
 

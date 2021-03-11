@@ -1,3 +1,5 @@
+const Event = require('./Event');
+
 class CommandHandler 
 {
     #blackrik;
@@ -26,15 +28,26 @@ class CommandHandler
         return Object.prototype.hasOwnProperty.call(this.#blackrik._aggregates, aggregateName);
     }
 
-    buildContext()
+    buildContext(req)
     {
         return Object.freeze({
-            blackrik: this.#blackrik
+            //TODO add context from middlewares (req.context)
+            blackrik: req.blackrik
         });
     }
 
-    async handle({blackrik, body}, res)
+    processEvent(aggregateId, event)
     {
+        event.aggregateId = aggregateId;
+        event = new Event(event);
+        this.#blackrik._eventBus.publish(event);
+        return event;
+    }
+
+    async handle(req, res)
+    {
+        const {body} = req;
+
         const command = this.createCommand(body);
         //TODO load aggregateVersion
 
@@ -55,7 +68,7 @@ class CommandHandler
             event = await commands[type](
                 command, 
                 await aggregate.load(aggregateId), 
-                this.buildContext()
+                this.buildContext(req)
             );  
         }
         catch(e)
@@ -63,8 +76,10 @@ class CommandHandler
             return res.status(e.status || 500).send(e.message || e);
         }
 
-        if(event)
-            blackrik._eventBus.publish(event);
+        if(!event)
+            return res.sendStatus(200).end();
+
+        event = this.processEvent(aggregateId, event);
         res.json(event);
     }
 }
