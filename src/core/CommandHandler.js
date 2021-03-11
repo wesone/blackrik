@@ -31,9 +31,17 @@ class CommandHandler
     buildContext(req)
     {
         return Object.freeze({
-            blackrik: req.blackrik
             //TODO add context from middlewares (req.context)
+            blackrik: req.blackrik
         });
+    }
+
+    processEvent(aggregateId, event)
+    {
+        event.aggregateId = aggregateId;
+        event = new Event(event);
+        this.#blackrik._eventBus.publish(event);
+        return event;
     }
 
     async handle(req, res)
@@ -71,9 +79,7 @@ class CommandHandler
         if(!event)
             return res.sendStatus(200).end();
 
-        event.aggregateId = aggregateId;
-        event = new Event(event);
-        this.#blackrik._eventBus.publish(event);
+        event = this.processEvent(aggregateId, event);
         res.json(event);
     }
 }

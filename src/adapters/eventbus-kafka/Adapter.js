@@ -1,6 +1,6 @@
 const EventBusAdapterInterface = require('../EventBusAdapterInterface');
 
-const {Kafka} = require('kafkajs');
+const {Kafka, logLevel} = require('kafkajs');
 const ConsumerList = require('./ConsumerList');
 
 class Adapter extends EventBusAdapterInterface
@@ -33,8 +33,10 @@ class Adapter extends EventBusAdapterInterface
 
     async init()
     {
-        this.args.clientId = this.args.clientId || 'blackrik-application';
-        const kafka = new Kafka(this.args);
+        const kafka = new Kafka({
+            logLevel: logLevel.ERROR,
+            ...this.args
+        });
 
         this.producer = kafka.producer();
         await this.producer.connect();

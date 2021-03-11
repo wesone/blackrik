@@ -20,7 +20,10 @@ class Blackrik
             module: defaultAdapters.EVENTSTORE.MySQL
         },
         eventBusAdapter: {
-            module: defaultAdapters.EVENTBUS.Kafka
+            module: defaultAdapters.EVENTBUS.Kafka,
+            args: {
+                clientId: 'blackrik-application'
+            }
         },
         server: {
             config: {
