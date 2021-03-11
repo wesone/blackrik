@@ -28,15 +28,18 @@ class CommandHandler
         return Object.prototype.hasOwnProperty.call(this.#blackrik._aggregates, aggregateName);
     }
 
-    buildContext()
+    buildContext(req)
     {
         return Object.freeze({
-            blackrik: this.#blackrik
+            blackrik: req.blackrik
+            //TODO add context from middlewares (req.context)
         });
     }
 
-    async handle({blackrik, body}, res)
+    async handle(req, res)
     {
+        const {body} = req;
+
         const command = this.createCommand(body);
         //TODO load aggregateVersion
 
@@ -57,7 +60,7 @@ class CommandHandler
             event = await commands[type](
                 command, 
                 await aggregate.load(aggregateId), 
-                this.buildContext()
+                this.buildContext(req)
             );  
         }
         catch(e)
@@ -66,10 +69,11 @@ class CommandHandler
         }
 
         if(!event)
-            return;
+            return res.sendStatus(200).end();
 
+        event.aggregateId = aggregateId;
         event = new Event(event);
-        blackrik._eventBus.publish(event);
+        this.#blackrik._eventBus.publish(event);
         res.json(event);
     }
 }

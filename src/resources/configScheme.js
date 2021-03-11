@@ -55,7 +55,7 @@ module.exports = yup.object({
         routes: yup.array(
             yup.object({
                 method: yup.string().lowercase().oneOf(httpMethods).required(),
-                path: yup.string().required(),
+                path: yup.string().notOneOf(['/commands', '/query/:readModel/:resolver']).required(), // this would allow /query/:rm/:res :(
                 callback: yup.function().required()
             })
         )

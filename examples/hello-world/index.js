@@ -51,14 +51,6 @@ const Blackrik = require('../../');
                     callback: (req, res) => {
                         console.log('CALLED /TEST');
                     }
-                },
-                {
-                    // this route should not get called as /commands is reserved
-                    method: 'POST',
-                    path: '/commands',
-                    callback: (req, res) => {
-                        console.log('CALLED /commands');
-                    }
                 }
             ]
         }

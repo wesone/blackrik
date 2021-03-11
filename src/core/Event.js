@@ -1,8 +1,9 @@
 class Event
 {
-    constructor({type, correlationId, causationId, payload})
+    constructor({aggregateId, type, correlationId, causationId, payload})
     {
         return {
+            aggregateId,
             type,
             timestamp: Date.now(),
             correlationId,
