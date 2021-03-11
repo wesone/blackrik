@@ -1,13 +1,16 @@
 import Adapter from '../../src/core/Adapter';
-
+  
 describe('Testing Adapter.create', () => {
+    const testMsg = 'create(args) has been called';
+    const modulePath = `${__dirname}/AdapterMock`;
+
     test('Create Adapter - success', () => {
         const config = {
-            module: 'Adapter',// todo require mocken
-            args: () => 'Adapter'
+            module: modulePath,
+            args: testMsg
         };
         const adapter = Adapter.create(config);
-        expect(adapter).toEqual(null);
+        expect(adapter).toEqual(testMsg);
     });
 
     test('Create Adapter without config', () => {
@@ -16,8 +19,8 @@ describe('Testing Adapter.create', () => {
 
     test('Create Adapter without args', () => {
         const config = {
-            module: 'Adapter', // todo require mocken
-            args: undefined
+            module: modulePath,
+            args: null,
         };
         const adapter = Adapter.create(config);
         expect(adapter).toEqual(null);
