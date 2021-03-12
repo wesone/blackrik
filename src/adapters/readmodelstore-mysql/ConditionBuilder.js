@@ -1,3 +1,4 @@
+import { escapeIdentifier } from './utils';
 
 const comparisonOperators = {
     $eq: '=',
@@ -29,9 +30,6 @@ const allOperators = {
     ..._typeOperators(comparisonOperators, 'comparison'), 
     ..._typeOperators(logicalOperators, 'logical')
 };
-
-const identifierPrefix = '`';
-const identifierSuffix = '`';
 
 function _buildAST(conditions)
 {
@@ -137,7 +135,7 @@ function _sqlBuilder(ast, field, parameters )
             else if(value instanceof Date)
                 value =  value.toISOString();
 
-            const identifier = [identifierPrefix, token.field ?? field, identifierSuffix].join('');
+            const identifier = escapeIdentifier(token.field ?? field);
             if(raw)
                 res = [identifier, raw].join(' ');
             else 
@@ -176,6 +174,4 @@ function conditionBuilder(conditions)
 
 export {
     conditionBuilder,
-    identifierPrefix,
-    identifierSuffix,
 };

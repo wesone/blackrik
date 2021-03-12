@@ -1,4 +1,4 @@
-import { identifierPrefix, identifierSuffix} from './ConditionBuilder';
+import { escapeIdentifier } from './utils';
 
 const types = {
     'String': 'VARCHAR(512)',
@@ -125,7 +125,7 @@ function createTableBuilder(tableName, fieldDefinitions)
             throw new Error('No type given for field: ' + name);
         }
         
-        const identifier = [identifierPrefix, name, identifierSuffix].join(''); 
+        const identifier = escapeIdentifier(name); 
         return [identifier, _translateType(type, {
             allowNull, 
             defaultValue, 
@@ -135,7 +135,7 @@ function createTableBuilder(tableName, fieldDefinitions)
         }, state, index)].join(' ');
     });
     const definitions = fieldTokens.join(', ');
-    return ['CREATE TABLE', tableName, ['(', definitions, ')'].join('')].join(' ');
+    return ['CREATE TABLE IF NOT EXISTS', escapeIdentifier(tableName), ['(', definitions, ')'].join('')].join(' ');
 }
 
 export {
