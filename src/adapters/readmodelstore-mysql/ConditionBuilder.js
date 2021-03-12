@@ -176,4 +176,6 @@ function conditionBuilder(conditions)
 
 export {
     conditionBuilder,
+    identifierPrefix,
+    identifierSuffix,
 };
