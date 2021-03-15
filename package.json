@@ -25,7 +25,7 @@
     "express-ws": "^4.0.0",
     "helmet": "^4.4.1",
     "kafkajs": "^1.15.0",
-    "mysql": "^2.18.1",
+    "mysql2": "^2.2.5",
     "yup": "^0.32.9"
   },
   "devDependencies": {

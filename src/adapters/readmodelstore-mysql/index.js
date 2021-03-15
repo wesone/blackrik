@@ -1,5 +1,3 @@
-module.exports = options => {
-    return {
+const Adapter = require('./Adapter');
 
-    };
-};
+module.exports = options => new Adapter(options);

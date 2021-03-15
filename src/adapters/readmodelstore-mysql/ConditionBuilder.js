@@ -1,3 +1,4 @@
+import { quoteIdentifier, convertValue } from './utils';
 
 const comparisonOperators = {
     $eq: '=',
@@ -29,9 +30,6 @@ const allOperators = {
     ..._typeOperators(comparisonOperators, 'comparison'), 
     ..._typeOperators(logicalOperators, 'logical')
 };
-
-const identifierPrefix = '`';
-const identifierSuffix = '`';
 
 function _buildAST(conditions)
 {
@@ -122,6 +120,8 @@ function _sqlBuilder(ast, field, parameters )
             let value = token.value;
             const operator = token.op;
             let raw;
+            
+            value = convertValue(value);
             if(value === null)
             {
                 if(token.o === '$eq' || token.o === '$is')
@@ -134,10 +134,8 @@ function _sqlBuilder(ast, field, parameters )
                 const parameterNames = value.map(v => _pushParameter(v, parameters));
                 raw = ['IN ', '(', parameterNames.join(', '),')'].join('');
             } 
-            else if(value instanceof Date)
-                value =  value.toISOString();
-
-            const identifier = [identifierPrefix, token.field ?? field, identifierSuffix].join('');
+            
+            const identifier = quoteIdentifier(token.field ?? field);
             if(raw)
                 res = [identifier, raw].join(' ');
             else 
@@ -176,6 +174,4 @@ function conditionBuilder(conditions)
 
 export {
     conditionBuilder,
-    identifierPrefix,
-    identifierSuffix,
 };

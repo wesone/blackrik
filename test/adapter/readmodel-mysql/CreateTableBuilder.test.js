@@ -3,7 +3,7 @@ import { createTableBuilder } from '../../../src/adapters/readmodelstore-mysql/C
 
 const tableName = 'TestTable';
 
-test('Build field based condition', () => {
+test('Build creat table statement', () => {
     const fieldDefinition = {
         id: {
             type: 'uuid',
@@ -31,7 +31,7 @@ test('Build field based condition', () => {
         }
     };
    
-    const expectedSQL = 'CREATE TABLE TestTable (`id` CHAR(36) PRIMARY KEY, `test` VARCHAR(512) NULL, `testDate` DATETIME, `testInt` INTEGER UNIQUE, `testInc` FLOAT UNIQUE AUTO_INCREMENT, `testDefault` VARCHAR(512) DEFAULT \'Ein Test\')';
+    const expectedSQL = 'CREATE TABLE IF NOT EXISTS `TestTable` (`id` CHAR(36) PRIMARY KEY, `test` VARCHAR(512) NULL, `testDate` DATETIME, `testInt` INTEGER UNIQUE, `testInc` FLOAT UNIQUE AUTO_INCREMENT, `testDefault` VARCHAR(512) DEFAULT \'Ein Test\')';
     const sql = createTableBuilder(tableName, fieldDefinition);
     expect(sql).toEqual(expectedSQL);
 });
