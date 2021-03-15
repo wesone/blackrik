@@ -25,7 +25,14 @@ const Blackrik = require('../../');
             }
         ],
         readModelStoreAdapters: {},
-        eventStoreAdapter: {},
+        eventStoreAdapter: {
+            args: {
+                host: 'localhost',
+                database: 'eventstore',
+                user: 'root',
+                password: '1234'
+            }
+        },
         eventBusAdapter: {
             args: {
                 brokers: ['localhost:9092']

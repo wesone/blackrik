@@ -67,7 +67,7 @@ class CommandHandler
         {
             event = await commands[type](
                 command, 
-                await aggregate.load(aggregateId), 
+                await aggregate.load(this.#blackrik._eventStore, aggregateId), 
                 this.buildContext(req)
             );  
         }

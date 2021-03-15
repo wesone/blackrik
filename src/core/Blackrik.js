@@ -41,6 +41,7 @@ class Blackrik
     {
         if(!(this._eventStore = Adapter.create(this.config.eventStoreAdapter)))
             throw Error(`EventStore adapter '${this.config.eventStoreAdapter.module}' is invalid.`);
+        await this._eventStore.init();
     }
 
     _processAggregates()

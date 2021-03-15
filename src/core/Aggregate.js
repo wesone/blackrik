@@ -26,35 +26,9 @@ class Aggregate
         this.constructor.isValid(this);
     }
 
-    _loadEvents(id)
+    async _loadEvents(eventStore, aggregateId)
     {
-        //TODO load all events from eventstore that belong to aggregateId
-        return [
-            {
-                type: 'USER_UPDATED',
-                payload: {
-                    name: '1'
-                }
-            },
-            {
-                type: 'USER_UPDATED',
-                payload: {
-                    name: '2'
-                }
-            },
-            {
-                type: 'USER_UPDATED',
-                payload: {
-                    name: '3'
-                }
-            },
-            {
-                type: 'USER_UPDATED',
-                payload: {
-                    name: '4'
-                }
-            }
-        ];
+        return eventStore.load(aggregateId);
     }
 
     _reduceEvents(events)
@@ -70,9 +44,9 @@ class Aggregate
         return state;
     }
 
-    load(aggregateId)
+    async load(eventStore, aggregateId)
     {
-        return this._reduceEvents(this._loadEvents(aggregateId));
+        return this._reduceEvents(await this._loadEvents(eventStore, aggregateId));
     }
 }
 

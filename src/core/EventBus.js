@@ -13,7 +13,7 @@ class EventBus
 
     async persistEvent(event)
     {
-        //TODO this.blackrik._eventStore.save(event);
+        await this.blackrik._eventStore.save(event);
         return event;
     }
 
