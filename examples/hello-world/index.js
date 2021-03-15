@@ -24,7 +24,13 @@ const Blackrik = require('../../');
                 adapter: 'default'
             }
         ],
-        readModelStoreAdapters: {},
+        readModelStoreAdapters: {
+            default: {
+                args: {
+                    
+                }
+            }
+        },
         eventStoreAdapter: {
             args: {
                 host: 'localhost',

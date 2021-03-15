@@ -1,5 +1,5 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
 class Adapter extends EventStoreAdapterInterface
 {
