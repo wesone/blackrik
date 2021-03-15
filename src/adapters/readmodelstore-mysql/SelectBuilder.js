@@ -9,14 +9,18 @@ function selectBuilder(tableName, queryOptions)
     }
 
     let selectList = quoteIdentifier('*');
-    if(queryOptions.fields)
+    if(queryOptions.count)
+    {
+        selectList = ['COUNT(', selectList, ')', ' AS cnt'].join('');
+    }
+    else if(queryOptions.fields)
     {
         selectList = queryOptions.fields.map(field => quoteIdentifier(field)).join(', ');
     }
 
     const distinct = !!queryOptions.distinct;
 
-    const sqlList = [distinct? 'SELECT DISTINCT' : 'SELECT', selectList, 'FROM', quoteIdentifier(tableName)];
+    const sqlList = [distinct ? 'SELECT DISTINCT' : 'SELECT', selectList, 'FROM', quoteIdentifier(tableName)];
     const parameters = [];
 
     if(queryOptions.conditions)
@@ -36,7 +40,6 @@ function selectBuilder(tableName, queryOptions)
     {
         const sort = Object.keys(queryOptions.sort).map(field => {
             const direction = queryOptions.sort[field];
-            console.log(direction);
             if(direction !== 1 && direction !== -1)
             {
                 throw new Error('direction of sort has to be 1 for ASC or -1 for DESC');
