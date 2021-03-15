@@ -36,7 +36,6 @@ class Adapter extends EventStoreAdapterInterface
         this.db = mysql.createConnection(this.config);
         await this.db.connect();
         await this.createTable();
-        this.db.end();
         // todo check if scheme is valid
     }
 
