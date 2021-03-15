@@ -26,27 +26,47 @@ class Aggregate
         this.constructor.isValid(this);
     }
 
-    async _loadEvents(eventStore, aggregateId)
+    hasProjection(eventType)
     {
-        return eventStore.load(aggregateId);
+        return Object.prototype.hasOwnProperty.call(this.projection, eventType);
     }
 
-    _reduceEvents(events)
+    _reduceEvents(events, state = null)
     {
-        let state = typeof this.projection.init === 'function' 
+        let state = state || (typeof this.projection.init === 'function' 
             ? this.projection.init()
-            : {};
+            : {});
         events.forEach(event => {
-            const {type: eventType} = event;
-            if(Object.prototype.hasOwnProperty.call(this.projection, eventType))
-                state = this.projection[eventType](state, event);
+            const {type} = event;
+            if(this.hasProjection(type))
+                state = this.projection[type](state, event);
         });
         return state;
     }
 
     async load(eventStore, aggregateId)
     {
-        return this._reduceEvents(await this._loadEvents(eventStore, aggregateId));
+        const aggregateIds = [aggregateId];
+        let state = null;
+        let next = null;
+        do
+        {
+            // {
+            //     aggregateIds: Array,
+            //     types: Array,
+            //     since: Number,
+            //     until: Number,
+            //     limit: Number
+            // }
+            const {events, cursor} = await eventStore.load({
+                aggregateIds,
+                limit: 100000, //TODO outsource
+                next
+            });
+            state = this._reduceEvents(events, state);
+            next = cursor;
+        } while(next);
+        return state;
     }
 }
 
