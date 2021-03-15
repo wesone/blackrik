@@ -2,8 +2,26 @@
 const identifierPrefix = '`';
 const identifierSuffix = '`';
 
+function validateIdentifier(identifier)
+{
+    if(!identifier)
+    {
+        throw new Error('identifier "'+identifier+'" is required');
+    }
+    if(typeof identifier !== 'string')
+    {
+        throw new Error('identifier "'+identifier+'" has to be a string');
+    }
+    if(identifier.length < 1 || identifier.length > 64)
+    {
+        throw new Error('identifier "'+identifier+'" length has to be between 1 and 64 characters');
+    }
+}
+
 function quoteIdentifier(identifier)
 {
+    validateIdentifier(identifier);
+    
     if(identifier === '*')
         return identifier;
     
@@ -27,6 +45,7 @@ function convertValue(value)
 }
 
 export {
+    validateIdentifier,
     quoteIdentifier,
     convertValue,
 };
