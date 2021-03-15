@@ -68,7 +68,7 @@ class Adapter extends EventStoreAdapterInterface
     {
         console.log('createTable');
         const exists = await new Promise((resolve, reject) => {
-            this.db.query('SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = \'eventStore\') AND (TABLE_NAME = \'events\')', (err, res) => {
+            this.db.query(`SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = '${this.config.database}') AND (TABLE_NAME = 'events')`, (err, res) => {
                 if(err)
                     return reject(err);
                 resolve(res[0]['count(*)']);
