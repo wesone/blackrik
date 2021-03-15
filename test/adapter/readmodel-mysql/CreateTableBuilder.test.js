@@ -3,7 +3,7 @@ import { createTableBuilder } from '../../../src/adapters/readmodelstore-mysql/C
 
 const tableName = 'TestTable';
 
-test('Build field based condition', () => {
+test('Build creat table statement', () => {
     const fieldDefinition = {
         id: {
             type: 'uuid',
