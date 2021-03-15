@@ -42,10 +42,12 @@ class Adapter extends EventStoreAdapterInterface
     async save(event)
     {
         console.log('save');
-        this.db.query(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.values(event).join(',')})`, (error, result) => {
-            if(error)
-                throw error;
-            console.log(result);
+        await new Promise((resolve, reject) => {
+            this.db.query(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.values(event).join(',')})`, (err, res) => {
+                if(err)
+                    return reject(err);
+                resolve(res);
+            });
         });
     }
 
@@ -53,10 +55,12 @@ class Adapter extends EventStoreAdapterInterface
     {
         // TODO
         console.log('load');
-        this.db.query('SELECT * FROM events WHERE ', (error, result) => {
-            if(error)
-                throw error;
-            console.log(result);
+        await new Promise((resolve, reject) => {
+            this.db.query('SELECT * FROM events WHERE ', (err, res) => {
+                if(err)
+                    return reject(err);
+                resolve(res);
+            });
         });
     }
 
@@ -64,10 +68,10 @@ class Adapter extends EventStoreAdapterInterface
     {
         console.log('createTable');
         const exists = await new Promise((resolve, reject) => {
-            this.db.query('SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = \'eventStore\') AND (TABLE_NAME = \'events\')', (error, result) => {
-                if(error)
-                    return reject(error);
-                resolve(result[0]['count(*)']);
+            this.db.query('SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = \'eventStore\') AND (TABLE_NAME = \'events\')', (err, res) => {
+                if(err)
+                    return reject(err);
+                resolve(res[0]['count(*)']);
             });
         });
 
@@ -83,7 +87,13 @@ class Adapter extends EventStoreAdapterInterface
                 'payload TEXT NOT NULL',
             ];
             const query = `CREATE TABLE events (${fields.join(', ')})`;
-            await this.db.query(query);
+            await new Promise((resolve, reject) => {
+                this.db.query(query, (err, res) => {
+                    if(err)
+                        return reject(err);
+                    resolve(res);
+                });
+            });
         }
     }
 
@@ -98,10 +108,10 @@ class Adapter extends EventStoreAdapterInterface
         });
 
         await new Promise((resolve, reject) => {
-            connection.query('CREATE DATABASE IF NOT EXISTS eventStore', (err, result) => {
+            connection.query('CREATE DATABASE IF NOT EXISTS eventStore', (err, res) => {
                 if(err)
                     return reject(err);
-                resolve(result);
+                resolve(res);
             });
         });
 
