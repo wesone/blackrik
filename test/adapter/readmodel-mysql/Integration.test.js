@@ -47,6 +47,10 @@ test('test with MySQL DB', async () => {
     });
 
     const expectedResult = {'id':1,'test':'Hello world!'};
-
     expect(result).toEqual(expectedResult);
+
+    const count = await adapter.count(tableName, {});
+    expect(count).toEqual(1);
+
+    
 });

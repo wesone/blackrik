@@ -86,7 +86,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async count(tableName, queryOptions){
         const res = await this.find(tableName, {...queryOptions, count: true});
-        return res?.rows?.[0]?.cnt ?? 0;
+        return res?.[0]?.cnt ?? 0;
     }
 
     async delete(tableName, conditions){
