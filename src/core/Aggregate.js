@@ -33,7 +33,7 @@ class Aggregate
 
     _reduceEvents(events, state = null)
     {
-        let state = state || (typeof this.projection.init === 'function' 
+        state = state || (typeof this.projection.init === 'function' 
             ? this.projection.init()
             : {});
         events.forEach(event => {
