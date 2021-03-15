@@ -52,5 +52,9 @@ test('test with MySQL DB', async () => {
     const count = await adapter.count(tableName, {});
     expect(count).toEqual(1);
 
-    
+    await adapter.delete(tableName, {id: 1});
+
+    const count2 = await adapter.count(tableName, {});
+    expect(count2).toEqual(0);
+
 });
