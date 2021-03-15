@@ -21,7 +21,7 @@ function validateIdentifier(identifier)
 function quoteIdentifier(identifier)
 {
     validateIdentifier(identifier);
-    
+
     if(identifier === '*')
         return identifier;
     
@@ -44,7 +44,7 @@ function convertValue(value)
     return value;
 }
 
-export {
+module.exports =  {
     validateIdentifier,
     quoteIdentifier,
     convertValue,
