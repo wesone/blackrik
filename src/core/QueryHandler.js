@@ -7,13 +7,16 @@ class QueryHandler
     constructor(blackrik)
     {
         this.#blackrik = blackrik;
-        return this.handle.bind(this);
     }
 
     async handle(req)
     {
         const {readModel, resolver} = req.params;
+        return await this.process(readModel, resolver, req.query);
+    }
 
+    async process(readModel, resolver, query = {})
+    {
         if(!Object.prototype.hasOwnProperty.call(this.#blackrik._resolvers, readModel))
             throw new NotFoundError('Unknown ReadModel');
 
@@ -22,7 +25,7 @@ class QueryHandler
         if(!Object.prototype.hasOwnProperty.call(resolvers, resolver))
             throw new NotFoundError('Unknown resolver');
 
-        return await resolvers[resolver](this.#blackrik._stores[adapter], req.query);
+        return await resolvers[resolver](this.#blackrik._stores[adapter], query);
     }
 }
 

@@ -8,7 +8,6 @@ class CommandHandler
     constructor(blackrik)
     {
         this.#blackrik = blackrik;
-        return this.handle.bind(this);
     }
 
     createCommand(command)
@@ -32,24 +31,26 @@ class CommandHandler
     buildContext(req)
     {
         return Object.freeze({
-            //TODO add context from middlewares (req.context)
             blackrik: req.blackrik
         });
     }
 
-    processEvent(aggregateId, event)
+    async processEvent(aggregateId, event)
     {
         event.aggregateId = aggregateId;
         event = new Event(event);
-        this.#blackrik._eventBus.publish(event);
+        await this.#blackrik._eventHandler.publish(event);
         return event;
     }
 
     async handle(req)
     {
-        const {body} = req;
+        return this.process(req.body, this.buildContext(req));
+    }
 
-        const command = this.createCommand(body);
+    async process(args, context = {})
+    {
+        const command = this.createCommand(args);
         //TODO load aggregateVersion
 
         const {aggregateName, aggregateId, type} = command;
@@ -66,11 +67,11 @@ class CommandHandler
         const event = await commands[type](
             command, 
             await aggregate.load(this.#blackrik._eventStore, aggregateId), 
-            this.buildContext(req)
+            context
         );  
         
         return event
-            ? this.processEvent(aggregateId, event)
+            ? await this.processEvent(aggregateId, event)
             : null;
     }
 }

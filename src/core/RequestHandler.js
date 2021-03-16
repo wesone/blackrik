@@ -13,7 +13,7 @@ class RequestHandler
             const response = this.#handler(req);
             if(!response)
                 return res.sendStatus(200).end();
-            res.json(event).end();
+            res.json(response).end();
         }
         catch(e)
         {

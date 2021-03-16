@@ -29,6 +29,7 @@ class EventHandler
 
     async publish(event)
     {
+        //TODO implement optimistic concurrency control
         return this.persistEvent(event)
             .then(this.sendEvent.bind(this));
     }
