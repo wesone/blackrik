@@ -42,8 +42,6 @@ class Adapter extends EventStoreAdapterInterface
     async save(event)
     {
         console.log('save');
-        const timestampToString = timestamp => (new Date(timestamp)).toISOString().replace(/T/, ' ').replace(/\..+/, '');
-        event.timestamp = timestampToString(event.timestamp);
         await new Promise((resolve, reject) => {
             this.db.execute(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (?,?,?,?,?,?)`, Object.values(event), (err, res) => {
                 if(err)
@@ -53,7 +51,7 @@ class Adapter extends EventStoreAdapterInterface
         });
     }
 
-    async load()
+    async load(filter)
     {
         // TODO aggregateIds: Array,
         //      types: Array,
@@ -62,13 +60,24 @@ class Adapter extends EventStoreAdapterInterface
         //      limit: Number
 
         console.log('load');
-        await new Promise((resolve, reject) => {
-            this.db.query('SELECT * FROM events WHERE ', (err, res) => {
+        const values = [
+            filter.aggregateIds,
+            filter.types,
+            filter.since,
+            filter.until,
+            filter.limit
+        ];
+
+        const events = await new Promise((resolve, reject) => {
+            this.db.format('SELECT * FROM events WHERE aggregateId IN (?) AND type IN (?) AND (timestamp >= ? AND timestamp < ?) LIMIT ?', values, (err, res) => {
                 if(err)
                     return reject(err);
                 resolve(res);
             });
         });
+
+        console.log(events);
+        return events;
     }
 
     async createTable()
@@ -88,7 +97,7 @@ class Adapter extends EventStoreAdapterInterface
                 'id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY',
                 'aggregateId VARCHAR(32) NOT NULL',
                 'type VARCHAR(32) NOT NULL',
-                'timestamp TIMESTAMP NOT NULL',
+                'timestamp BIGINT NOT NULL',
                 'correlationId VARCHAR(32) NOT NULL',
                 'causationId VARCHAR(32) NOT NULL',
                 'payload TEXT NOT NULL',
