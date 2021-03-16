@@ -1,4 +1,5 @@
 const Event = require('./Event');
+const {BadRequestError} = require('./Errors');
 
 class CommandHandler 
 {
@@ -7,7 +8,7 @@ class CommandHandler
     constructor(blackrik)
     {
         this.#blackrik = blackrik;
-        return this.handle.bind(this);
+        this.handle = this.handle.bind(this);
     }
 
     createCommand(command)
@@ -31,56 +32,48 @@ class CommandHandler
     buildContext(req)
     {
         return Object.freeze({
-            //TODO add context from middlewares (req.context)
             blackrik: req.blackrik
         });
     }
 
-    processEvent(aggregateId, event)
+    async processEvent(aggregateId, event)
     {
         event.aggregateId = aggregateId;
         event = new Event(event);
-        this.#blackrik._eventBus.publish(event);
+        await this.#blackrik._eventHandler.publish(event);
         return event;
     }
 
-    async handle(req, res)
+    async handle(req)
     {
-        const {body} = req;
+        return this.process(req.body, this.buildContext(req));
+    }
 
-        const command = this.createCommand(body);
+    async process(args, context = {})
+    {
+        const command = this.createCommand(args);
         //TODO load aggregateVersion
 
         const {aggregateName, aggregateId, type} = command;
 
         if(!this.hasAggregate(aggregateName))
-            return res.sendStatus(400).end(); //TODO error for invalid aggregate
+            throw new BadRequestError('Invalid aggregate');
 
         const aggregate = this.#blackrik._aggregates[aggregateName];
         const {commands} = aggregate;
 
         if(!Object.prototype.hasOwnProperty.call(commands, type))
-            return res.sendStatus(400).end(); //TODO error for unknown command
+            throw new BadRequestError('Unknown command');
         
-        let event = null;
-        try
-        {
-            event = await commands[type](
-                command, 
-                await aggregate.load(this.#blackrik._eventStore, aggregateId), 
-                this.buildContext(req)
-            );  
-        }
-        catch(e)
-        {
-            return res.status(e.status || 500).send(e.message || e);
-        }
-
-        if(!event)
-            return res.sendStatus(200).end();
-
-        event = this.processEvent(aggregateId, event);
-        res.json(event);
+        const event = await commands[type](
+            command, 
+            await aggregate.load(this.#blackrik._eventStore, aggregateId), 
+            context
+        );  
+        
+        return event
+            ? await this.processEvent(aggregateId, event)
+            : null;
     }
 }
 

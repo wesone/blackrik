@@ -1,4 +1,4 @@
-class EventBus
+class EventHandler
 {
     constructor(blackrik, bus)
     {
@@ -29,9 +29,10 @@ class EventBus
 
     async publish(event)
     {
+        //TODO implement optimistic concurrency control
         return this.persistEvent(event)
             .then(this.sendEvent.bind(this));
     }
 }
 
-module.exports = EventBus;
+module.exports = EventHandler;

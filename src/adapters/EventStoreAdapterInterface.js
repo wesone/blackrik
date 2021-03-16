@@ -5,6 +5,7 @@ class EventStoreAdapterInterface extends Interface
     constructor()
     {
         super({
+            init: 'function',
             save: 'function',
             load: 'function'
         });
