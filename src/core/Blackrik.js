@@ -3,6 +3,7 @@ const Adapter = require('./Adapter');
 const EventBus = require('./EventHandler');
 
 const Aggregate = require('./Aggregate');
+const RequestHandler = require('./RequestHandler');
 const CommandHandler = require('./CommandHandler');
 const QueryHandler = require('./QueryHandler');
 
@@ -131,8 +132,8 @@ class Blackrik
 
     _registerInternalAPI()
     {
-        this.#server.route('/commands').post(new CommandHandler(this));
-        this.#server.route('/query/:readModel/:resolver').get(new QueryHandler(this));
+        this.#server.route('/commands').post(new RequestHandler(new CommandHandler(this)));
+        this.#server.route('/query/:readModel/:resolver').get(new RequestHandler(new QueryHandler(this)));
     }
 
     _registerAPI()

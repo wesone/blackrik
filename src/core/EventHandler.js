@@ -1,4 +1,4 @@
-class EventBus
+class EventHandler
 {
     constructor(blackrik, bus)
     {
@@ -34,4 +34,4 @@ class EventBus
     }
 }
 
-module.exports = EventBus;
+module.exports = EventHandler;

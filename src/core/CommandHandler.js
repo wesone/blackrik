@@ -1,4 +1,5 @@
 const Event = require('./Event');
+const {BadRequestError} = require('./Errors');
 
 class CommandHandler 
 {
@@ -44,7 +45,7 @@ class CommandHandler
         return event;
     }
 
-    async handle(req, res)
+    async handle(req)
     {
         const {body} = req;
 
@@ -54,33 +55,23 @@ class CommandHandler
         const {aggregateName, aggregateId, type} = command;
 
         if(!this.hasAggregate(aggregateName))
-            return res.sendStatus(400).end(); //TODO error for invalid aggregate
+            throw new BadRequestError('Invalid aggregate');
 
         const aggregate = this.#blackrik._aggregates[aggregateName];
         const {commands} = aggregate;
 
         if(!Object.prototype.hasOwnProperty.call(commands, type))
-            return res.sendStatus(400).end(); //TODO error for unknown command
+            throw new BadRequestError('Unknown command');
         
-        let event = null;
-        try
-        {
-            event = await commands[type](
-                command, 
-                await aggregate.load(this.#blackrik._eventStore, aggregateId), 
-                this.buildContext(req)
-            );  
-        }
-        catch(e)
-        {
-            return res.status(e.status || 500).send(e.message || e);
-        }
-
-        if(!event)
-            return res.sendStatus(200).end();
-
-        event = this.processEvent(aggregateId, event);
-        res.json(event);
+        const event = await commands[type](
+            command, 
+            await aggregate.load(this.#blackrik._eventStore, aggregateId), 
+            this.buildContext(req)
+        );  
+        
+        return event
+            ? this.processEvent(aggregateId, event)
+            : null;
     }
 }
 
