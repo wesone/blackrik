@@ -40,7 +40,7 @@ class Adapter extends EventStoreAdapterInterface
 
         // see https://github.com/sidorares/node-mysql2/issues/1239
         //========MySQL 8.0.22 (and higher) fix========
-        const originalExecute = this.db.execute;
+        const originalExecute = this.db.execute.bind(this.db);
         this.db.execute = function(...args){
             const [query, substitutions, ...rest] = args;
             for(const key in substitutions) // array or object
