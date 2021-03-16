@@ -8,6 +8,7 @@ class CommandHandler
     constructor(blackrik)
     {
         this.#blackrik = blackrik;
+        this.handle = this.handle.bind(this);
     }
 
     createCommand(command)

@@ -5,6 +5,7 @@ class BaseError extends Error
         super(message);
     }
 }
+module.exports.BaseError = BaseError;
   
 class BadRequestError extends BaseError
 {
@@ -14,6 +15,7 @@ class BadRequestError extends BaseError
         this.code = 400;
     }
 }
+module.exports.BadRequestError = BadRequestError;
   
 class UnauthorizedError extends BaseError
 {
@@ -23,6 +25,7 @@ class UnauthorizedError extends BaseError
         this.code = 401;
     }
 }
+module.exports.UnauthorizedError = UnauthorizedError;
   
 class ForbiddenError extends BaseError
 {
@@ -32,6 +35,7 @@ class ForbiddenError extends BaseError
         this.code = 403;
     }
 }
+module.exports.ForbiddenError = ForbiddenError;
 
 class NotFoundError extends BaseError
 {
@@ -41,9 +45,4 @@ class NotFoundError extends BaseError
         this.code = 404;
     }
 }
-
-module.exports.BaseError = BaseError;
-module.exports.BadRequestError = BadRequestError;
-module.exports.UnauthorizedError = UnauthorizedError;
-module.exports.ForbiddenError = ForbiddenError;
 module.exports.NotFoundError = NotFoundError;
