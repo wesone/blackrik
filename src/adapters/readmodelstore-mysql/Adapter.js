@@ -55,6 +55,15 @@ class Adapter extends ReadModelStoreAdapterInterface
         return this.pool.query(sql, parameters);
     }
 
+    getStatementMetaData([results])
+    {
+        return {
+            id: results?.insertId ?? null,
+            affected: results?.affectedRows ?? 0,
+            changed: results?.changedRows ?? 0,
+        };
+    }
+
     async createTable(tableName, fieldDefinitions){
         const sql = createTableBuilder(tableName, fieldDefinitions);
         return await this.exec(sql);
@@ -66,17 +75,17 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async insert(tableName, data){
         const {sql, parameters} = insertIntoBuilder(tableName, data);
-        return await this.exec(sql, parameters);
+        return this.getStatementMetaData(await this.exec(sql, parameters));
     }
 
     async update(tableName, conditions, data){
         const {sql, parameters} = updateBuilder(tableName, data, conditions);
-        return await this.exec(sql, parameters);
+        return this.getStatementMetaData(await this.exec(sql, parameters));
     }
 
     async find(tableName, queryOptions){
         const {sql, parameters} = selectBuilder(tableName, queryOptions);
-        return (await this.query(sql, parameters))[0];
+        return (await this.query(sql, parameters))?.[0] ?? [];
     }
 
     async findOne(tableName, queryOptions){
@@ -91,7 +100,9 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async delete(tableName, conditions){
         const {sql, parameters} = conditionBuilder(conditions);
-        return await this.exec(['DELETE FROM', quoteIdentifier(tableName), 'WHERE', sql].join(' '), parameters);
+        return this.getStatementMetaData(
+            await this.exec(['DELETE FROM', quoteIdentifier(tableName), 'WHERE', sql].join(' '), parameters)
+        );
     }
 }
 
