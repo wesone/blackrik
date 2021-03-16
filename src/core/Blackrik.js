@@ -1,6 +1,6 @@
 const Server = require('./Server');
 const Adapter = require('./Adapter');
-const EventBus = require('./EventBus');
+const EventBus = require('./EventHandler');
 
 const Aggregate = require('./Aggregate');
 const CommandHandler = require('./CommandHandler');
