@@ -1,4 +1,4 @@
-module.exports.BaseError = class BaseError extends Error
+class BaseError extends Error
 {
     constructor(message = 'Internal Error')
     {
@@ -6,7 +6,7 @@ module.exports.BaseError = class BaseError extends Error
     }
 }
   
-module.exports.BadRequestError = class BadRequestError extends BaseError
+class BadRequestError extends BaseError
 {
     constructor(message = 'Bad Request')
     {
@@ -15,7 +15,7 @@ module.exports.BadRequestError = class BadRequestError extends BaseError
     }
 }
   
-module.exports.UnauthorizedError = class UnauthorizedError extends BaseError
+class UnauthorizedError extends BaseError
 {
     constructor(message = 'Unauthorized')
     {
@@ -24,7 +24,7 @@ module.exports.UnauthorizedError = class UnauthorizedError extends BaseError
     }
 }
   
-module.exports.ForbiddenError = class ForbiddenError extends BaseError
+class ForbiddenError extends BaseError
 {
     constructor(message = 'Forbidden')
     {
@@ -33,7 +33,7 @@ module.exports.ForbiddenError = class ForbiddenError extends BaseError
     }
 }
 
-module.exports.NotFoundError = class NotFoundError extends BaseError
+class NotFoundError extends BaseError
 {
     constructor(message = 'Not Found')
     {
@@ -41,3 +41,9 @@ module.exports.NotFoundError = class NotFoundError extends BaseError
         this.code = 404;
     }
 }
+
+module.exports.BaseError = BaseError;
+module.exports.BadRequestError = BadRequestError;
+module.exports.UnauthorizedError = UnauthorizedError;
+module.exports.ForbiddenError = ForbiddenError;
+module.exports.NotFoundError = NotFoundError;
