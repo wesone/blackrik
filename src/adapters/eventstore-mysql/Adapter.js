@@ -42,8 +42,10 @@ class Adapter extends EventStoreAdapterInterface
     async save(event)
     {
         console.log('save');
+        const timestampToString = timestamp => (new Date(timestamp)).toISOString().replace(/T/, ' ').replace(/\..+/, '');
+        event.timestamp = timestampToString(event.timestamp);
         await new Promise((resolve, reject) => {
-            this.db.query(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.values(event).join(',')})`, (err, res) => {
+            this.db.execute(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (?,?,?,?,?,?)`, Object.values(event), (err, res) => {
                 if(err)
                     return reject(err);
                 resolve(res);
@@ -53,7 +55,12 @@ class Adapter extends EventStoreAdapterInterface
 
     async load()
     {
-        // TODO
+        // TODO aggregateIds: Array,
+        //      types: Array,
+        //      since: Number,
+        //      until: Number,
+        //      limit: Number
+
         console.log('load');
         await new Promise((resolve, reject) => {
             this.db.query('SELECT * FROM events WHERE ', (err, res) => {
