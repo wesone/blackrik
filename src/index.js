@@ -59,7 +59,10 @@ class Blackrik
 
     async executeCommand(command)
     {
-        return !!await this.#blackrik._commandHandler.process(command, Object.freeze({blackrik: this}));
+        return !!await this.#blackrik._commandHandler.process(
+            command,
+            Object.freeze({blackrik: this})
+        );
     }
 
     // scheduleCommand(crontime, command)
@@ -69,7 +72,11 @@ class Blackrik
 
     async executeQuery(readModel, resolver, query)
     {
-        return await this.#blackrik._queryHandler.process(readModel, resolver, query);
+        return await this.#blackrik._queryHandler.process(
+            readModel,
+            resolver,
+            query
+        );
     }
 
     async start()

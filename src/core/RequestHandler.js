@@ -1,5 +1,7 @@
 class RequestHandler
 {
+    #handler;
+
     constructor(handler)
     {
         this.#handler = handler;
