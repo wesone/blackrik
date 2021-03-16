@@ -12,7 +12,7 @@ class RequestHandler
     {
         try
         {
-            const response = this.#handler(req);
+            const response = await this.#handler(req);
             if(!response)
                 return res.sendStatus(200).end();
             res.json(response).end();
