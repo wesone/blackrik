@@ -1,5 +1,5 @@
-import EventBus from '../../src/core/EventBus';
+import EventHandler from '../../src/core/EventHandler';
 
-test('EventBus test', () => {
+test('EventHandler test', () => {
     expect(null).toEqual(null);
 });
