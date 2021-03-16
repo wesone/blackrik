@@ -1,11 +1,11 @@
 const mysql = require('mysql2/promise');
 const ReadModelStoreAdapterInterface = require('../ReadModelStoreAdapterInterface');
-import { conditionBuilder } from './ConditionBuilder';
-import { quoteIdentifier } from './utils';
-import { createTableBuilder } from './CreateTableBuilder';
-import { insertIntoBuilder } from './InsertIntoBuilder';
-import { updateBuilder } from './UpdateBuilder';
-import { selectBuilder } from './SelectBuilder';
+const { conditionBuilder } = require('./ConditionBuilder');
+const { quoteIdentifier } = require('./utils');
+const { createTableBuilder } = require('./CreateTableBuilder');
+const { insertIntoBuilder } = require('./InsertIntoBuilder');
+const { updateBuilder } = require('./UpdateBuilder');
+const { selectBuilder } = require('./SelectBuilder');
 
 class Adapter extends ReadModelStoreAdapterInterface
 {
