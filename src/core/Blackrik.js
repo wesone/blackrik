@@ -1,8 +1,9 @@
 const Server = require('./Server');
 const Adapter = require('./Adapter');
-const EventBus = require('./EventBus');
+const EventHandler = require('./EventHandler');
 
 const Aggregate = require('./Aggregate');
+const RequestHandler = require('./RequestHandler');
 const CommandHandler = require('./CommandHandler');
 const QueryHandler = require('./QueryHandler');
 
@@ -14,7 +15,7 @@ class Blackrik
     config;
     #server;
 
-    _eventBus;
+    _eventHandler;
     _eventStore;
     _stores = {};
 
@@ -22,25 +23,29 @@ class Blackrik
     _subscribers = {};
     _resolvers = {};
 
+    _commandHandler;
+    _queryHandler;
+
     constructor(instance)
     {
         this.#instance = instance;
         this.config = instance.config;
     }
 
-    async _initEventBus()
+    async _initEventHandler()
     {
-        const bus = Adapter.create(this.config.eventBusAdapter);
-        if(!bus)
+        const eventBus = Adapter.create(this.config.eventBusAdapter);
+        if(!eventBus)
             throw Error(`EventBus adapter '${this.config.eventBusAdapter.module}' is invalid.`);
-        await bus.init();
-        this._eventBus = new EventBus(this, bus);
+        await eventBus.init();
+        this._eventHandler = new EventHandler(this, eventBus);
     }
 
     async _initEventStore()
     {
         if(!(this._eventStore = Adapter.create(this.config.eventStoreAdapter)))
             throw Error(`EventStore adapter '${this.config.eventStoreAdapter.module}' is invalid.`);
+        await this._eventStore.init();
     }
 
     _processAggregates()
@@ -60,7 +65,7 @@ class Blackrik
         const promises = [];
         Object.entries(eventMap).forEach(([eventType, handler]) => {
             promises.push(
-                this._eventBus.subscribe(eventType, async event => {
+                this._eventHandler.subscribe(eventType, async event => {
                     await handler(store, event);
                 })
             );
@@ -70,13 +75,15 @@ class Blackrik
 
     async _registerSubscribers(name, source, adapter)
     {
-        if(!adapter || !adapter.length)
+        if(this._subscribers[name])
+            throw Error(`Duplicate ReadModel or Saga name '${name}'.`);
+
+        if(!adapter)
             adapter = 'default';
 
         const store = this._createReadModelStore(adapter);
-        if(this._subscribers[name])
-            throw Error(`Duplicate ReadModel or Saga name '${name}'.`);
-        await source.init(store);
+        if(typeof source.init === 'function')
+            await source.init(store);
         await this._createSubscriptions(source, store);
         return (this._subscribers[name] = {
             source,
@@ -130,8 +137,10 @@ class Blackrik
 
     _registerInternalAPI()
     {
-        this.#server.route('/commands').post(new CommandHandler(this));
-        this.#server.route('/query/:readModel/:resolver').get(new QueryHandler(this));
+        this._commandHandler = new CommandHandler(this);
+        this.#server.route('/commands').post(new RequestHandler(this._commandHandler.handle));
+        this._queryHandler = new QueryHandler(this);
+        this.#server.route('/query/:readModel/:resolver').get(new RequestHandler(this._queryHandler.handle));
     }
 
     _registerAPI()
@@ -157,13 +166,13 @@ class Blackrik
 
     async start()
     {
-        await this._initEventBus();
+        await this._initEventHandler();
         await this._initEventStore();
 
         this._processAggregates();
         await this._processSubscribers();
 
-        await this._eventBus.start(); // needs to run after subscriptions
+        await this._eventHandler.start(); // needs to run after subscriptions
 
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();

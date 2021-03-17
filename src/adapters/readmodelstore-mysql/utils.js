@@ -21,7 +21,7 @@ function validateIdentifier(identifier)
 function quoteIdentifier(identifier)
 {
     validateIdentifier(identifier);
-    
+
     if(identifier === '*')
         return identifier;
     
@@ -41,10 +41,17 @@ function convertValue(value)
     {
         return null;
     }
+    // see https://github.com/sidorares/node-mysql2/issues/1239
+    //========MySQL 8.0.22 (and higher) fix========
+    if(typeof value === 'number')
+    {
+        return String(value);
+    }
+      
     return value;
 }
 
-export {
+module.exports =  {
     validateIdentifier,
     quoteIdentifier,
     convertValue,

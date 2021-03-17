@@ -21,38 +21,41 @@ afterAll(() => {
 
 test('test with MySQL DB', async () => {
 
+    let result;
+
     await adapter.dropTable(tableName);
 
     await adapter.createTable(tableName, {
         id: {
             type: 'Integer',
             primaryKey: true,
+            autoIncrement: true,
         },
         test: {
             type: 'String',
         }
     });
 
-    await adapter.insert(tableName, {
-        id: 1,
+    result = await adapter.insert(tableName, {
         test: 'Hello world'
     });
+    const id = result.id;
 
-    await adapter.update(tableName,{id: 1}, {test: 'Hello world!'});
+    await adapter.update(tableName,{id}, {test: 'Hello world!'});
 
-    const result = await adapter.findOne(tableName, {
+    result = await adapter.findOne(tableName, {
         conditions: {
-            id: 1,
+            id,
         }
     });
 
-    const expectedResult = {'id':1,'test':'Hello world!'};
+    const expectedResult = {'id':id,'test':'Hello world!'};
     expect(result).toEqual(expectedResult);
 
     const count = await adapter.count(tableName, {});
     expect(count).toEqual(1);
 
-    await adapter.delete(tableName, {id: 1});
+    await adapter.delete(tableName, {id});
 
     const count2 = await adapter.count(tableName, {});
     expect(count2).toEqual(0);

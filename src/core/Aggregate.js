@@ -26,53 +26,45 @@ class Aggregate
         this.constructor.isValid(this);
     }
 
-    _loadEvents(id)
+    hasProjection(eventType)
     {
-        //TODO load all events from eventstore that belong to aggregateId
-        return [
-            {
-                type: 'USER_UPDATED',
-                payload: {
-                    name: '1'
-                }
-            },
-            {
-                type: 'USER_UPDATED',
-                payload: {
-                    name: '2'
-                }
-            },
-            {
-                type: 'USER_UPDATED',
-                payload: {
-                    name: '3'
-                }
-            },
-            {
-                type: 'USER_UPDATED',
-                payload: {
-                    name: '4'
-                }
-            }
-        ];
+        return Object.prototype.hasOwnProperty.call(this.projection, eventType);
     }
 
-    _reduceEvents(events)
+    _reduceEvents(events, state = null)
     {
-        let state = typeof this.projection.init === 'function' 
+        state = state || (typeof this.projection.init === 'function' 
             ? this.projection.init()
-            : {};
+            : {});
         events.forEach(event => {
-            const {type: eventType} = event;
-            if(Object.prototype.hasOwnProperty.call(this.projection, eventType))
-                state = this.projection[eventType](state, event);
+            const {type} = event;
+            if(this.hasProjection(type))
+                state = this.projection[type](state, event);
         });
         return state;
     }
 
-    load(aggregateId)
+    async load(eventStore, aggregateId)
     {
-        return this._reduceEvents(this._loadEvents(aggregateId));
+        const aggregateIds = [aggregateId];
+        let state = null;
+        let next = null;
+        let latestEvent = null;
+        do
+        {
+            const {events, cursor} = await eventStore.load({
+                aggregateIds,
+                limit: 100000, //TODO outsource
+                next
+            });
+            if(events.length)
+            {
+                state = this._reduceEvents(events, state);
+                latestEvent = events.pop();
+            }
+            next = cursor;
+        } while(next);
+        return {state, latestEvent};
     }
 }
 

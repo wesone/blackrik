@@ -1,4 +1,4 @@
-import { quoteIdentifier } from './utils';
+const { quoteIdentifier } = require('./utils');
 
 const types = {
     'String': 'VARCHAR(512)',
@@ -138,6 +138,6 @@ function createTableBuilder(tableName, fieldDefinitions)
     return ['CREATE TABLE IF NOT EXISTS', quoteIdentifier(tableName), ['(', definitions, ')'].join('')].join(' ');
 }
 
-export {
+module.exports =  {
     createTableBuilder,
 };

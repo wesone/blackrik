@@ -1,5 +1,5 @@
-import { quoteIdentifier } from './utils';
-import { conditionBuilder } from './ConditionBuilder';
+const { quoteIdentifier, convertValue } = require('./utils');
+const { conditionBuilder } = require('./ConditionBuilder');
 
 function selectBuilder(tableName, queryOptions)
 {
@@ -56,7 +56,7 @@ function selectBuilder(tableName, queryOptions)
             throw new Error('limit has to be a number');
         }
         sqlList.push('LIMIT', '?');
-        parameters.push(queryOptions.limit);
+        parameters.push(convertValue(queryOptions.limit));
     }
 
     if(queryOptions.offset)
@@ -66,12 +66,12 @@ function selectBuilder(tableName, queryOptions)
             throw new Error('offset has to be a number');
         }
         sqlList.push('OFFSET', '?');
-        parameters.push(queryOptions.offset);
+        parameters.push(convertValue(queryOptions.offset));
     }
 
     return {sql: sqlList.join(' '), parameters};
 }
 
-export {
+module.exports =  {
     selectBuilder,
 };

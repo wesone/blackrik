@@ -1,5 +1,5 @@
-import { quoteIdentifier, convertValue } from './utils';
-import { conditionBuilder } from './ConditionBuilder';
+const { quoteIdentifier, convertValue } = require('./utils');
+const { conditionBuilder } = require('./ConditionBuilder');
 
 function updateBuilder(tableName, data, conditions)
 {
@@ -24,6 +24,6 @@ function updateBuilder(tableName, data, conditions)
     return {sql, parameters: values.concat(condition.parameters)};
 }
 
-export {
+module.exports =  {
     updateBuilder,
 };

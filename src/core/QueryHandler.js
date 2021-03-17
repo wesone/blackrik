@@ -1,3 +1,5 @@
+const {NotFoundError} = require('./Errors');
+
 class QueryHandler 
 {
     #blackrik;
@@ -5,23 +7,26 @@ class QueryHandler
     constructor(blackrik)
     {
         this.#blackrik = blackrik;
-        return this.handle.bind(this);
+        this.handle = this.handle.bind(this);
     }
 
-    async handle(req, res)
+    async handle(req)
     {
         const {readModel, resolver} = req.params;
+        return await this.process(readModel, resolver, req.query);
+    }
 
+    async process(readModel, resolver, query = {})
+    {
         if(!Object.prototype.hasOwnProperty.call(this.#blackrik._resolvers, readModel))
-            return res.sendStatus(404).end(); //TODO error for invalid readmodel
+            throw new NotFoundError('Unknown ReadModel');
 
         const {source: resolvers, adapter} = this.#blackrik._resolvers[readModel];
 
         if(!Object.prototype.hasOwnProperty.call(resolvers, resolver))
-            return res.sendStatus(404).end(); //TODO error for invalid resolver
+            throw new NotFoundError('Unknown resolver');
 
-        const response = await resolvers[resolver](this.#blackrik._stores[adapter], req.query);
-        res.json(response);
+        return await resolvers[resolver](this.#blackrik._stores[adapter], query);
     }
 }
 

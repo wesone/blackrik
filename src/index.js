@@ -37,6 +37,8 @@ class Blackrik
     config;
     #blackrik;
 
+    #started = false;
+
     static get ADAPTERS()
     {
         return defaultAdapters;
@@ -55,9 +57,15 @@ class Blackrik
         this.#blackrik = new Application(this);
     }
 
-    executeCommand(command)
+    async executeCommand(command, causationEvent = null)
     {
-        //TODO handle req, res objects
+        const context = {blackrik: this};
+        if(causationEvent)
+            context.causationEvent = causationEvent;
+        return !!await this.#blackrik._commandHandler.process(
+            command,
+            Object.freeze(context)
+        );
     }
 
     // scheduleCommand(crontime, command)
@@ -65,13 +73,20 @@ class Blackrik
 
     // }
 
-    // publishEvent(event)
-    // {
-
-    // }
+    async executeQuery(readModel, resolver, query)
+    {
+        return await this.#blackrik._queryHandler.process(
+            readModel,
+            resolver,
+            query
+        );
+    }
 
     async start()
     {
+        if(this.#started)
+            return;
+        this.#started = true;
         await this.#blackrik.start();
     }
 }

@@ -20,10 +20,10 @@ test('create update statement', () => {
     const expectedParameters = [
         'Hello world',
         '2021-12-17T02:24:00.000Z',
-        42,
+        '42',
         null,
         null,
-        1,
+        '1',
     ];
     const {sql, parameters} = updateBuilder(tableName, data, conditions);
     expect(sql).toEqual(expectedSQL);

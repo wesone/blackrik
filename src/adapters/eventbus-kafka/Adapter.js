@@ -42,11 +42,12 @@ class Adapter extends EventBusAdapterInterface
         await this.producer.connect();
 
         this.consumer = kafka.consumer({groupId: this.args.clientId});
-        await this.consumer.connect();
     }
 
     async start()
     {
+        await this.consumer.connect(); // connect the client after all topics were created
+        
         await this.consumer.run({
             eachMessage: this.onMessage.bind(this)
         });
