@@ -77,6 +77,15 @@ class Adapter extends EventStoreAdapterInterface
             filter.limit
         ];
 
+        // const test = await new Promise((resolve, reject) => {
+        //     this.db.execute(`SELECT * FROM events WHERE aggregateId IN ('${filter.aggregateIds.join('\',\'')}') AND type IN ('${filter.types.join('\',\'')}') AND (timestamp >= ${filter.since} AND timestamp < ${filter.until}) ORDER BY aggregateVersion ASC LIMIT ${filter.limit}`, [], (err, res) => {
+        //         if(err)
+        //             return reject(err);
+        //         resolve(res);
+        //     });
+        // });
+        // console.log(test);
+
         const events = await new Promise((resolve, reject) => {
             this.db.execute('SELECT * FROM events WHERE aggregateId IN (?) AND type IN (?) AND (timestamp >= ? AND timestamp < ?) ORDER BY aggregateVersion ASC LIMIT ?', values, (err, res) => {
                 if(err)
@@ -85,7 +94,9 @@ class Adapter extends EventStoreAdapterInterface
             });
         });
 
+        console.log(events);
         return events;
+        //TODO cursor
     }
 
     async createTable()
