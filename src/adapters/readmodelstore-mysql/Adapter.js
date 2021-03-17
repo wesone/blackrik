@@ -12,12 +12,17 @@ class Adapter extends ReadModelStoreAdapterInterface
     constructor(args)
     {
         super();
+        if(args.debugSql)
+        {
+            this.debugSql = true;
+            delete args.debugSql;
+        }
         this.args = {...args};
     }
 
     printDebugStatemant(sql, parameters)
     {
-        if(!this.args.debugSql)
+        if(!this.debugSql)
             return;
         console.log(sql, JSON.stringify(parameters ?? '[NO PARAMS]'));
     }
@@ -46,13 +51,6 @@ class Adapter extends ReadModelStoreAdapterInterface
         await this.checkConnection();
         this.printDebugStatemant(sql, parameters);
         return this.pool.execute(sql, parameters);
-    }
-
-    async query(sql, parameters)
-    {
-        await this.checkConnection();
-        this.printDebugStatemant(sql, parameters);
-        return this.pool.query(sql, parameters);
     }
 
     getStatementMetaData([results])
@@ -85,7 +83,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async find(tableName, queryOptions){
         const {sql, parameters} = selectBuilder(tableName, queryOptions);
-        return (await this.query(sql, parameters))?.[0] ?? [];
+        return (await this.exec(sql, parameters))?.[0] ?? [];
     }
 
     async findOne(tableName, queryOptions){
