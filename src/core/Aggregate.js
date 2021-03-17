@@ -52,13 +52,6 @@ class Aggregate
         let latestEvent = null;
         do
         {
-            // {
-            //     aggregateIds: Array,
-            //     types: Array,
-            //     since: Number,
-            //     until: Number,
-            //     limit: Number
-            // }
             const {events, cursor} = await eventStore.load({
                 aggregateIds,
                 limit: 100000, //TODO outsource
