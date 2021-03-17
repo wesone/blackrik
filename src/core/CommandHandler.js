@@ -79,8 +79,10 @@ class CommandHandler
         if(!event)
             return res.sendStatus(200).end();
 
-        event = this.processEvent(aggregateId, event);
-        res.json(event);
+        event.aggregateId = aggregateId;
+        event.aggregateVersion = aggregateVersion + 1;
+        return await this.processEvent(event, context.causationEvent);
+
     }
 }
 
