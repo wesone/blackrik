@@ -58,7 +58,7 @@ class Adapter extends EventStoreAdapterInterface
     {
         console.log('save');
         await new Promise((resolve, reject) => {
-            this.db.execute(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (?,?,?,?,?,?)`, Object.values(event), (err, res) => {
+            this.db.execute(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.keys(event).map(() => '?').join(',')})`, Object.values(event), (err, res) => {
                 if(err)
                     return reject(err);
                 resolve(res);
@@ -78,14 +78,13 @@ class Adapter extends EventStoreAdapterInterface
         ];
 
         const events = await new Promise((resolve, reject) => {
-            this.db.execute('SELECT * FROM events WHERE aggregateId IN (?) AND type IN (?) AND (timestamp >= ? AND timestamp < ?) LIMIT ?', values, (err, res) => {
+            this.db.execute('SELECT * FROM events WHERE aggregateId IN (?) AND type IN (?) AND (timestamp >= ? AND timestamp < ?) ORDER BY aggregateVersion ASC LIMIT ?', values, (err, res) => {
                 if(err)
                     return reject(err);
                 resolve(res);
             });
         });
 
-        console.log(events);
         return events;
     }
 
@@ -103,15 +102,17 @@ class Adapter extends EventStoreAdapterInterface
         if(!exists)
         {
             const fields = [
-                'id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY',
+                'id VARCHAR(36) UNIQUE NOT NULL',
                 'aggregateId VARCHAR(32) NOT NULL',
+                'aggregateVersion INT NOT NULL',
                 'type VARCHAR(32) NOT NULL',
                 'timestamp BIGINT NOT NULL',
                 'correlationId VARCHAR(32) NOT NULL',
                 'causationId VARCHAR(32) NOT NULL',
                 'payload TEXT NOT NULL',
+                'PRIMARY KEY(aggregateId, aggregateVersion)'
             ];
-            const query = `CREATE TABLE events (${fields.join(', ')})`;
+            const query = `CREATE TABLE events (${fields.join(',')})`;
             await new Promise((resolve, reject) => {
                 this.db.query(query, (err, res) => {
                     if(err)
