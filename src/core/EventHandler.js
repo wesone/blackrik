@@ -8,7 +8,7 @@ class EventHandler
 
     async start()
     {
-        await this.eventBus.start();
+        return await this.eventBus.start();
     }
 
     async persistEvent(event)
@@ -19,12 +19,12 @@ class EventHandler
 
     async sendEvent(event)
     {
-        await this.eventBus.publish(event);
+        return await this.eventBus.publish(event);
     }
 
     async subscribe(type, callback)
     {
-        await this.eventBus.subscribe(type, callback);
+        return await this.eventBus.subscribe(type, callback);
     }
 
     async publish(event)

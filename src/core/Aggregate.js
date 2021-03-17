@@ -49,7 +49,7 @@ class Aggregate
         const aggregateIds = [aggregateId];
         let state = null;
         let next = null;
-        let latestEvent = null;
+        let latestEvent = {};
         do
         {
             // {

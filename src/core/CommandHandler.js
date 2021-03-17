@@ -1,5 +1,5 @@
 const Event = require('./Event');
-const {BadRequestError} = require('./Errors');
+const {BadRequestError, ConflictError} = require('./Errors');
 
 class CommandHandler 
 {
@@ -47,8 +47,8 @@ class CommandHandler
         event = new Event(event);
 
         const success = await this.#blackrik._eventHandler.publish(event);
-        // if(!success)
-        //     throw new ()
+        if(!success)
+            throw new ConflictError('Events overlapped');
         return event;
     }
 
