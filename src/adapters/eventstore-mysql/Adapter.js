@@ -68,12 +68,6 @@ class Adapter extends EventStoreAdapterInterface
 
     async load(filter)
     {
-        // TODO aggregateIds: Array,
-        //      types: Array,
-        //      since: Number,
-        //      until: Number,
-        //      limit: Number
-
         console.log('load');
         const values = [
             filter.aggregateIds,
@@ -84,7 +78,7 @@ class Adapter extends EventStoreAdapterInterface
         ];
 
         const events = await new Promise((resolve, reject) => {
-            this.db.format('SELECT * FROM events WHERE aggregateId IN (?) AND type IN (?) AND (timestamp >= ? AND timestamp < ?) LIMIT ?', values, (err, res) => {
+            this.db.execute('SELECT * FROM events WHERE aggregateId IN (?) AND type IN (?) AND (timestamp >= ? AND timestamp < ?) LIMIT ?', values, (err, res) => {
                 if(err)
                     return reject(err);
                 resolve(res);
