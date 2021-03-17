@@ -57,11 +57,14 @@ class Blackrik
         this.#blackrik = new Application(this);
     }
 
-    async executeCommand(command)
+    async executeCommand(command, causationEvent = null)
     {
+        const context = {blackrik: this};
+        if(causationEvent)
+            context.causationEvent = causationEvent;
         return !!await this.#blackrik._commandHandler.process(
             command,
-            Object.freeze({blackrik: this})
+            Object.freeze(context)
         );
     }
 

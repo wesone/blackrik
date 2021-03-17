@@ -36,10 +36,17 @@ class CommandHandler
         });
     }
 
-    async processEvent(aggregateId, event)
+    async processEvent(event, aggregateId, causationEvent = null)
     {
         event.aggregateId = aggregateId;
+        if(causationEvent)
+        {
+            const {correlationId, id} = causationEvent;
+            event.correlationId = correlationId;
+            event.causationId = id;
+        }
         event = new Event(event);
+
         await this.#blackrik._eventHandler.publish(event);
         return event;
     }
@@ -69,10 +76,10 @@ class CommandHandler
             command, 
             await aggregate.load(this.#blackrik._eventStore, aggregateId), 
             context
-        );  
+        );
         
         return event
-            ? await this.processEvent(aggregateId, event)
+            ? await this.processEvent(event, aggregateId, context.causationEvent)
             : null;
     }
 }
