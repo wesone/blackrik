@@ -1,6 +1,5 @@
 
 import Adapter from '../../../src/adapters/readmodelstore-mysql/Adapter';
-
 const tableName = 'TestTable';
 
 let adapter;
@@ -16,7 +15,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-    return adapter.diconnect();
+    return adapter.disconnect();
 });
 
 test('test with MySQL DB', async () => {
@@ -25,7 +24,7 @@ test('test with MySQL DB', async () => {
 
     await adapter.dropTable(tableName);
 
-    await adapter.createTable(tableName, {
+    await adapter.defineTable(tableName, {
         id: {
             type: 'Integer',
             primaryKey: true,

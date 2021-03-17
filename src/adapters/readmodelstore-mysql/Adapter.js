@@ -40,7 +40,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         this.pool = await mysql.createPool(this.args);
     }
 
-    async diconnect()
+    async disconnect()
     {
         await this.pool.end();
         this.pool = null;
@@ -62,7 +62,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         };
     }
 
-    async createTable(tableName, fieldDefinitions){
+    async defineTable(tableName, fieldDefinitions){
         const sql = createTableBuilder(tableName, fieldDefinitions);
         return await this.exec(sql);
     }

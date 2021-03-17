@@ -4,7 +4,7 @@ const tableName = 'users';
 
 module.exports = {
     init: async store => {
-        await store.createTable(tableName, {
+        await store.defineTable(tableName, {
             id: {
                 type: 'uuid',
                 primaryKey: true,
