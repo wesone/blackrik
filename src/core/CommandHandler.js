@@ -71,7 +71,10 @@ class CommandHandler
         if(!Object.prototype.hasOwnProperty.call(commands, type))
             throw new BadRequestError('Unknown type');
 
-        const {state, latestEvent: {aggregateVersion}} = await aggregate.load(this.#blackrik._eventStore, aggregateId);
+        const {state, latestEvent} = await aggregate.load(this.#blackrik._eventStore, aggregateId);
+        const aggregateVersion = latestEvent
+            ? latestEvent.aggregateVersion
+            : 0;            
         command.aggregateVersion = aggregateVersion;
         
         const event = await commands[type](

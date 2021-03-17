@@ -49,7 +49,7 @@ class Aggregate
         const aggregateIds = [aggregateId];
         let state = null;
         let next = null;
-        let latestEvent = {};
+        let latestEvent = null;
         do
         {
             // {
@@ -64,9 +64,12 @@ class Aggregate
                 limit: 100000, //TODO outsource
                 next
             });
-            state = this._reduceEvents(events, state);
+            if(events.length)
+            {
+                state = this._reduceEvents(events, state);
+                latestEvent = events.pop();
+            }
             next = cursor;
-            latestEvent = events.pop();
         } while(next);
         return {state, latestEvent};
     }
