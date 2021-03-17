@@ -13,6 +13,7 @@ class EventHandler
 
     async persistEvent(event)
     {
+        //TODO create snapshot if too many events are stored
         await this.blackrik._eventStore.save(event);
         return event;
     }
