@@ -52,21 +52,17 @@ class Aggregate
         let latestEvent = null;
         do
         {
-            // {
-            //     aggregateIds: Array,
-            //     types: Array,
-            //     since: Number,
-            //     until: Number,
-            //     limit: Number
-            // }
             const {events, cursor} = await eventStore.load({
                 aggregateIds,
                 limit: 100000, //TODO outsource
                 next
             });
-            state = this._reduceEvents(events, state);
+            if(events.length)
+            {
+                state = this._reduceEvents(events, state);
+                latestEvent = events.pop();
+            }
             next = cursor;
-            latestEvent = events.pop();
         } while(next);
         return {state, latestEvent};
     }

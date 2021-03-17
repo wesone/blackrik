@@ -1,5 +1,5 @@
 const Event = require('./Event');
-const {BadRequestError} = require('./Errors');
+const {BadRequestError, ConflictError} = require('./Errors');
 
 class CommandHandler 
 {
@@ -47,8 +47,8 @@ class CommandHandler
         event = new Event(event);
 
         const success = await this.#blackrik._eventHandler.publish(event);
-        // if(!success)
-        //     throw new ()
+        if(!success)
+            throw new ConflictError('Events overlapped');
         return event;
     }
 
@@ -71,7 +71,10 @@ class CommandHandler
         if(!Object.prototype.hasOwnProperty.call(commands, type))
             throw new BadRequestError('Unknown type');
 
-        const {state, latestEvent: {aggregateVersion}} = await aggregate.load(this.#blackrik._eventStore, aggregateId);
+        const {state, latestEvent} = await aggregate.load(this.#blackrik._eventStore, aggregateId);
+        const aggregateVersion = latestEvent
+            ? latestEvent.aggregateVersion
+            : 0;            
         command.aggregateVersion = aggregateVersion;
         
         const event = await commands[type](

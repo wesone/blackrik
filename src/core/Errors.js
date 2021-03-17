@@ -46,3 +46,13 @@ class NotFoundError extends BaseError
     }
 }
 module.exports.NotFoundError = NotFoundError;
+
+class ConflictError extends BaseError
+{
+    constructor(message = 'Conflict')
+    {
+        super(message);
+        this.code = 409;
+    }
+}
+module.exports.ConflictError = ConflictError;

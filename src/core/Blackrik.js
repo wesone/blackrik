@@ -58,6 +58,11 @@ class Blackrik
         if(!this._stores[adapterName] && !(this._stores[adapterName] = Adapter.create(this.config.readModelStoreAdapters[adapterName])))
             throw Error(`ReadModel adapter '${adapterName}' is invalid.`);
         return this._stores[adapterName];
+
+        //TODO hook into defineTable to detect the need of a replay 
+        // return new Proxy(this._stores[adapterName], {
+
+        // });
     }
 
     async _createSubscriptions(eventMap, store)
@@ -75,13 +80,15 @@ class Blackrik
 
     async _registerSubscribers(name, source, adapter)
     {
-        if(!adapter || !adapter.length)
+        if(this._subscribers[name])
+            throw Error(`Duplicate ReadModel or Saga name '${name}'.`);
+
+        if(!adapter)
             adapter = 'default';
 
         const store = this._createReadModelStore(adapter);
-        if(this._subscribers[name])
-            throw Error(`Duplicate ReadModel or Saga name '${name}'.`);
-        await source.init(store);
+        if(typeof source.init === 'function')
+            await source.init(store);
         await this._createSubscriptions(source, store);
         return (this._subscribers[name] = {
             source,
