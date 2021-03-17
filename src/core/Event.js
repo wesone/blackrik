@@ -18,6 +18,7 @@ class Event
     {
         const {
             aggregateId,
+            aggregateVersion = 0,
             type,
             correlationId = null,
             causationId = null,
@@ -28,6 +29,7 @@ class Event
         this.#data = {
             id,
             aggregateId,
+            aggregateVersion,
             type,
             timestamp: Date.now(),
             correlationId: correlationId || id,

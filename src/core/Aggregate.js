@@ -49,6 +49,7 @@ class Aggregate
         const aggregateIds = [aggregateId];
         let state = null;
         let next = null;
+        let latestEvent = null;
         do
         {
             // {
@@ -65,8 +66,9 @@ class Aggregate
             });
             state = this._reduceEvents(events, state);
             next = cursor;
+            latestEvent = events.pop();
         } while(next);
-        return state;
+        return {state, latestEvent};
     }
 }
 

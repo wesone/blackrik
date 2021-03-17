@@ -1,14 +1,14 @@
 class EventHandler
 {
-    constructor(blackrik, bus)
+    constructor(blackrik, eventBus)
     {
         this.blackrik = blackrik;
-        this.bus = bus;
+        this.eventBus = eventBus;
     }
 
     async start()
     {
-        await this.bus.start();
+        await this.eventBus.start();
     }
 
     async persistEvent(event)
@@ -19,19 +19,19 @@ class EventHandler
 
     async sendEvent(event)
     {
-        await this.bus.publish(event);
+        await this.eventBus.publish(event);
     }
 
     async subscribe(type, callback)
     {
-        await this.bus.subscribe(type, callback);
+        await this.eventBus.subscribe(type, callback);
     }
 
     async publish(event)
     {
-        //TODO implement optimistic concurrency control
         return this.persistEvent(event)
-            .then(this.sendEvent.bind(this));
+            .then(this.sendEvent.bind(this))
+            .catch(() => false);
     }
 }
 

@@ -36,9 +36,8 @@ class CommandHandler
         });
     }
 
-    async processEvent(event, aggregateId, causationEvent = null)
+    async processEvent(event, causationEvent = null)
     {
-        event.aggregateId = aggregateId;
         if(causationEvent)
         {
             const {correlationId, id} = causationEvent;
@@ -47,7 +46,9 @@ class CommandHandler
         }
         event = new Event(event);
 
-        await this.#blackrik._eventHandler.publish(event);
+        const success = await this.#blackrik._eventHandler.publish(event);
+        // if(!success)
+        //     throw new ()
         return event;
     }
 
@@ -59,8 +60,6 @@ class CommandHandler
     async process(args, context = {})
     {
         const command = this.createCommand(args);
-        //TODO load aggregateVersion
-
         const {aggregateName, aggregateId, type} = command;
 
         if(!this.hasAggregate(aggregateName))
@@ -70,17 +69,23 @@ class CommandHandler
         const {commands} = aggregate;
 
         if(!Object.prototype.hasOwnProperty.call(commands, type))
-            throw new BadRequestError('Unknown command');
+            throw new BadRequestError('Unknown type');
+
+        const {state, latestEvent: {aggregateVersion}} = await aggregate.load(this.#blackrik._eventStore, aggregateId);
+        command.aggregateVersion = aggregateVersion;
         
         const event = await commands[type](
             command, 
-            await aggregate.load(this.#blackrik._eventStore, aggregateId), 
+            state, 
             context
         );
         
-        return event
-            ? await this.processEvent(event, aggregateId, context.causationEvent)
-            : null;
+        if(!event)
+            return null;
+
+        event.aggregateId = aggregateId;
+        event.aggregateVersion = aggregateVersion + 1;
+        return await this.processEvent(event, context.causationEvent)
     }
 }
 
