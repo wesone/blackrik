@@ -1,6 +1,5 @@
 
 import Adapter from '../../../src/adapters/readmodelstore-mysql/Adapter';
-
 const tableName = 'TestTable';
 
 let adapter;
@@ -16,7 +15,7 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-    return adapter.diconnect();
+    return adapter.disconnect();
 });
 
 test('test with MySQL DB', async () => {
@@ -25,7 +24,7 @@ test('test with MySQL DB', async () => {
 
     await adapter.dropTable(tableName);
 
-    await adapter.createTable(tableName, {
+    await adapter.defineTable(tableName, {
         id: {
             type: 'Integer',
             primaryKey: true,
@@ -59,5 +58,58 @@ test('test with MySQL DB', async () => {
 
     const count2 = await adapter.count(tableName, {});
     expect(count2).toEqual(0);
+
+});
+
+test('table schema changes', async () => {
+    let result;
+
+    const schema1 = {
+        id: {
+            type: 'Integer',
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        test: {
+            type: 'String',
+        }
+    };
+
+    const schema2 = {
+        id: {
+            type: 'Integer',
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        test: {
+            type: 'String',
+        },
+        test2: {
+            type: 'Boolean'
+        }
+    };
+
+    await adapter.dropTable(tableName);
+
+    await adapter.defineTable(tableName, schema1);
+
+    await adapter.defineTable(tableName, schema2);
+
+    result = await adapter.insert(tableName, {
+        test: 'Hello world!',
+        test2: true
+    });
+    const id = result.id;
+
+    await adapter.defineTable(tableName, schema2);
+
+    result = await adapter.findOne(tableName, {
+        conditions: {
+            id,
+        }
+    });
+
+    const expectedResult = {'id':id,'test':'Hello world!', test2: 1};
+    expect(result).toEqual(expectedResult);
 
 });

@@ -5,9 +5,7 @@ module.exports = {
         console.log('Create User Command', command, state, context);
         return {
             type: USER_CREATED,
-            correlationId: '0',
-            causationId: '0',
-            payload: {}
+            payload: {name: 'Test User'}
         };
     }
 };

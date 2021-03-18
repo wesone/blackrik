@@ -5,8 +5,9 @@ const {
 
 module.exports = {
     init: () => ({}),
-    [USER_CREATED]: (state, event) => ({
-        ...state
+    [USER_CREATED]: (state, {payload}) => ({
+        ...state,
+        ...payload
     }),
     [USER_UPDATED]: (state, {payload}) => ({
         ...state,

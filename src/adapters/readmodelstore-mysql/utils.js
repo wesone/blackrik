@@ -22,7 +22,7 @@ function quoteIdentifier(identifier)
 {
     validateIdentifier(identifier);
 
-    if(identifier === '*')
+    if(identifier === '*' || identifier === 'information_schema.TABLES')
         return identifier;
     
     identifier.replace(new RegExp(identifierPrefix, 'g'), '');
