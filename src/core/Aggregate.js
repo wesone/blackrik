@@ -57,7 +57,7 @@ class Aggregate
             const {events, cursor} = await eventStore.load({
                 aggregateIds,
                 limit: EVENT_LIMIT_AGGREGATE,
-                next
+                cursor: next
             });
             if(events.length)
             {

@@ -39,16 +39,16 @@ class EventHandler
 
     async replayEvents(types)
     {
-        console.log('Replaying events:', types.join(', '));
+        let next = null;
         do
         {
             const {events, cursor} = await this.blackrik._eventStore.load({
                 types,
                 limit: EVENT_LIMIT_REPLAY,
-                next
+                cursor: next
             });
             if(events.length)
-                await Promise.all(events.map(event => this.sendEvent(event)));
+                await Promise.all(events.map(event => this.sendEvent({...event, isReplay: true})));
             next = cursor;
         } while(next);
     }

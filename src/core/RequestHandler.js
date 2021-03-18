@@ -20,7 +20,10 @@ class RequestHandler
         catch(e)
         {
             if(!e.status)
+            {
                 console.error(e);
+                return res.sendStatus(500).end(); // do not expose critical errors
+            }
             return res.status(e.status || 500).send(e.message || e).end();
         }
     }

@@ -64,21 +64,7 @@ class Blackrik
         return this._stores[adapterName];
     }
 
-    async _createSubscriptions(eventMap, store)
-    {
-        const promises = [];
-        Object.entries(eventMap).forEach(([eventType, handler]) => {
-            if(eventType !== CONSTANTS.READMODEL_INIT_FUNCTION)
-                promises.push(
-                    this._eventHandler.subscribe(eventType, async event => {
-                        await handler(store, event);
-                    })
-                );
-        });
-        return Promise.all(promises);
-    }
-
-    _wrapReadModelStore(adapter, source)
+    _wrapReadModelStore(adapter, handlers)
     {
         const blackrik = this;
         return new Proxy(this._createReadModelStore(adapter), {
@@ -88,7 +74,7 @@ class Blackrik
                         const created = await target[prop](...args);
                         if(created) // mark readmodel events for replay
                             blackrik.#replayEvents.push(
-                                ...Object.keys(source)
+                                ...Object.keys(handlers)
                                     .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
                             );
                         return created;
@@ -98,7 +84,20 @@ class Blackrik
         });
     }
 
-    async _registerSubscribers(name, source, adapter)
+    async _createSubscriptions(eventMap, store, callback)
+    {
+        await Promise.all(
+            Object.entries(eventMap).map(
+                ([eventType, handler]) =>
+                    eventType !== CONSTANTS.READMODEL_INIT_FUNCTION && 
+                        this._eventHandler.subscribe(eventType, async event => {
+                            await callback(handler, store, event);
+                        })
+            )
+        );
+    }
+
+    async _registerSubscribers(name, handlers, adapter, callback)
     {
         if(this._subscribers[name])
             throw Error(`Duplicate ReadModel or Saga name '${name}'.`);
@@ -106,33 +105,52 @@ class Blackrik
         if(!adapter)
             adapter = CONSTANTS.DEFAULT_ADAPTER;
 
-        const store = this._wrapReadModelStore(adapter, source);
-        if(typeof source[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function')
-            await source[CONSTANTS.READMODEL_INIT_FUNCTION](store);
-        await this._createSubscriptions(source, store);
+        const store = this._wrapReadModelStore(adapter, handlers);
+        if(typeof handlers[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function')
+            await handlers[CONSTANTS.READMODEL_INIT_FUNCTION](store);
+
+        await this._createSubscriptions(handlers, store, callback);
+
         return (this._subscribers[name] = {
-            source,
+            handlers,
             adapter
         });
     }
 
     async _processReadModels()
     {
-        const promises = [];
-        this.config.readModels.forEach(({name, projection, resolvers, adapter}) => {
-            promises.push(
-                this._registerSubscribers(name, projection, adapter)
-                    .then(({adapter}) => (this._resolvers[name] = {source: resolvers, adapter}))
-            );
-        });
-        return Promise.all(promises);
+        return Promise.all(
+            this.config.readModels.map(
+                ({name, projection, resolvers, adapter}) => 
+                    this._registerSubscribers(name, projection, adapter, async (handler, store, event) => await handler(store, event))
+                        .then(({adapter}) => (this._resolvers[name] = {handlers: resolvers, adapter}))
+            )
+        );
     }
 
     async _processSagas()
     {
-        const promises = [];
-        this.config.sagas.forEach(({name, source, adapter}) => promises.push(this._registerSubscribers(name, source, adapter))); //TODO detect replay
-        return Promise.all(promises);
+        return Promise.all(
+            this.config.sagas.map(
+                ({name, source: {handlers, sideEffects}, adapter}) =>
+                    this._registerSubscribers(
+                        name,
+                        handlers,
+                        adapter,
+                        async (handler, store, event) => await handler(
+                            store,
+                            event,
+                            new Proxy(sideEffects, {
+                                get: (target, prop) => {
+                                    //TODO add blackrick instance functions
+                                    //TODO maybe return noop function if event.isReplay === true
+                                    return Reflect.get(...arguments);
+                                }
+                            })
+                        )
+                    )
+            )
+        );
     }
 
     async _processSubscribers()
@@ -191,16 +209,24 @@ class Blackrik
 
     async start()
     {
+        console.log('Initialize EventHandler');
         await this._initEventHandler();
+        console.log('Initialize EventStore');
         await this._initEventStore();
 
+        console.log('Process Aggregates');
         this._processAggregates();
+        console.log('Process Subscribers');
         await this._processSubscribers();
 
+        console.log('Start EventHandler');
         await this._eventHandler.start(); // needs to run after subscriptions
 
         if(this.#replayEvents.length)
+        {
+            console.log('Replaying events:', this.#replayEvents.join(', '));
             await this._eventHandler.replayEvents(this.#replayEvents);
+        }
 
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();
