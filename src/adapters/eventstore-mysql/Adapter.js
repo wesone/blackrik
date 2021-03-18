@@ -1,5 +1,5 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -8,7 +8,6 @@ class Adapter extends EventStoreAdapterInterface
 
     constructor(config)
     {
-        console.log('constructor');
         super();
         this.config = config;
         this.validateConfig();
@@ -33,11 +32,9 @@ class Adapter extends EventStoreAdapterInterface
     {
         console.log('init');
         await this.createDatabase();
-        this.db = mysql.createConnection(this.config);
+        this.db = await mysql.createConnection(this.config);
         await this.db.connect();
         await this.createTable();
-        // todo check if scheme is valid
-
         // see https://github.com/sidorares/node-mysql2/issues/1239
         //========MySQL 8.0.22 (and higher) fix========
         const originalExecute = this.db.execute.bind(this.db);
@@ -56,14 +53,9 @@ class Adapter extends EventStoreAdapterInterface
 
     async save(event)
     {
-        console.log('save');
-        await new Promise((resolve, reject) => {
-            this.db.execute(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.keys(event).map(() => '?').join(',')})`, Object.values(event), (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res);
-            });
-        });
+        await this.db.execute(
+            `INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.keys(event).map(() => '?').join(',')})`,
+            Object.values(event));
     }
 
     async load(filter)
@@ -75,37 +67,27 @@ class Adapter extends EventStoreAdapterInterface
         values.push(filter.since);
         values.push(filter.until);
         values.push(filter.limit);
-        const events = await new Promise((resolve, reject) => {
-            this.db.execute(`SELECT * FROM events WHERE aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')}) AND type IN (${filter.types.map(() => '?').join(',')}) AND (timestamp >= ? AND timestamp < ?) ORDER BY position ASC LIMIT ?`, values, (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res);
-            });
-        });
-
-        const rows = await new Promise((resolve, reject) => {
-            this.db.execute('SELECT FOUND_ROWS() FROM events', values, (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res);
-            });
-        });
-
-        return { events, rows: rows[0]['FOUND_ROWS()'] };
+        values.push(filter.limit * (filter.cursor - 1));
+        const events = await this.db.execute(
+            `SELECT * FROM events WHERE aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')}) AND type IN (${filter.types.map(() => '?').join(',')}) AND (timestamp >= ? AND timestamp < ?) ORDER BY position ASC LIMIT ? OFFSET ?`,
+            values
+        );
+        return { events: events[0], cursor: filter.cursor };
     }
 
     async createTable()
     {
         console.log('createTable');
-        const exists = await new Promise((resolve, reject) => {
-            this.db.query(`SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = '${this.config.database}') AND (TABLE_NAME = 'events')`, (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res[0]['count(*)']);
-            });
-        });
+        const exists = await this.db.execute(
+            'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')',
+            [this.config.database]
+        );
 
-        if(!exists)
+        if(exists[0][0]['count(*)'])
+        {
+            // TODO validate scheme
+        }
+        else
         {
             const fields = [
                 'id VARCHAR(36) NOT NULL',
@@ -120,42 +102,32 @@ class Adapter extends EventStoreAdapterInterface
                 'PRIMARY KEY (id)',
                 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
             ];
-            const query = `CREATE TABLE events (${fields.join(',')})`;
-            await new Promise((resolve, reject) => {
-                this.db.query(query, (err, res) => {
-                    if(err)
-                        return reject(err);
-                    resolve(res);
-                });
-            });
+            await this.db.execute(
+                `CREATE TABLE events (${fields.join(',')})`,
+                fields
+            );
         }
     }
 
     async createDatabase()
     {
         console.log('createDatabase');
-        const connection = mysql.createConnection({
+        const db = await mysql.createConnection({
             host: this.config.host,
             port: this.config.port,
             user: this.config.user,
             password: this.config.password
         });
+        await db.execute(
+            `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
+            []
+        );
+        await db.end();
+    }
 
-        await new Promise((resolve, reject) => {
-            connection.query('CREATE DATABASE IF NOT EXISTS eventStore', (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res);
-            });
-        });
-
-        await new Promise((resolve, reject) => {
-            connection.end(err => {
-                if(err)
-                    return reject(err);
-                resolve();
-            });
-        });
+    async close()
+    {
+        await this.db.end();
     }
 }
 
