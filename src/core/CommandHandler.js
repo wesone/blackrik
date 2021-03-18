@@ -31,9 +31,9 @@ class CommandHandler
 
     buildContext(req)
     {
-        return Object.freeze({
+        return {
             blackrik: req.blackrik
-        });
+        };
     }
 
     async processEvent(event, causationEvent = null)
@@ -80,7 +80,7 @@ class CommandHandler
         const event = await commands[type](
             command, 
             state, 
-            context
+            Object.freeze(context)
         );
         
         if(!event)

@@ -64,7 +64,7 @@ class Blackrik
             context.causationEvent = causationEvent;
         return !!await this.#blackrik._commandHandler.process(
             command,
-            Object.freeze(context)
+            context
         );
     }
 
