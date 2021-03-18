@@ -1,5 +1,6 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
 const mysql = require('mysql2/promise');
+const yup = require('yup');
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -61,13 +62,14 @@ class Adapter extends EventStoreAdapterInterface
     async load(filter)
     {
         console.log('load');
-        // Leider kann man nicht einfach Arrays mit einem Placeholder in execute nutzen,
-        // daher etwas umständlicher gelöst https://github.com/sidorares/node-mysql2/issues/476
-        const values = filter.aggregateIds.concat(filter.types);
+        // execute can't handle arrays as placeholder, see https://github.com/sidorares/node-mysql2/issues/476
+        const values = [];
+        filter.aggregateIds.forEach(aggregateId => values.push(aggregateId));
+        filter.types.forEach(type => values.push(type));
         values.push(filter.since);
         values.push(filter.until);
         values.push(filter.limit);
-        values.push(filter.limit * (filter.cursor - 1));
+        values.push(filter.limit * (filter.cursor));
         const events = await this.db.execute(
             `SELECT * FROM events WHERE aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')}) AND type IN (${filter.types.map(() => '?').join(',')}) AND (timestamp >= ? AND timestamp < ?) ORDER BY position ASC LIMIT ? OFFSET ?`,
             values
@@ -92,12 +94,12 @@ class Adapter extends EventStoreAdapterInterface
             const fields = [
                 'id VARCHAR(36) NOT NULL',
                 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
-                'aggregateId VARCHAR(32) NOT NULL',
+                'aggregateId VARCHAR(36) NOT NULL',
                 'aggregateVersion INT NOT NULL',
                 'type VARCHAR(32) NOT NULL',
                 'timestamp BIGINT NOT NULL',
-                'correlationId VARCHAR(32) NOT NULL',
-                'causationId VARCHAR(32) NOT NULL',
+                'correlationId VARCHAR(36) NOT NULL',
+                'causationId VARCHAR(36)',
                 'payload TEXT NOT NULL',
                 'PRIMARY KEY (id)',
                 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
