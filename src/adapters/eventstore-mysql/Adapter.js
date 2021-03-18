@@ -69,34 +69,29 @@ class Adapter extends EventStoreAdapterInterface
     async load(filter)
     {
         console.log('load');
-        const values = [
-            filter.aggregateIds,
-            filter.types,
-            filter.since,
-            filter.until,
-            filter.limit
-        ];
-
-        // const test = await new Promise((resolve, reject) => {
-        //     this.db.execute(`SELECT * FROM events WHERE aggregateId IN ('${filter.aggregateIds.join('\',\'')}') AND type IN ('${filter.types.join('\',\'')}') AND (timestamp >= ${filter.since} AND timestamp < ${filter.until}) ORDER BY aggregateVersion ASC LIMIT ${filter.limit}`, [], (err, res) => {
-        //         if(err)
-        //             return reject(err);
-        //         resolve(res);
-        //     });
-        // });
-        // console.log(test);
-
+        // Leider kann man nicht einfach Arrays mit einem Placeholder in execute nutzen,
+        // daher etwas umständlicher gelöst https://github.com/sidorares/node-mysql2/issues/476
+        const values = filter.aggregateIds.concat(filter.types);
+        values.push(filter.since);
+        values.push(filter.until);
+        values.push(filter.limit);
         const events = await new Promise((resolve, reject) => {
-            this.db.execute('SELECT * FROM events WHERE aggregateId IN (?) AND type IN (?) AND (timestamp >= ? AND timestamp < ?) ORDER BY aggregateVersion ASC LIMIT ?', values, (err, res) => {
+            this.db.execute(`SELECT * FROM events WHERE aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')}) AND type IN (${filter.types.map(() => '?').join(',')}) AND (timestamp >= ? AND timestamp < ?) ORDER BY position ASC LIMIT ?`, values, (err, res) => {
                 if(err)
                     return reject(err);
                 resolve(res);
             });
         });
 
-        console.log(events);
-        return events;
-        //TODO cursor
+        const rows = await new Promise((resolve, reject) => {
+            this.db.execute('SELECT FOUND_ROWS() FROM events', values, (err, res) => {
+                if(err)
+                    return reject(err);
+                resolve(res);
+            });
+        });
+
+        return { events, rows: rows[0]['FOUND_ROWS()'] };
     }
 
     async createTable()
@@ -113,7 +108,8 @@ class Adapter extends EventStoreAdapterInterface
         if(!exists)
         {
             const fields = [
-                'id VARCHAR(36) UNIQUE NOT NULL',
+                'id VARCHAR(36) NOT NULL',
+                'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
                 'aggregateId VARCHAR(32) NOT NULL',
                 'aggregateVersion INT NOT NULL',
                 'type VARCHAR(32) NOT NULL',
@@ -121,7 +117,8 @@ class Adapter extends EventStoreAdapterInterface
                 'correlationId VARCHAR(32) NOT NULL',
                 'causationId VARCHAR(32) NOT NULL',
                 'payload TEXT NOT NULL',
-                'PRIMARY KEY(aggregateId, aggregateVersion)'
+                'PRIMARY KEY (id)',
+                'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
             ];
             const query = `CREATE TABLE events (${fields.join(',')})`;
             await new Promise((resolve, reject) => {
