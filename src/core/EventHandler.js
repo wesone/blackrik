@@ -42,7 +42,7 @@ class EventHandler
         console.log('Replaying events:', types.join(', '));
         do
         {
-            const {events, cursor} = await eventStore.load({
+            const {events, cursor} = await this.blackrik._eventStore.load({
                 types,
                 limit: EVENT_LIMIT_REPLAY,
                 next
