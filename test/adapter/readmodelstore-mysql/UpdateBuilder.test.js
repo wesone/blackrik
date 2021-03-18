@@ -19,7 +19,7 @@ test('create update statement', () => {
     const expectedSQL = 'UPDATE `TestTable` SET `test` = ?, `testDate` = ?, `testInt` = ?, `testNull` = ?, `testUndefined` = ? WHERE `id` = ?';
     const expectedParameters = [
         'Hello world',
-        '2021-12-17T02:24:00.000Z',
+        '2021-12-17 02:24:00',
         '42',
         null,
         null,
