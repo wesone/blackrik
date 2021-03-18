@@ -60,3 +60,56 @@ test('test with MySQL DB', async () => {
     expect(count2).toEqual(0);
 
 });
+
+test('table schema changes', async () => {
+    let result;
+
+    const schema1 = {
+        id: {
+            type: 'Integer',
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        test: {
+            type: 'String',
+        }
+    };
+
+    const schema2 = {
+        id: {
+            type: 'Integer',
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        test: {
+            type: 'String',
+        },
+        test2: {
+            type: 'Boolean'
+        }
+    };
+
+    await adapter.dropTable(tableName);
+
+    await adapter.defineTable(tableName, schema1);
+
+    await adapter.defineTable(tableName, schema2);
+
+    result = await adapter.insert(tableName, {
+        test: 'Hello world!',
+        test2: true
+    });
+    const id = result.id;
+
+    await adapter.defineTable(tableName, schema2);
+
+    result = await adapter.findOne(tableName, {
+        conditions: {
+            id,
+        }
+    });
+
+    const expectedResult = {'id':id,'test':'Hello world!', test2: 1};
+    expect(result).toEqual(expectedResult);
+
+});
