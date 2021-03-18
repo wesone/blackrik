@@ -32,8 +32,10 @@ module.exports = yup.object({
     sagas: yup.array(
         yup.object({
             name: yup.string().required(),
-            source: yup.object(),
-            resolvers: yup.object(),
+            source: yup.object({
+                handlers: yup.object().required(),
+                sideEffects: yup.object().required()
+            }),
             adapter: yup.string()
         })
     ),

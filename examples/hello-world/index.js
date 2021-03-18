@@ -29,7 +29,7 @@ const Blackrik = require('../../');
                 args: {
                     debugSql: true,
                     host: 'localhost',
-                    database: 'readmodels',
+                    database: 'readmodelstore',
                     user: 'root',
                     password: '1234'
                 }
