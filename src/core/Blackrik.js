@@ -224,7 +224,7 @@ class Blackrik
 
         if(this.#replayEvents.length)
         {
-            console.log('Replaying events:', types.join(', '));
+            console.log('Replaying events:', this.#replayEvents.join(', '));
             await this._eventHandler.replayEvents(this.#replayEvents);
         }
 
