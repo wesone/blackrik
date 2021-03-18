@@ -1,3 +1,5 @@
+const {EVENT_LIMIT_REPLAY} = require('./Constants');
+
 class EventHandler
 {
     constructor(blackrik, eventBus)
@@ -33,6 +35,22 @@ class EventHandler
         return this.persistEvent(event)
             .then(this.sendEvent.bind(this))
             .catch(() => false);
+    }
+
+    async replayEvents(types)
+    {
+        console.log('Replaying events:', types.join(', '));
+        do
+        {
+            const {events, cursor} = await eventStore.load({
+                types,
+                limit: EVENT_LIMIT_REPLAY,
+                next
+            });
+            if(events.length)
+                await Promise.all(events.map(event => this.sendEvent(event)));
+            next = cursor;
+        } while(next);
     }
 }
 

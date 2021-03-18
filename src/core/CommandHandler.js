@@ -72,10 +72,9 @@ class CommandHandler
             throw new BadRequestError('Unknown type');
 
         const {state, latestEvent} = await aggregate.load(this.#blackrik._eventStore, aggregateId);
-        const aggregateVersion = latestEvent
+        context.aggregateVersion = latestEvent
             ? latestEvent.aggregateVersion
-            : 0;            
-        command.aggregateVersion = aggregateVersion;
+            : 0;
         
         const event = await commands[type](
             command, 
@@ -87,8 +86,8 @@ class CommandHandler
             return null;
 
         event.aggregateId = aggregateId;
-        event.aggregateVersion = aggregateVersion + 1;
-        return await this.processEvent(event, context.causationEvent)
+        event.aggregateVersion = context.aggregateVersion + 1;
+        return await this.processEvent(event, context.causationEvent);
     }
 }
 

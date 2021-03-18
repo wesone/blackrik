@@ -1,3 +1,4 @@
+const CONSTANTS = require('./Constants');
 const Server = require('./Server');
 const Adapter = require('./Adapter');
 const EventHandler = require('./EventHandler');
@@ -14,6 +15,8 @@ class Blackrik
     #instance;
     config;
     #server;
+
+    #replayEvents = [];
 
     _eventHandler;
     _eventStore;
@@ -58,24 +61,40 @@ class Blackrik
         if(!this._stores[adapterName] && !(this._stores[adapterName] = Adapter.create(this.config.readModelStoreAdapters[adapterName])))
             throw Error(`ReadModel adapter '${adapterName}' is invalid.`);
         return this._stores[adapterName];
-
-        //TODO hook into defineTable to detect the need of a replay 
-        // return new Proxy(this._stores[adapterName], {
-
-        // });
     }
 
     async _createSubscriptions(eventMap, store)
     {
         const promises = [];
         Object.entries(eventMap).forEach(([eventType, handler]) => {
-            promises.push(
-                this._eventHandler.subscribe(eventType, async event => {
-                    await handler(store, event);
-                })
-            );
+            if(eventType !== CONSTANTS.READMODEL_INIT_FUNCTION)
+                promises.push(
+                    this._eventHandler.subscribe(eventType, async event => {
+                        await handler(store, event);
+                    })
+                );
         });
         return Promise.all(promises);
+    }
+
+    _wrapReadModelStore(adapter, source)
+    {
+        const blackrik = this;
+        return new Proxy(this._createReadModelStore(adapter), {
+            get: (target, prop) => {
+                if(prop === 'defineTable')
+                    return async function(...args){
+                        const created = await target[prop](...args);
+                        if(created) // mark readmodel events for replay
+                            blackrik.#replayEvents.push(
+                                ...Object.keys(source)
+                                    .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
+                            );
+                        return created;
+                    };
+                return Reflect.get(...arguments);
+            }
+        });
     }
 
     async _registerSubscribers(name, source, adapter)
@@ -84,11 +103,11 @@ class Blackrik
             throw Error(`Duplicate ReadModel or Saga name '${name}'.`);
 
         if(!adapter)
-            adapter = 'default';
+            adapter = CONSTANTS.DEFAULT_ADAPTER;
 
-        const store = this._createReadModelStore(adapter);
-        if(typeof source.init === 'function')
-            await source.init(store);
+        const store = this._wrapReadModelStore(adapter, source);
+        if(typeof source[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function')
+            await source[CONSTANTS.READMODEL_INIT_FUNCTION](store);
         await this._createSubscriptions(source, store);
         return (this._subscribers[name] = {
             source,
@@ -143,9 +162,9 @@ class Blackrik
     _registerInternalAPI()
     {
         this._commandHandler = new CommandHandler(this);
-        this.#server.route('/commands').post(new RequestHandler(this._commandHandler.handle));
+        this.#server.route(CONSTANTS.ROUTE_COMMAND).post(new RequestHandler(this._commandHandler.handle));
         this._queryHandler = new QueryHandler(this);
-        this.#server.route('/query/:readModel/:resolver').get(new RequestHandler(this._queryHandler.handle));
+        this.#server.route(CONSTANTS.ROUTE_QUERY).get(new RequestHandler(this._queryHandler.handle));
     }
 
     _registerAPI()
@@ -178,6 +197,9 @@ class Blackrik
         await this._processSubscribers();
 
         await this._eventHandler.start(); // needs to run after subscriptions
+
+        if(this.#replayEvents.length)
+            await this._eventHandler.replayEvents(this.#replayEvents);
 
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();

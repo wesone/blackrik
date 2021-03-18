@@ -10,6 +10,8 @@ const AdapterListScheme = require('./YupExtensions/AdapterListScheme');
 yup.adapterList = () => new AdapterListScheme();
 
 const httpMethods = require('./httpMethods');
+const {ROUTE_COMMAND, ROUTE_QUERY} = require('../core/Constants');
+const reservedRoutes = [ROUTE_COMMAND, ROUTE_QUERY]; // this would allow /query/:rm/:res :(
 
 module.exports = yup.object({
     aggregates: yup.array(
@@ -55,7 +57,7 @@ module.exports = yup.object({
         routes: yup.array(
             yup.object({
                 method: yup.string().lowercase().oneOf(httpMethods).required(),
-                path: yup.string().notOneOf(['/commands', '/query/:readModel/:resolver']).required(), // this would allow /query/:rm/:res :(
+                path: yup.string().notOneOf(reservedRoutes).required(),
                 callback: yup.function().required()
             })
         )
