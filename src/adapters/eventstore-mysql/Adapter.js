@@ -1,26 +1,26 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
 const mysql = require('mysql2/promise');
-const databaseSchema = {
-    //'id VARCHAR(36) NOT NULL',
-    // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
-    // 'aggregateId VARCHAR(36) NOT NULL',
-    // 'aggregateVersion INT NOT NULL',
-    // 'type VARCHAR(32) NOT NULL',
-    // 'timestamp BIGINT NOT NULL',
-    // 'correlationId VARCHAR(36) NOT NULL',
-    // 'causationId VARCHAR(36)',
-    // 'payload TEXT NOT NULL',
-    // 'PRIMARY KEY (id)',
-    // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
-    fields: {
-        id: {
-            Type: 'varchar'
-        }
-    },
-    options: {
-
-    }
-};
+// const databaseSchema = {
+//     // 'id VARCHAR(36) NOT NULL',
+//     // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
+//     // 'aggregateId VARCHAR(36) NOT NULL',
+//     // 'aggregateVersion INT NOT NULL',
+//     // 'type VARCHAR(32) NOT NULL',
+//     // 'timestamp BIGINT NOT NULL',
+//     // 'correlationId VARCHAR(36) NOT NULL',
+//     // 'causationId VARCHAR(36)',
+//     // 'payload TEXT NOT NULL',
+//     // 'PRIMARY KEY (id)',
+//     // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
+//     fields: {
+//         id: {
+//             Type: 'varchar'
+//         }
+//     },
+//     options: {
+//
+//     }
+// };
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -40,6 +40,8 @@ class Adapter extends EventStoreAdapterInterface
             throw Error('EventStore-MySQL needs a config.');
         if(!this.config.host || !this.config.host.length)
             throw Error('EventStore-MySQL needs a host.');
+        if(!this.config.port || !this.config.host.port)
+            this.config.port = 3306;
         if(!this.config.database || !this.config.database.length)
             throw Error('EventStore-MySQL needs a database name.');
         if(!this.config.user || !this.config.user.length)
@@ -51,8 +53,8 @@ class Adapter extends EventStoreAdapterInterface
     async init()
     {
         console.log('init');
-        await this.createDatabase(await this._createConnection());    
-        this.db = await mysql.createConnection(this.config);
+        await this.createDatabase();
+        this.db = await this.createConnection(this.config);
         await this.db.connect();
         await this.createTable();
         // see https://github.com/sidorares/node-mysql2/issues/1239
@@ -139,8 +141,8 @@ class Adapter extends EventStoreAdapterInterface
 
         if(exists[0][0]['count(*)'])
         {
-            const table = await this.db.execute('DESCRIBE events', []);
-            console.log(table[0]);
+            // const table = await this.db.execute('DESCRIBE events', []);
+            // console.log(table[0]);
         }
         else
         {
@@ -164,9 +166,14 @@ class Adapter extends EventStoreAdapterInterface
         }
     }
 
-    async createDatabase(db)
+    async createDatabase()
     {
-        console.log('createDatabase');
+        const db = await this.createConnection({
+            host: this.config.host,
+            port: this.config.port,
+            user: this.config.user,
+            password: this.config.password,
+        });
         await db.execute(
             `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
             []
@@ -174,13 +181,14 @@ class Adapter extends EventStoreAdapterInterface
         await db.end();
     }
 
-    async _createConnection(){
-        return await mysql.createConnection(this.config);
+    async createConnection(config)
+    {
+        return mysql.createConnection(config);
     }
 
     async close()
     {
-        await db.end();
+        await this.db.end();
     }
 }
 
