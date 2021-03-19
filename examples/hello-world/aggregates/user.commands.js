@@ -8,7 +8,7 @@ const {ConflictError} = require('../errors');
 module.exports = {
     create: async (command, state, context) => {
         console.log('Create User Command', state);
-        if(state.registered)
+        if(state?.registered)
             throw new ConflictError('User already registered');
 
         return {

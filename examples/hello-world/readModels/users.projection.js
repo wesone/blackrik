@@ -12,19 +12,13 @@ module.exports = {
                 type: 'uuid',
                 primaryKey: true,
             },
-            name: {
-                type: 'String'
-            },
+            name: 'String',
             lastPosition: {
-                type: 'Bigint',
+                type: 'Int',
                 unique: true,
             },
-            createdAt: {
-                type: 'Date'
-            },
-            updatedAt: {
-                type: 'Date'
-            },
+            createdAt: 'Date',
+            updatedAt: 'Date',
         });
     },
     [USER_CREATED]: async (store, event) => {
