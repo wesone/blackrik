@@ -130,7 +130,8 @@ function createTableBuilder(tableName, fieldDefinitions)
             unique, 
             primaryKey, 
             autoIncrement
-        } = fieldDefinitions[name];
+        } = typeof fieldDefinitions[name] === 'object' ? 
+            fieldDefinitions[name] : {type: fieldDefinitions[name]};
         if(!type)
         {
             throw new Error('No type given for field: ' + name);
