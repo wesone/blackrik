@@ -17,7 +17,7 @@ async function checkPosition(store, args)
         if(args.position > lastPosition)
         {
             const error =  new Error('Data not yet availible');
-            error.status = 409;
+            error.code = 409;
             throw error;
         }
     }
@@ -31,7 +31,7 @@ module.exports = {
         });
     },
     list: async (store, args) => {
-        console.log(args);
+        await checkPosition(store, args);
         return await store.find(tableName, {
             
         });
