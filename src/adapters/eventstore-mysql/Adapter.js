@@ -61,7 +61,6 @@ class Adapter extends EventStoreAdapterInterface
     {
         // execute can't handle arrays as placeholder, see https://github.com/sidorares/node-mysql2/issues/476
         const values = [];
-
         const where = [];
         if(filter.aggregateIds)
         {
@@ -100,7 +99,13 @@ class Adapter extends EventStoreAdapterInterface
         }
 
         const events = await this.db.execute(`SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY position ASC ${limit.join(' ')}`, values);
-        return { events: events[0], cursor: filter.cursor };
+        return {
+            events: events[0].map(event => {
+                event.payload = JSON.parse(event.payload);
+                return event;
+            }),
+            cursor: filter.cursor
+        };
     }
 
     async createTable()
