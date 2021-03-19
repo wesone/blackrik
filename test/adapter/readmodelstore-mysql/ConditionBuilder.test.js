@@ -57,7 +57,7 @@ test('Build field based condition', () => {
         '2',
         '42',
         'Hans',
-        '2021-12-17T02:24:00.000Z',
+        '2021-12-17 02:24:00',
         '42',
         '42',
         '50',
@@ -87,7 +87,7 @@ test('Build condition with logic operator on top level', () => {
     };
     
     const expectedSQL = '(`a` = ? OR `b` > ? OR (`c` > ? OR `c` <= ?) OR `d` = ? OR `f` = ?)';
-    const expectedParameters = ['1' ,'2021-12-17T02:24:00.000Z' ,'5' ,'8' ,'ASD' ,'42'];
+    const expectedParameters = ['1' ,'2021-12-17 02:24:00' ,'5' ,'8' ,'ASD' ,'42'];
     const {sql, parameters} = conditionBuilder(condition);
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);

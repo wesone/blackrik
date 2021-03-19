@@ -5,7 +5,7 @@ module.exports = {
         console.log('Create User Command', command, state, context);
         return {
             type: USER_CREATED,
-            payload: {name: 'Test User'}
+            payload: {name: command.payload.name}
         };
     }
 };

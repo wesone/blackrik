@@ -35,7 +35,7 @@ function convertValue(value)
 {
     if(value instanceof Date)
     {
-        return value.toISOString();
+        return value.toISOString().slice(0, 19).replace('T', ' ');
     }
     if(value === undefined)
     {

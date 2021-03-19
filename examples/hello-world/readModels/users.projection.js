@@ -12,13 +12,17 @@ module.exports = {
             name: {
                 type: 'String'
             },
-            lastEvent: {
-                type: 'uuid',
-            }
+            lastPosition: {
+                type: 'Bigint',
+                unique: true,
+            },
+            createdAt: {
+                type: 'Date'
+            },
         });
     },
     [USER_CREATED]: async (store, event) => {
         console.log('ReadModel projection executed', event);
-        await store.insert(tableName, {id: event.aggregateId ,name: event.payload.name, lastEvent: event.id});
+        await store.insert(tableName, {id: event.aggregateId ,name: event.payload.name, lastPosition: event.position, createdAt: new Date(event.timestamp)});
     }
 };
