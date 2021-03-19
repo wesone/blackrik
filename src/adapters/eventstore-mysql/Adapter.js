@@ -1,26 +1,86 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
 const mysql = require('mysql2/promise');
-// const databaseSchema = {
-//     // 'id VARCHAR(36) NOT NULL',
-//     // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
-//     // 'aggregateId VARCHAR(36) NOT NULL',
-//     // 'aggregateVersion INT NOT NULL',
-//     // 'type VARCHAR(32) NOT NULL',
-//     // 'timestamp BIGINT NOT NULL',
-//     // 'correlationId VARCHAR(36) NOT NULL',
-//     // 'causationId VARCHAR(36)',
-//     // 'payload TEXT NOT NULL',
-//     // 'PRIMARY KEY (id)',
-//     // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
-//     fields: {
-//         id: {
-//             Type: 'varchar'
-//         }
-//     },
-//     options: {
-//
-//     }
-// };
+const databaseSchema = {
+    // 'id VARCHAR(36) NOT NULL',
+    // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
+    // 'aggregateId VARCHAR(36) NOT NULL',
+    // 'aggregateVersion INT NOT NULL',
+    // 'type VARCHAR(32) NOT NULL',
+    // 'timestamp BIGINT NOT NULL',
+    // 'correlationId VARCHAR(36) NOT NULL',
+    // 'causationId VARCHAR(36)',
+    // 'payload TEXT NOT NULL',
+    // 'PRIMARY KEY (id)',
+    // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
+    fields: {
+        id: {
+            Type: 'varchar(36)',
+            Null: 'NO',
+            Key: 'PRI',
+            Default: null,
+            Extra: ''
+        },
+        position: {
+            Type: 'bigint',
+            Null: 'NO',
+            Key: 'UNI',
+            Default: null,
+            Extra: 'auto_increment'
+        },
+        aggregateId: {
+            Type: 'varchar(36)',
+            Null: 'NO',
+            Key: 'MUL',
+            Default: null,
+            Extra: ''
+        },
+        aggregateVersion: {
+            Type: 'int',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        type: {
+            Type: 'varchar(32)',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        timestamp: {
+            Type: 'bigint',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        correlationId: {
+            Type: 'varchar(36)',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        causationId: {
+            Type: 'varchar(36)',
+            Null: 'YES',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        payload: {
+            Type: 'text',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        }
+    },
+    options: {
+
+    }
+};
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -141,8 +201,8 @@ class Adapter extends EventStoreAdapterInterface
 
         if(exists[0][0]['count(*)'])
         {
-            // const table = await this.db.execute('DESCRIBE events', []);
-            // console.log(table[0]);
+            const table = await this.db.execute('DESCRIBE events', []);
+            console.log(table[0]);
         }
         else
         {
@@ -189,6 +249,30 @@ class Adapter extends EventStoreAdapterInterface
     async close()
     {
         await this.db.end();
+    }
+
+    buildFieldList()
+    {
+        //id: {
+        //     Type: 'varchar(36)',
+        //     Null: 'NO',
+        //     Key: 'PRI',
+        //     Default: null,
+        //     Extra: ''
+        // },
+        let primaryKey = '';
+        let uniqueKey = [];
+        return Object.keys(databaseSchema.fields).map(field => {
+            const properties = [];
+            properties.push(field);
+            properties.push(databaseSchema.fields[field].Type);
+            if(databaseSchema.fields[field].Null === 'NO')
+                properties.push('NOT NULL');
+            if(databaseSchema.fields[field].Key === 'PRI')
+                primaryKey = field;
+            if(databaseSchema.fields[field].Key === 'MUL')
+                uniqueKey.push(field);
+        });
     }
 }
 

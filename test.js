@@ -21,26 +21,26 @@ const eventStoreAdapter = require('./src/adapters/eventstore-mysql');
     //     console.log(test);
     // }
 
-    const result = await eventStore.load({
-        aggregateIds: [
-            'testAggregateId',
-            'id2',
-            'id3',
-            'id4',
-            'id5'
-        ],
-        types: [
-            'testType',
-            'type2',
-            'type3'
-        ],
-        since: 1615878000000,
-        until: Date.now(),
-        limit: 5,
-        cursor: null
-    });
-
-    console.log(result);
+    // const result = await eventStore.load({
+    //     aggregateIds: [
+    //         'testAggregateId',
+    //         'id2',
+    //         'id3',
+    //         'id4',
+    //         'id5'
+    //     ],
+    //     types: [
+    //         'testType',
+    //         'type2',
+    //         'type3'
+    //     ],
+    //     since: 1615878000000,
+    //     until: Date.now(),
+    //     limit: 5,
+    //     cursor: null
+    // });
+    //
+    // console.log(result);
 
     await eventStore.close();
 })();
