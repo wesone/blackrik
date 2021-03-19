@@ -38,7 +38,8 @@ class Event
         };
 
         Object.keys(this.#data).forEach(key => Object.defineProperty(this, key, {
-            get: () => this.#data[key]
+            get: () => this.#data[key],
+            enumerable: true
         }));
     }
 
