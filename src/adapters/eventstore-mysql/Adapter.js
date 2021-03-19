@@ -29,7 +29,8 @@ class Adapter extends EventStoreAdapterInterface
 
     async init()
     {
-        await this.createDatabase();
+        console.log('init');
+        await this.createDatabase(await this._createConnection());    
         this.db = await mysql.createConnection(this.config);
         await this.db.connect();
         await this.createTable();
@@ -143,14 +144,18 @@ class Adapter extends EventStoreAdapterInterface
         }
     }
 
-    async createDatabase()
+    async createDatabase(db)
     {
+<<<<<<< HEAD
+        console.log('createDatabase');
+=======
         const db = await mysql.createConnection({
             host: this.config.host,
             port: this.config.port,
             user: this.config.user,
             password: this.config.password
         });
+>>>>>>> b7a2582b5635548a192d00325464e5ccbc18cda4
         await db.execute(
             `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
             []
@@ -158,9 +163,13 @@ class Adapter extends EventStoreAdapterInterface
         await db.end();
     }
 
+    async _createConnection(){
+        return await mysql.createConnection(this.config);
+    }
+
     async close()
     {
-        await this.db.end();
+        await db.end();
     }
 }
 
