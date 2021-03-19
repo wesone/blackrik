@@ -58,27 +58,8 @@ describe('Testing _reduceEvents', () => {
         }
     ];
     test('Test correct reduction of event list', () => {
-        const mockProjection = { 
-            init: jest.fn(() => {}),
-            'USER_CREATED': (state, event) => ({
-                ...state
-            }),
-            'USER_UPDATED': (state, {payload}) => ({
-                ...state,
-                ...payload
-            })
-        };
-        const testAggregate = new Aggregate({name: 'Noice name', projection: mockProjection});
-        expect(testAggregate._reduceEvents(events)).toEqual({name: '4'});
-        // init function called once
-        expect(mockProjection.init.mock.calls.length).toBe(1);
-    });
-    test('Test correct reduction without init function', () => {
         const mockProjection1 = { 
             init: 'This is no function',
-            // 'USER_CREATED': () => jest.fn(state, event) {
-            //     ...state
-            // },
             'USER_CREATED': (state, event) => ({
                 ...state
             }),
@@ -91,11 +72,3 @@ describe('Testing _reduceEvents', () => {
         expect(testAggregate._reduceEvents(events)).toEqual({name: '4'});
     });
 });
-
-// Already testet _reduceEvents and _loadEvents
-// describe('Testing load', () => {
-//     test('', () => {
-//         const testAggregate = new Aggregate({name: 'Noice name'});
-        
-//     });
-// });
