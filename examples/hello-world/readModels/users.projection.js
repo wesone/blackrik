@@ -1,4 +1,7 @@
-const {USER_CREATED} = require('../events/users');
+const {
+    USER_CREATED,
+    USER_UPDATED
+} = require('../events/users');
 
 const tableName = 'users';
 
@@ -19,10 +22,18 @@ module.exports = {
             createdAt: {
                 type: 'Date'
             },
+            updatedAt: {
+                type: 'Date'
+            },
         });
     },
     [USER_CREATED]: async (store, event) => {
         console.log('ReadModel projection executed', event);
-        await store.insert(tableName, {id: event.aggregateId ,name: event.payload.name, lastPosition: event.position, createdAt: new Date(event.timestamp)});
+        const createdAt = new Date(event.timestamp);
+        await store.insert(tableName, {id: event.aggregateId, name: event.payload.name, lastPosition: event.position, createdAt, updatedAt: createdAt});
+    },
+    [USER_UPDATED]: async (store, event) => {
+        console.log('ReadModel projection executed', event);
+        await store.update(tableName, {id: event.aggregateId}, {name: event.payload.name, lastPosition: event.position, updatedAt: new Date(event.timestamp)});
     }
 };

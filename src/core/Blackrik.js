@@ -68,7 +68,7 @@ class Blackrik
     {
         const blackrik = this;
         return new Proxy(this._createReadModelStore(adapter), {
-            get: (target, prop) => {
+            get: (target, prop, ...rest) => {
                 if(prop === 'defineTable')
                     return async function(...args){
                         const created = await target[prop](...args);
@@ -79,19 +79,26 @@ class Blackrik
                             );
                         return created;
                     };
-                return Reflect.get(...arguments);
+                return Reflect.get(target, prop, ...rest);
             }
         });
     }
 
-    async _createSubscriptions(eventMap, store, callback)
+    async _createSubscriptions(eventMap, store, callback, config)
     {
         await Promise.all(
             Object.entries(eventMap).map(
                 ([eventType, handler]) =>
                     eventType !== CONSTANTS.READMODEL_INIT_FUNCTION && 
                         this._eventHandler.subscribe(eventType, async event => {
-                            await callback(handler, store, event);
+                            try
+                            {
+                                await callback(handler, store, event, config);
+                            }
+                            catch(e)
+                            {
+                                console.error(e);
+                            }
                         })
             )
         );
@@ -106,10 +113,11 @@ class Blackrik
             adapter = CONSTANTS.DEFAULT_ADAPTER;
 
         const store = this._wrapReadModelStore(adapter, handlers);
-        if(typeof handlers[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function')
-            await handlers[CONSTANTS.READMODEL_INIT_FUNCTION](store);
+        const config = typeof handlers[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function'
+            ? await handlers[CONSTANTS.READMODEL_INIT_FUNCTION](store) || {}
+            : {};
 
-        await this._createSubscriptions(handlers, store, callback);
+        await this._createSubscriptions(handlers, store, callback, config);
 
         return (this._subscribers[name] = {
             handlers,
@@ -128,6 +136,15 @@ class Blackrik
         );
     }
 
+    _constructSideEffects(sideEffects)
+    {
+        Object.defineProperty(sideEffects, 'executeCommand', {
+            value: this.#instance.executeCommand,
+            writable: false
+        });
+        return sideEffects;
+    }
+
     async _processSagas()
     {
         return Promise.all(
@@ -137,14 +154,14 @@ class Blackrik
                         name,
                         handlers,
                         adapter,
-                        async (handler, store, event) => await handler(
+                        async (handler, store, event, config) => await handler(
                             store,
                             event,
-                            new Proxy(sideEffects, {
-                                get: (target, prop) => {
-                                    //TODO add blackrick instance functions
-                                    //TODO maybe return noop function if event.isReplay === true
-                                    return Reflect.get(...arguments);
+                            new Proxy(this._constructSideEffects(sideEffects), {
+                                get: (...args) => {
+                                    if(event.isReplay && config.noopSideEffectsOnReplay !== false)
+                                        return () => {};
+                                    return Reflect.get(...args);
                                 }
                             })
                         )

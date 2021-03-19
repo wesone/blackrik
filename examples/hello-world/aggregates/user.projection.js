@@ -7,7 +7,8 @@ module.exports = {
     init: () => ({}),
     [USER_CREATED]: (state, {payload}) => ({
         ...state,
-        ...payload
+        ...payload,
+        registered: true
     }),
     [USER_UPDATED]: (state, {payload}) => ({
         ...state,

@@ -1,6 +1,5 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
 const mysql = require('mysql2/promise');
-const yup = require('yup');
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -16,7 +15,6 @@ class Adapter extends EventStoreAdapterInterface
 
     validateConfig()
     {
-        console.log('validateConfig');
         if(!this.config)
             throw Error('EventStore-MySQL needs a config.');
         if(!this.config.host || !this.config.host.length)
@@ -54,32 +52,65 @@ class Adapter extends EventStoreAdapterInterface
 
     async save(event)
     {
-        await this.db.execute(
+        const result = await this.db.execute(
             `INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.keys(event).map(() => '?').join(',')})`,
             Object.values(event));
+        return result[0].insertId;
     }
 
     async load(filter)
     {
-        console.log('load');
         // execute can't handle arrays as placeholder, see https://github.com/sidorares/node-mysql2/issues/476
         const values = [];
-        filter.aggregateIds.forEach(aggregateId => values.push(aggregateId));
-        filter.types.forEach(type => values.push(type));
-        values.push(filter.since);
-        values.push(filter.until);
-        values.push(filter.limit);
-        values.push(filter.limit * (filter.cursor));
-        const events = await this.db.execute(
-            `SELECT * FROM events WHERE aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')}) AND type IN (${filter.types.map(() => '?').join(',')}) AND (timestamp >= ? AND timestamp < ?) ORDER BY position ASC LIMIT ? OFFSET ?`,
-            values
-        );
-        return { events: events[0], cursor: filter.cursor };
+        const where = [];
+        if(filter.aggregateIds)
+        {
+            filter.aggregateIds.forEach(aggregateId => values.push(aggregateId));
+            where.push(`aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')})`);
+        }
+
+        if(filter.types)
+        {
+            filter.types.forEach(type => values.push(type));
+            where.push(`type IN (${filter.types.map(() => '?').join(',')})`);
+        }
+
+        if(filter.since)
+        {
+            values.push(filter.since);
+            where.push('timestamp >= ?');
+        }
+
+        if(filter.until)
+        {
+            values.push(filter.until);
+            where.push('timestamp < ?');
+        }
+
+        const limit = [];
+        if(filter.limit)
+        {
+            values.push(filter.limit);
+            limit.push('LIMIT ?');
+            if(!filter.cursor === undefined)
+            {
+                values.push(filter.limit * (filter.cursor));
+                limit.push('OFFSET ?');
+            }
+        }
+
+        const events = await this.db.execute(`SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY position ASC ${limit.join(' ')}`, values);
+        return {
+            events: events[0].map(event => {
+                event.payload = JSON.parse(event.payload);
+                return event;
+            }),
+            cursor: filter.cursor
+        };
     }
 
     async createTable()
     {
-        console.log('createTable');
         const exists = await this.db.execute(
             'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')',
             [this.config.database]
@@ -87,6 +118,8 @@ class Adapter extends EventStoreAdapterInterface
 
         if(exists[0][0]['count(*)'])
         {
+            // const table = await this.db.execute('DESCRIBE events', []);
+            // console.log(table[0]);
             // TODO validate scheme
         }
         else
@@ -113,7 +146,16 @@ class Adapter extends EventStoreAdapterInterface
 
     async createDatabase(db)
     {
+<<<<<<< HEAD
         console.log('createDatabase');
+=======
+        const db = await mysql.createConnection({
+            host: this.config.host,
+            port: this.config.port,
+            user: this.config.user,
+            password: this.config.password
+        });
+>>>>>>> b7a2582b5635548a192d00325464e5ccbc18cda4
         await db.execute(
             `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
             []

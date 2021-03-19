@@ -1,4 +1,4 @@
-const {EVENT_LIMIT_AGGREGATE} = require('./Constants')
+const {EVENT_LIMIT_AGGREGATE} = require('./Constants');
 
 class Aggregate
 {

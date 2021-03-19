@@ -11,6 +11,8 @@ class Event
             event.#data.id = data.id;
         if(!isNaN(data.timestamp) && data.timestamp > 0)
             event.#data.timestamp = data.timestamp;
+        if(!isNaN(data.position) && data.position > 0)
+            event.#data.position = data.position;
         return event;
     }
 
@@ -32,6 +34,7 @@ class Event
             aggregateVersion,
             type,
             timestamp: Date.now(),
+            position: null,
             correlationId: correlationId || id,
             causationId,
             payload
