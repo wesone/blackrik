@@ -1,5 +1,26 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
 const mysql = require('mysql2/promise');
+const databaseSchema = {
+    //'id VARCHAR(36) NOT NULL',
+    // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
+    // 'aggregateId VARCHAR(36) NOT NULL',
+    // 'aggregateVersion INT NOT NULL',
+    // 'type VARCHAR(32) NOT NULL',
+    // 'timestamp BIGINT NOT NULL',
+    // 'correlationId VARCHAR(36) NOT NULL',
+    // 'causationId VARCHAR(36)',
+    // 'payload TEXT NOT NULL',
+    // 'PRIMARY KEY (id)',
+    // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
+    fields: {
+        id: {
+            Type: 'varchar'
+        }
+    },
+    options: {
+
+    }
+};
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -117,9 +138,8 @@ class Adapter extends EventStoreAdapterInterface
 
         if(exists[0][0]['count(*)'])
         {
-            // const table = await this.db.execute('DESCRIBE events', []);
-            // console.log(table[0]);
-            // TODO validate scheme
+            const table = await this.db.execute('DESCRIBE events', []);
+            console.log(table[0]);
         }
         else
         {
