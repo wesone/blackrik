@@ -10,7 +10,7 @@ module.exports = {
     },
     sideEffects: {
         test: () => {
-            console.log('Executed Sideeffect')
+            console.log('Executed Sideeffect');
         }
     }
 };

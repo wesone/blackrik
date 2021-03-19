@@ -1,4 +1,5 @@
 const {EVENT_LIMIT_REPLAY} = require('./Constants');
+const Event = require('./Event');
 
 class EventHandler
 {
@@ -16,8 +17,10 @@ class EventHandler
     async persistEvent(event)
     {
         //TODO create snapshot if too many events are stored
-        await this.blackrik._eventStore.save(event);
-        return event;
+        return Event.from({
+            ...event,
+            position: await this.blackrik._eventStore.save(event)
+        });
     }
 
     async sendEvent(event)
