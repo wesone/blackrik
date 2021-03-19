@@ -44,11 +44,11 @@ class CommandHandler
             event.correlationId = correlationId;
             event.causationId = id;
         }
-        event = new Event(event);
 
-        const success = await this.#blackrik._eventHandler.publish(event);
-        if(!success)
+        event = await this.#blackrik._eventHandler.publish(new Event(event));
+        if(!event)
             throw new ConflictError('Events overlapped');
+            
         return event;
     }
 

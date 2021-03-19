@@ -19,12 +19,12 @@ class RequestHandler
         }
         catch(e)
         {
-            if(!e.status)
+            if(!e.code)
             {
                 console.error(e);
                 return res.sendStatus(500).end(); // do not expose critical errors
             }
-            return res.status(e.status || 500).send(e.message || e).end();
+            return res.status(e.code || 500).send(e.message || e).end();
         }
     }
 }

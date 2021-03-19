@@ -68,7 +68,7 @@ class Blackrik
     {
         const blackrik = this;
         return new Proxy(this._createReadModelStore(adapter), {
-            get: (target, prop) => {
+            get: (target, prop, ...rest) => {
                 if(prop === 'defineTable')
                     return async function(...args){
                         const created = await target[prop](...args);
@@ -79,7 +79,7 @@ class Blackrik
                             );
                         return created;
                     };
-                return Reflect.get(...arguments);
+                return Reflect.get(target, prop, ...rest);
             }
         });
     }
@@ -91,7 +91,14 @@ class Blackrik
                 ([eventType, handler]) =>
                     eventType !== CONSTANTS.READMODEL_INIT_FUNCTION && 
                         this._eventHandler.subscribe(eventType, async event => {
-                            await callback(handler, store, event, config);
+                            try
+                            {
+                                await callback(handler, store, event, config);
+                            }
+                            catch(e)
+                            {
+                                console.error(e);
+                            }
                         })
             )
         );
@@ -151,10 +158,10 @@ class Blackrik
                             store,
                             event,
                             new Proxy(this._constructSideEffects(sideEffects), {
-                                get: () => {
+                                get: (...args) => {
                                     if(event.isReplay && config.noopSideEffectsOnReplay !== false)
                                         return () => {};
-                                    return Reflect.get(...arguments);
+                                    return Reflect.get(...args);
                                 }
                             })
                         )

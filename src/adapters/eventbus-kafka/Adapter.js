@@ -77,10 +77,12 @@ class Adapter extends EventBusAdapterInterface
                     }
                 ]
             });
+            return true;
         }
         catch(err)
         {
             console.error('Could not publish event...', err);
+            return false;
         }
     }
 }

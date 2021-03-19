@@ -2,6 +2,7 @@ const merge = require('./utils/merge');
 const {validateConfig} = require('./utils/validation');
 const defaultAdapters = Object.freeze(require('./adapters'));
 const httpMethods = Object.freeze(require('./resources/httpMethods'));
+const Errors = Object.freeze(require('./core/Errors'));
 
 const Application = require('./core/Blackrik');
 
@@ -47,6 +48,11 @@ class Blackrik
     static get HTTP_METHODS()
     {
         return httpMethods;
+    }
+
+    static get ERRORS()
+    {
+        return Errors;
     }
 
     constructor(...configs)

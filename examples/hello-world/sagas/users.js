@@ -8,7 +8,7 @@ module.exports = {
             };
         },
         [USER_CREATED]: async (store, event, sideEffects) => {
-            console.log('Saga executed', event);
+            console.log('Saga executed', event.id);
             sideEffects.test();
         }
     },

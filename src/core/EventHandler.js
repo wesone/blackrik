@@ -25,7 +25,7 @@ class EventHandler
 
     async sendEvent(event)
     {
-        return await this.eventBus.publish(event);
+        return await this.eventBus.publish(event) && event;
     }
 
     async subscribe(type, callback)
