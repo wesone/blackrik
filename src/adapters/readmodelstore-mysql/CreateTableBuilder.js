@@ -9,10 +9,9 @@ const types = {
     'Boolean': 'TINYINT(1)', 
     'Int': 'INTEGER', 
     'Integer': 'INTEGER', 
-    'Bigint': 'BIGINT', 
+    'Bigint': 'DECIMAL(16,0)', 
     'Float': 'FLOAT', 
-    'Double': 'DOUBLE', 
-    'Decimal': 'DECIMAL(5,2)', 
+    'Double': 'DOUBLE',  
     'Date': 'DATETIME', 
     'Timestamp': 'TIMESTAMP',
     'uuid': 'CHAR(36)'

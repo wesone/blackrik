@@ -228,7 +228,6 @@ class Adapter extends EventStoreAdapterInterface
 
     async createDatabase(db)
     {
-        console.log('PRE db sagt: ', db);
         if(!db)
         {
             db = await mysql.createConnection({
@@ -238,8 +237,6 @@ class Adapter extends EventStoreAdapterInterface
                 password: this.config.password,
             });
         }
-
-        console.log('POST db sagt: ', db);
         await db.execute(
             `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
             []
