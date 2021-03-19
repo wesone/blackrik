@@ -24,7 +24,11 @@ module.exports = {
     readModelStoreAdapters: {
         default: {
             args: {
-                
+                debugSql: true,
+                host: 'localhost',
+                database: 'readmodelstore',
+                user: 'root',
+                password: '1234'
             }
         }
     },
@@ -64,5 +68,4 @@ module.exports = {
             }
         ]
     }
-}
-;
+};
