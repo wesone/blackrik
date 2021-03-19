@@ -78,7 +78,7 @@ const databaseSchema = {
         }
     },
     options: {
-
+        uniqueKey: 'streamId'
     }
 };
 
@@ -254,26 +254,35 @@ class Adapter extends EventStoreAdapterInterface
 
     buildFieldList()
     {
-        //id: {
-        //     Type: 'varchar(36)',
-        //     Null: 'NO',
-        //     Key: 'PRI',
-        //     Default: null,
-        //     Extra: ''
-        // },
         let primaryKey = '';
         let uniqueKey = [];
-        return Object.keys(databaseSchema.fields).map(field => {
+        const fields = Object.keys(databaseSchema.fields).map(field => {
             const properties = [];
             properties.push(field);
             properties.push(databaseSchema.fields[field].Type);
             if(databaseSchema.fields[field].Null === 'NO')
                 properties.push('NOT NULL');
+
             if(databaseSchema.fields[field].Key === 'PRI')
                 primaryKey = field;
             if(databaseSchema.fields[field].Key === 'MUL')
                 uniqueKey.push(field);
+
+            if(databaseSchema.fields[field].Default !== null)
+                properties.push(`DEFAULT ${databaseSchema.fields[field].Default}`);
+
+            if(databaseSchema.fields[field].Extra)
+                properties.push(databaseSchema.fields[field].Extra);
+
+            return properties;
         });
+
+        const queryParts = [];
+        queryParts.concat(fields);
+        queryParts.push(`PRIMARY KEY (${primaryKey})`);
+        queryParts.push(`UNIQUE KEY '${databaseSchema.options.uniqueKey}' (${uniqueKey.join(',')})`);
+
+        return queryParts.join(' ');
     }
 }
 
