@@ -38,7 +38,7 @@ const Blackrik = require('../../');
         eventStoreAdapter: {
             args: {
                 host: 'localhost',
-                database: 'eventstore',
+                database: 'eventStore',
                 user: 'root',
                 password: '1234'
             }
