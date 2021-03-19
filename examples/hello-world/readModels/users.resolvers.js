@@ -5,20 +5,27 @@ async function getLastPosition(store)
 {
     return (await store.findOne(tableName,{
         fields: ['lastPosition'],
-        order: {lastPosition: 1}
+        sort: {lastPosition: -1}
     }))?.lastPosition ?? -1;
+}
+
+async function checkPosition(store, args)
+{
+    if(args?.position)
+    {
+        const lastPosition = await getLastPosition(store);
+        if(args.position > lastPosition)
+        {
+            const error =  new Error('Data not yet availible');
+            error.status = 409;
+            throw error;
+        }
+    }
 }
 
 module.exports = {
     get: async (store, args) => {
-        if(args?.position)
-        {
-            const lastPosition = await getLastPosition(store);
-            if(args.position > lastPosition)
-            {
-                throw new Error('Data not yet availible');
-            }
-        }
+        await checkPosition(store, args);
         return await store.findOne(tableName, {
             conditions:{id: args.id}
         });
