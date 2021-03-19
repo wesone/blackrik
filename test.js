@@ -4,7 +4,6 @@ const eventStoreAdapter = require('./src/adapters/eventstore-mysql');
 (async () => {
     const eventStore = eventStoreAdapter(config);
     await eventStore.init();
-
     // const Event = require('./src/core/Event');
     // for(let i = 0; i < 5; i++)
     // {
