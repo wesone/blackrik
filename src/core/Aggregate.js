@@ -1,3 +1,5 @@
+const {EVENT_LIMIT_AGGREGATE} = require('./Constants')
+
 class Aggregate
 {
     static isValid({name/* , commands, projection */})
@@ -49,24 +51,22 @@ class Aggregate
         const aggregateIds = [aggregateId];
         let state = null;
         let next = null;
+        let latestEvent = null;
         do
         {
-            // {
-            //     aggregateIds: Array,
-            //     types: Array,
-            //     since: Number,
-            //     until: Number,
-            //     limit: Number
-            // }
             const {events, cursor} = await eventStore.load({
                 aggregateIds,
-                limit: 100000, //TODO outsource
-                next
+                limit: EVENT_LIMIT_AGGREGATE,
+                cursor: next
             });
-            state = this._reduceEvents(events, state);
+            if(events.length)
+            {
+                state = this._reduceEvents(events, state);
+                latestEvent = events.pop();
+            }
             next = cursor;
         } while(next);
-        return state;
+        return {state, latestEvent};
     }
 }
 

@@ -1,4 +1,7 @@
-import { quoteIdentifier } from './utils';
+const crypto = require('crypto');
+const { quoteIdentifier } = require('./utils');
+
+const schemaVersion = 1;
 
 const types = {
     'String': 'VARCHAR(512)',
@@ -11,6 +14,7 @@ const types = {
     'Double': 'DOUBLE', 
     'Decimal': 'DECIMAL(5,2)', 
     'Date': 'DATETIME', 
+    'Timestamp': 'TIMESTAMP',
     'uuid': 'CHAR(36)'
 };
 
@@ -96,6 +100,13 @@ function _translateType(type, attributes, state, fieldIndex)
     return typeDef;
 }
 
+function _calculateHash(fieldTokens)
+{
+    const hash = crypto.createHash('sha512');
+    fieldTokens.forEach(field => hash.update(field));
+    return [schemaVersion,hash.digest('hex')].join(':');
+}
+
 function createTableBuilder(tableName, fieldDefinitions)
 {
     if(typeof fieldDefinitions !== 'object')
@@ -119,7 +130,8 @@ function createTableBuilder(tableName, fieldDefinitions)
             unique, 
             primaryKey, 
             autoIncrement
-        } = fieldDefinitions[name];
+        } = typeof fieldDefinitions[name] === 'object' ? 
+            fieldDefinitions[name] : {type: fieldDefinitions[name]};
         if(!type)
         {
             throw new Error('No type given for field: ' + name);
@@ -134,10 +146,14 @@ function createTableBuilder(tableName, fieldDefinitions)
             autoIncrement
         }, state, index)].join(' ');
     });
+
     const definitions = fieldTokens.join(', ');
-    return ['CREATE TABLE IF NOT EXISTS', quoteIdentifier(tableName), ['(', definitions, ')'].join('')].join(' ');
+    const hash = _calculateHash(fieldTokens);
+    const comment = ['COMMENT=','"' , hash, '"'].join('');
+    const sql = ['CREATE TABLE', quoteIdentifier(tableName), ['(', definitions, ')'].join(''), comment].join(' ');
+    return {sql, hash};
 }
 
-export {
+module.exports =  {
     createTableBuilder,
 };

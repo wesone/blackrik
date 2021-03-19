@@ -27,7 +27,11 @@ const Blackrik = require('../../');
         readModelStoreAdapters: {
             default: {
                 args: {
-                    
+                    debugSql: true,
+                    host: 'localhost',
+                    database: 'readmodelstore',
+                    user: 'root',
+                    password: '1234'
                 }
             }
         },

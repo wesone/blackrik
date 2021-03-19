@@ -1,4 +1,5 @@
 const Event = require('./Event');
+const {BadRequestError, ConflictError} = require('./Errors');
 
 class CommandHandler 
 {
@@ -7,7 +8,7 @@ class CommandHandler
     constructor(blackrik)
     {
         this.#blackrik = blackrik;
-        return this.handle.bind(this);
+        this.handle = this.handle.bind(this);
     }
 
     createCommand(command)
@@ -30,57 +31,63 @@ class CommandHandler
 
     buildContext(req)
     {
-        return Object.freeze({
-            //TODO add context from middlewares (req.context)
+        return {
             blackrik: req.blackrik
-        });
+        };
     }
 
-    processEvent(aggregateId, event)
+    async processEvent(event, causationEvent = null)
     {
-        event.aggregateId = aggregateId;
+        if(causationEvent)
+        {
+            const {correlationId, id} = causationEvent;
+            event.correlationId = correlationId;
+            event.causationId = id;
+        }
         event = new Event(event);
-        this.#blackrik._eventBus.publish(event);
+
+        const success = await this.#blackrik._eventHandler.publish(event);
+        if(!success)
+            throw new ConflictError('Events overlapped');
         return event;
     }
 
-    async handle(req, res)
+    async handle(req)
     {
-        const {body} = req;
+        return this.process(req.body, this.buildContext(req));
+    }
 
-        const command = this.createCommand(body);
-        //TODO load aggregateVersion
-
+    async process(args, context = {})
+    {
+        const command = this.createCommand(args);
         const {aggregateName, aggregateId, type} = command;
 
         if(!this.hasAggregate(aggregateName))
-            return res.sendStatus(400).end(); //TODO error for invalid aggregate
+            throw new BadRequestError('Invalid aggregate');
 
         const aggregate = this.#blackrik._aggregates[aggregateName];
         const {commands} = aggregate;
 
         if(!Object.prototype.hasOwnProperty.call(commands, type))
-            return res.sendStatus(400).end(); //TODO error for unknown command
+            throw new BadRequestError('Unknown type');
+
+        const {state, latestEvent} = await aggregate.load(this.#blackrik._eventStore, aggregateId);
+        context.aggregateVersion = latestEvent
+            ? latestEvent.aggregateVersion
+            : 0;
         
-        let event = null;
-        try
-        {
-            event = await commands[type](
-                command, 
-                await aggregate.load(this.#blackrik._eventStore, aggregateId), 
-                this.buildContext(req)
-            );  
-        }
-        catch(e)
-        {
-            return res.status(e.status || 500).send(e.message || e);
-        }
-
+        const event = await commands[type](
+            command, 
+            state, 
+            Object.freeze(context)
+        );
+        
         if(!event)
-            return res.sendStatus(200).end();
+            return null;
 
-        event = this.processEvent(aggregateId, event);
-        res.json(event);
+        event.aggregateId = aggregateId;
+        event.aggregateVersion = context.aggregateVersion + 1;
+        return await this.processEvent(event, context.causationEvent);
     }
 }
 

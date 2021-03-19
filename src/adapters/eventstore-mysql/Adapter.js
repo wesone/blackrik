@@ -1,5 +1,6 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
+const yup = require('yup');
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -8,7 +9,6 @@ class Adapter extends EventStoreAdapterInterface
 
     constructor(config)
     {
-        console.log('constructor');
         super();
         this.config = config;
         this.validateConfig();
@@ -33,95 +33,103 @@ class Adapter extends EventStoreAdapterInterface
     {
         console.log('init');
         await this.createDatabase();
-        this.db = mysql.createConnection(this.config);
+        this.db = await mysql.createConnection(this.config);
         await this.db.connect();
         await this.createTable();
-        // todo check if scheme is valid
+        // see https://github.com/sidorares/node-mysql2/issues/1239
+        //========MySQL 8.0.22 (and higher) fix========
+        const originalExecute = this.db.execute.bind(this.db);
+        this.db.execute = function(...args){
+            const [query, substitutions, ...rest] = args;
+            for(const key in substitutions) // array or object
+            {
+                const value = substitutions[key];
+                if(typeof value === 'number')
+                    substitutions[key] = String(value);
+            }
+            return originalExecute(query, substitutions, ...rest);
+        };
+        //========/========
     }
 
     async save(event)
     {
-        console.log('save');
-        await new Promise((resolve, reject) => {
-            this.db.query(`INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.values(event).join(',')})`, (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res);
-            });
-        });
+        await this.db.execute(
+            `INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.keys(event).map(() => '?').join(',')})`,
+            Object.values(event));
     }
 
-    async load()
+    async load(filter)
     {
-        // TODO
         console.log('load');
-        await new Promise((resolve, reject) => {
-            this.db.query('SELECT * FROM events WHERE ', (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res);
-            });
-        });
+        // execute can't handle arrays as placeholder, see https://github.com/sidorares/node-mysql2/issues/476
+        const values = [];
+        filter.aggregateIds.forEach(aggregateId => values.push(aggregateId));
+        filter.types.forEach(type => values.push(type));
+        values.push(filter.since);
+        values.push(filter.until);
+        values.push(filter.limit);
+        values.push(filter.limit * (filter.cursor));
+        const events = await this.db.execute(
+            `SELECT * FROM events WHERE aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')}) AND type IN (${filter.types.map(() => '?').join(',')}) AND (timestamp >= ? AND timestamp < ?) ORDER BY position ASC LIMIT ? OFFSET ?`,
+            values
+        );
+        return { events: events[0], cursor: filter.cursor };
     }
 
     async createTable()
     {
         console.log('createTable');
-        const exists = await new Promise((resolve, reject) => {
-            this.db.query(`SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = '${this.config.database}') AND (TABLE_NAME = 'events')`, (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res[0]['count(*)']);
-            });
-        });
+        const exists = await this.db.execute(
+            'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')',
+            [this.config.database]
+        );
 
-        if(!exists)
+        if(exists[0][0]['count(*)'])
+        {
+            // TODO validate scheme
+        }
+        else
         {
             const fields = [
-                'id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY',
-                'aggregateId VARCHAR(32) NOT NULL',
+                'id VARCHAR(36) NOT NULL',
+                'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
+                'aggregateId VARCHAR(36) NOT NULL',
+                'aggregateVersion INT NOT NULL',
                 'type VARCHAR(32) NOT NULL',
-                'timestamp TIMESTAMP NOT NULL',
-                'correlationId VARCHAR(32) NOT NULL',
-                'causationId VARCHAR(32) NOT NULL',
+                'timestamp BIGINT NOT NULL',
+                'correlationId VARCHAR(36) NOT NULL',
+                'causationId VARCHAR(36)',
                 'payload TEXT NOT NULL',
+                'PRIMARY KEY (id)',
+                'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
             ];
-            const query = `CREATE TABLE events (${fields.join(', ')})`;
-            await new Promise((resolve, reject) => {
-                this.db.query(query, (err, res) => {
-                    if(err)
-                        return reject(err);
-                    resolve(res);
-                });
-            });
+            await this.db.execute(
+                `CREATE TABLE events (${fields.join(',')})`,
+                fields
+            );
         }
     }
 
     async createDatabase()
     {
         console.log('createDatabase');
-        const connection = mysql.createConnection({
+        const db = await mysql.createConnection({
             host: this.config.host,
             port: this.config.port,
             user: this.config.user,
             password: this.config.password
         });
+        await db.execute(
+            `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
+            []
+        );
+        await db.end();
+    }
 
-        await new Promise((resolve, reject) => {
-            connection.query('CREATE DATABASE IF NOT EXISTS eventStore', (err, res) => {
-                if(err)
-                    return reject(err);
-                resolve(res);
-            });
-        });
-
-        await new Promise((resolve, reject) => {
-            connection.end(err => {
-                if(err)
-                    return reject(err);
-                resolve();
-            });
-        });
+    async close()
+    {
+        await this.db.end();
     }
 }
 

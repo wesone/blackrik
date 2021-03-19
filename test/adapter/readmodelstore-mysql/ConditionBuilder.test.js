@@ -53,21 +53,21 @@ test('Build field based condition', () => {
    
     const expectedSQL = '(`a` = ? OR `a` > ?) AND `b` > ? AND `c` = ? AND `c2` = ? AND `c3` = ? AND `c4` IS NULL AND `d` IS NOT NULL AND `e` IS NULL AND `f` IS NOT NULL AND (`g` >= ? AND `g` <= ?) AND `h` IN (?, ?) AND NOT (`i` = ? AND `i` < ?) AND NOT (`j` < ? OR (`j` < ? AND `j` > ?))';
     const expectedParameters = [
-        1,
-        2,
-        42,
+        '1',
+        '2',
+        '42',
         'Hans',
-        '2021-12-17T02:24:00.000Z',
-        42,
-        42,
-        50,
+        '2021-12-17 02:24:00',
+        '42',
+        '42',
+        '50',
         'asd',
         'efg',
-        1337,
-        42,
-        3,
-        8,
-        2
+        '1337',
+        '42',
+        '3',
+        '8',
+        '2'
     ];
     const {sql, parameters} = conditionBuilder(condition);
     expect(sql).toEqual(expectedSQL);
@@ -87,7 +87,7 @@ test('Build condition with logic operator on top level', () => {
     };
     
     const expectedSQL = '(`a` = ? OR `b` > ? OR (`c` > ? OR `c` <= ?) OR `d` = ? OR `f` = ?)';
-    const expectedParameters = [1 ,'2021-12-17T02:24:00.000Z' ,5 ,8 ,'ASD' ,42];
+    const expectedParameters = ['1' ,'2021-12-17 02:24:00' ,'5' ,'8' ,'ASD' ,'42'];
     const {sql, parameters} = conditionBuilder(condition);
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);

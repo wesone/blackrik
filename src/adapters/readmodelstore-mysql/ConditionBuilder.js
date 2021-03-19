@@ -1,4 +1,4 @@
-import { quoteIdentifier, convertValue } from './utils';
+const { quoteIdentifier, convertValue } = require('./utils');
 
 const comparisonOperators = {
     $eq: '=',
@@ -120,7 +120,7 @@ function _sqlBuilder(ast, field, parameters )
             let value = token.value;
             const operator = token.op;
             let raw;
-            
+
             value = convertValue(value);
             if(value === null)
             {
@@ -172,6 +172,6 @@ function conditionBuilder(conditions)
     return {sql, parameters};
 }
 
-export {
+module.exports =  {
     conditionBuilder,
 };

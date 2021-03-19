@@ -5,7 +5,7 @@ class ReadModelStoreAdapterInterface extends Interface
     constructor()
     {
         super({
-            createTable: 'function',
+            defineTable: 'function',
             dropTable: 'function',
             insert: 'function',
             update: 'function',
