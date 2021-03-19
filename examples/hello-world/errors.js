@@ -1,8 +1,9 @@
 class BaseError extends Error
 {
-    constructor(message = 'Internal Error')
+    constructor(message = 'Internal Error', code = 500)
     {
         super(message);
+        this.code = code;
     }
 }
 module.exports.BaseError = BaseError;

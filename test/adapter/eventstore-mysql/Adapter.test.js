@@ -1,6 +1,5 @@
 const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
-const instance = require('../../testExample/testInstance');
-const mysql = require('mysql2');
+const instance = require('../../../examples/hello-world/config');
 const testInstance = instance.eventStoreAdapter.args;
 
 test('Constructor set config', () => {
@@ -57,29 +56,16 @@ describe('Test validateConfig ', () => {
 //     });
 // });
 
-describe('Create database and terminate connection', () => {
+test('Create database and terminate connection', async () => {
     const testObj = new Adapter(testInstance);
-    test('Query', async () => {
-        const mockConnection = {
-            // query: Promise.resolve('QUERY RESOLVE'),
-            // query: jest.fn(arg => Promise.resolve(console.log(arg))),
-            query: jest.fn((arg, arg1) => arg1()),
-            end: jest.fn(() => Promise.resolve(console.log('geendigt')))
-        };
-        const spyQuery= jest.spyOn(mockConnection, 'query');
-        const spyEnd = jest.spyOn(mockConnection, 'end');
+    const mockConnection = {
+        execute: jest.fn(),
+        end: jest.fn()
+    };
+    const spyExecute= jest.spyOn(mockConnection, 'execute');
+    const spyEnd = jest.spyOn(mockConnection, 'end');
 
-        // await mysql.createDatabase({
-        //     host: 'localhost',
-        //     database: 'eventStore',
-        //     user: 'root',
-        //     password: '1234'
-        // });
-
-        // console.log('mock fun: ',await mockConnection.query());
-
-        testObj.createDatabase(mockConnection);
-        expect(spyQuery).toHaveBeenCalled();
-        expect(spyEnd).toHaveBeenCalled();
-    });
+    await testObj.createDatabase(mockConnection);
+    expect(spyExecute).toHaveBeenCalled();
+    expect(spyEnd).toHaveBeenCalled();
 });

@@ -33,11 +33,8 @@ class Aggregate
         return Object.prototype.hasOwnProperty.call(this.projection, eventType);
     }
 
-    _reduceEvents(events, state = null)
+    _reduceEvents(events, state = {})
     {
-        state = state || (typeof this.projection.init === 'function' 
-            ? this.projection.init()
-            : {});
         events.forEach(event => {
             const {type} = event;
             if(this.hasProjection(type))
@@ -49,7 +46,9 @@ class Aggregate
     async load(eventStore, aggregateId)
     {
         const aggregateIds = [aggregateId];
-        let state = null;
+        let state = (typeof this.projection.init === 'function' 
+            ? this.projection.init()
+            : {});
         let next = null;
         let latestEvent = null;
         do

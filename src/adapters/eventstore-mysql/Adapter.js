@@ -1,5 +1,26 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
 const mysql = require('mysql2/promise');
+// const databaseSchema = {
+//     // 'id VARCHAR(36) NOT NULL',
+//     // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
+//     // 'aggregateId VARCHAR(36) NOT NULL',
+//     // 'aggregateVersion INT NOT NULL',
+//     // 'type VARCHAR(32) NOT NULL',
+//     // 'timestamp BIGINT NOT NULL',
+//     // 'correlationId VARCHAR(36) NOT NULL',
+//     // 'causationId VARCHAR(36)',
+//     // 'payload TEXT NOT NULL',
+//     // 'PRIMARY KEY (id)',
+//     // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
+//     fields: {
+//         id: {
+//             Type: 'varchar'
+//         }
+//     },
+//     options: {
+//
+//     }
+// };
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -19,6 +40,8 @@ class Adapter extends EventStoreAdapterInterface
             throw Error('EventStore-MySQL needs a config.');
         if(!this.config.host || !this.config.host.length)
             throw Error('EventStore-MySQL needs a host.');
+        if(!this.config.port || !this.config.host.port)
+            this.config.port = 3306;
         if(!this.config.database || !this.config.database.length)
             throw Error('EventStore-MySQL needs a database name.');
         if(!this.config.user || !this.config.user.length)
@@ -29,6 +52,7 @@ class Adapter extends EventStoreAdapterInterface
 
     async init()
     {
+        console.log('init');
         await this.createDatabase();
         this.db = await mysql.createConnection(this.config);
         await this.db.connect();
@@ -119,7 +143,6 @@ class Adapter extends EventStoreAdapterInterface
         {
             // const table = await this.db.execute('DESCRIBE events', []);
             // console.log(table[0]);
-            // TODO validate scheme
         }
         else
         {
@@ -143,14 +166,20 @@ class Adapter extends EventStoreAdapterInterface
         }
     }
 
-    async createDatabase()
+    async createDatabase(db)
     {
-        const db = await mysql.createConnection({
-            host: this.config.host,
-            port: this.config.port,
-            user: this.config.user,
-            password: this.config.password
-        });
+        console.log('PRE db sagt: ', db);
+        if(!db)
+        {
+            db = await mysql.createConnection({
+                host: this.config.host,
+                port: this.config.port,
+                user: this.config.user,
+                password: this.config.password,
+            });
+        }
+
+        console.log('POST db sagt: ', db);
         await db.execute(
             `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
             []
