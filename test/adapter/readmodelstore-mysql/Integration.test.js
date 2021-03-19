@@ -42,11 +42,7 @@ test('test with MySQL DB', async () => {
 
     await adapter.update(tableName,{id}, {test: 'Hello world!'});
 
-    result = await adapter.findOne(tableName, {
-        conditions: {
-            id,
-        }
-    });
+    result = await adapter.findOne(tableName, {id});
 
     const expectedResult = {'id':id,'test':'Hello world!'};
     expect(result).toEqual(expectedResult);
@@ -103,13 +99,12 @@ test('table schema changes', async () => {
 
     await adapter.defineTable(tableName, schema2);
 
-    result = await adapter.findOne(tableName, {
-        conditions: {
-            id,
-        }
-    });
+    result = await adapter.findOne(tableName, {id});
 
     const expectedResult = {'id':id,'test':'Hello world!', test2: 1};
     expect(result).toEqual(expectedResult);
+
+    result = await adapter.count(tableName);
+    expect(result).toEqual(1);
 
 });

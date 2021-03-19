@@ -81,10 +81,10 @@ class Adapter extends ReadModelStoreAdapterInterface
     async checkTable(tableName, hash)
     {
         const result = await this.findOne('information_schema.TABLES', {
-            conditions: {
-                TABLE_SCHEMA: this.args.database,
-                TABLE_NAME: tableName,
-            },
+            TABLE_SCHEMA: this.args.database,
+            TABLE_NAME: tableName,
+        },
+        {
             fields: ['TABLE_NAME', 'TABLE_COMMENT'],
         });
 
@@ -144,18 +144,18 @@ class Adapter extends ReadModelStoreAdapterInterface
         return this.getStatementMetaData(await this.exec(sql, parameters));
     }
 
-    async find(tableName, queryOptions){
-        const {sql, parameters} = selectBuilder(tableName, queryOptions);
+    async find(tableName, conditions, queryOptions = {}){
+        const {sql, parameters} = selectBuilder(tableName, {...queryOptions, conditions});
         return (await this.exec(sql, parameters))?.[0] ?? [];
     }
 
-    async findOne(tableName, queryOptions){
-        const res = await this.find(tableName, {...queryOptions, limit: 1});
+    async findOne(tableName, conditions, queryOptions = {}){
+        const res = await this.find(tableName, conditions, {...queryOptions, limit: 1});
         return res?.[0] ?? null;
     }
 
-    async count(tableName, queryOptions){
-        const res = await this.find(tableName, {...queryOptions, count: true});
+    async count(tableName, conditions, queryOptions = {}){
+        const res = await this.find(tableName, conditions, {...queryOptions, count: true});
         return res?.[0]?.cnt ?? 0;
     }
 
