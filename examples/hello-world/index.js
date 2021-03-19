@@ -1,6 +1,6 @@
 const Blackrik = require('../../');
-const exampleInstance = require('./exampleInstance');
+const config = require('./config');
 
 (async () => {
-    blackrik = await (new Blackrik(exampleInstance)).start();
+    blackrik = await (new Blackrik(config)).start();
 })();
