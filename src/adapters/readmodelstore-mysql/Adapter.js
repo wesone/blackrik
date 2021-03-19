@@ -24,6 +24,10 @@ class Adapter extends ReadModelStoreAdapterInterface
             this.debugSql = true;
             delete args.debugSql;
         }
+        if(!args.database || typeof args.database !== 'string')
+        {
+            throw new Error('Readmodelstore needs a database name.');
+        }
         this.args = {...args};
     }
 
