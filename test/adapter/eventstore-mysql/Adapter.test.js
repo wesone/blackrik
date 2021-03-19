@@ -1,5 +1,5 @@
 const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
-const instance = require('../../../examples/hello-world/exampleInstance');
+const instance = require('../../../examples/hello-world/config');
 const testInstance = instance.eventStoreAdapter.args;
 
 test('Constructor set config', () => {
