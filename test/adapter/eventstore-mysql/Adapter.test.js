@@ -59,22 +59,11 @@ describe('Test validateConfig ', () => {
 test('Create database and terminate connection', async () => {
     const testObj = new Adapter(testInstance);
     const mockConnection = {
-        // query: Promise.resolve('QUERY RESOLVE'),
-        // query: jest.fn(arg => Promise.resolve(console.log(arg))),
         execute: jest.fn(),
         end: jest.fn()
     };
     const spyExecute= jest.spyOn(mockConnection, 'execute');
     const spyEnd = jest.spyOn(mockConnection, 'end');
-
-    // await mysql.createDatabase({
-    //     host: 'localhost',
-    //     database: 'eventStore',
-    //     user: 'root',
-    //     password: '1234'
-    // });
-
-    // console.log('mock fun: ',await mockConnection.query());
 
     await testObj.createDatabase(mockConnection);
     expect(spyExecute).toHaveBeenCalled();

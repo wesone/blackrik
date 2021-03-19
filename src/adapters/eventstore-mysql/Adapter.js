@@ -146,16 +146,7 @@ class Adapter extends EventStoreAdapterInterface
 
     async createDatabase(db)
     {
-<<<<<<< HEAD
         console.log('createDatabase');
-=======
-        const db = await mysql.createConnection({
-            host: this.config.host,
-            port: this.config.port,
-            user: this.config.user,
-            password: this.config.password
-        });
->>>>>>> b7a2582b5635548a192d00325464e5ccbc18cda4
         await db.execute(
             `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
             []
