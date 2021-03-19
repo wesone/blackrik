@@ -14,6 +14,7 @@ const types = {
     'Double': 'DOUBLE', 
     'Decimal': 'DECIMAL(5,2)', 
     'Date': 'DATETIME', 
+    'Timestamp': 'TIMESTAMP',
     'uuid': 'CHAR(36)'
 };
 
