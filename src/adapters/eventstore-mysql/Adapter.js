@@ -32,8 +32,8 @@ class Adapter extends EventStoreAdapterInterface
     async init()
     {
         console.log('init');
+        await this.createDatabase(await this._createConnection());    
         this.db = await mysql.createConnection(this.config);
-        await this.createDatabase();    
         await this.db.connect();
         await this.createTable();
         // see https://github.com/sidorares/node-mysql2/issues/1239
@@ -111,19 +111,23 @@ class Adapter extends EventStoreAdapterInterface
         }
     }
 
-    async createDatabase()
+    async createDatabase(db)
     {
         console.log('createDatabase');
-        await this.db.execute(
+        await db.execute(
             `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
             []
         );
         await db.end();
     }
 
+    async _createConnection(){
+        return await mysql.createConnection(this.config);
+    }
+
     async close()
     {
-        await this.db.end();
+        await db.end();
     }
 }
 
