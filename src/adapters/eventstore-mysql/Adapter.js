@@ -14,6 +14,7 @@ const databaseSchema = {
     // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
     fields: {
         id: {
+            Field: 'id',
             Type: 'varchar(36)',
             Null: 'NO',
             Key: 'PRI',
@@ -21,6 +22,7 @@ const databaseSchema = {
             Extra: ''
         },
         position: {
+            Field: 'position',
             Type: 'bigint',
             Null: 'NO',
             Key: 'UNI',
@@ -28,6 +30,7 @@ const databaseSchema = {
             Extra: 'auto_increment'
         },
         aggregateId: {
+            Field: 'aggregateId',
             Type: 'varchar(36)',
             Null: 'NO',
             Key: 'MUL',
@@ -35,6 +38,7 @@ const databaseSchema = {
             Extra: ''
         },
         aggregateVersion: {
+            Field: 'aggregateVersion',
             Type: 'int',
             Null: 'NO',
             Key: '',
@@ -42,6 +46,7 @@ const databaseSchema = {
             Extra: ''
         },
         type: {
+            Field: 'type',
             Type: 'varchar(32)',
             Null: 'NO',
             Key: '',
@@ -49,6 +54,7 @@ const databaseSchema = {
             Extra: ''
         },
         timestamp: {
+            Field: 'timestamp',
             Type: 'bigint',
             Null: 'NO',
             Key: '',
@@ -56,6 +62,7 @@ const databaseSchema = {
             Extra: ''
         },
         correlationId: {
+            Field: 'correlationId',
             Type: 'varchar(36)',
             Null: 'NO',
             Key: '',
@@ -63,6 +70,7 @@ const databaseSchema = {
             Extra: ''
         },
         causationId: {
+            Field: 'causationId',
             Type: 'varchar(36)',
             Null: 'YES',
             Key: '',
@@ -70,6 +78,7 @@ const databaseSchema = {
             Extra: ''
         },
         payload: {
+            Field: 'payload',
             Type: 'text',
             Null: 'NO',
             Key: '',
@@ -204,7 +213,8 @@ class Adapter extends EventStoreAdapterInterface
         if(exists[0][0]['count(*)'])
         {
             const table = await this.db.execute('DESCRIBE events', []);
-            // todo
+            if(!await this.verifySchema(table[0]))
+                throw Error('Existing table schema is not valid.');
         }
         else
         {
@@ -230,6 +240,38 @@ class Adapter extends EventStoreAdapterInterface
     async close()
     {
         await this.db.end();
+    }
+
+    verifySchema(data)
+    {
+        return new Promise(resolve => {
+            let valid = false;
+            Object.values(databaseSchema.fields).forEach(field => {
+                for(let i = 0; i < data.length; i++)
+                {
+                    if(data[i].Field === field.Field)
+                    {
+                        if(
+                            data[i].Type === field.Type &&
+                            data[i].Null === field.Null &&
+                            data[i].Key === field.Key &&
+                            data[i].Default === field.Default &&
+                            data[i].Extra === field.Extra
+                        )
+                        {
+                            valid = true;
+                            break;
+                        }
+
+                        valid = false;
+                    }
+                }
+
+                if(!valid)
+                    return resolve(false);
+            });
+            resolve(true);
+        });
     }
 
     buildFieldListFromSchema()
