@@ -7,11 +7,24 @@ Blackrik is a CQRS and Event-Sourcing Framework for Node.js.
 - [CQRS](https://martinfowler.com/bliki/CQRS.html) - A pattern for a separated write (command) and read (query) side
 - [Event-Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html) - An approach where every state change of an application is stored in an event
 - [Aggregates](https://martinfowler.com/bliki/DDD_Aggregate.html) - A pattern to encapsulate associated states, commands and events (for more information see [Domain Driven Design](https://martinfowler.com/bliki/DomainDrivenDesign.html))
+- [More](https://www.cqrs.nu/)
 
 ## Getting Started
 
 ### Installation
-TODO 
+Make sure you have at least Node.js v14.0.0 installed
+```
+$ node --version
+v14.0.0
+```
+Create a new project (or use an existing one)
+```
+$ mkdir hello-world
+$ cd hello-world
+$ npm init -y
+```
+Then install the Blackrik module
+TODO
 
 ### Usage
 TODO

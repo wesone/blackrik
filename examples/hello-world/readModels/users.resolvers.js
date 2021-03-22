@@ -25,10 +25,8 @@ async function checkPosition(store, args)
 
 module.exports = {
     get: async (store, args) => {
-        await checkPosition(store, args);
-        return await store.findOne(tableName, {
-            conditions:{id: args.id}
-        });
+        await checkPosition(store, {args});
+        return await store.findOne(tableName, {id: args.id});
     },
     list: async (store, args) => {
         await checkPosition(store, args);

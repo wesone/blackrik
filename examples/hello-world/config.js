@@ -1,3 +1,5 @@
+const Blackrik = require('../../');
+
 module.exports = {
     aggregates: [
         {
@@ -44,8 +46,8 @@ module.exports = {
         args: {
             brokers: ['localhost:9092']
         }
-        //args: {},
-        //module: '../adapters/eventbus-local'
+        // module: Blackrik.ADAPTERS.EVENTBUS.Local,
+        // args: {}
     },
     server: {
         config: {
