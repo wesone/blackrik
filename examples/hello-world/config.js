@@ -44,6 +44,8 @@ module.exports = {
         args: {
             brokers: ['localhost:9092']
         }
+        //args: {},
+        //module: '../adapters/eventbus-local'
     },
     server: {
         config: {
