@@ -1,26 +1,89 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
 const mysql = require('mysql2/promise');
-// const databaseSchema = {
-//     // 'id VARCHAR(36) NOT NULL',
-//     // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
-//     // 'aggregateId VARCHAR(36) NOT NULL',
-//     // 'aggregateVersion INT NOT NULL',
-//     // 'type VARCHAR(32) NOT NULL',
-//     // 'timestamp BIGINT NOT NULL',
-//     // 'correlationId VARCHAR(36) NOT NULL',
-//     // 'causationId VARCHAR(36)',
-//     // 'payload TEXT NOT NULL',
-//     // 'PRIMARY KEY (id)',
-//     // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
-//     fields: {
-//         id: {
-//             Type: 'varchar'
-//         }
-//     },
-//     options: {
-//
-//     }
-// };
+const databaseSchema = {
+    // 'id VARCHAR(36) NOT NULL',
+    // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
+    // 'aggregateId VARCHAR(36) NOT NULL',
+    // 'aggregateVersion INT NOT NULL',
+    // 'type VARCHAR(32) NOT NULL',
+    // 'timestamp BIGINT NOT NULL',
+    // 'correlationId VARCHAR(36) NOT NULL',
+    // 'causationId VARCHAR(36)',
+    // 'payload TEXT NOT NULL',
+    // 'PRIMARY KEY (id)',
+    // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
+    fields: {
+        id: {
+            Type: 'varchar(36)',
+            Null: 'NO',
+            Key: 'PRI',
+            Default: null,
+            Extra: ''
+        },
+        position: {
+            Type: 'bigint',
+            Null: 'NO',
+            Key: 'UNI',
+            Default: null,
+            Extra: 'auto_increment'
+        },
+        aggregateId: {
+            Type: 'varchar(36)',
+            Null: 'NO',
+            Key: 'MUL',
+            Default: null,
+            Extra: ''
+        },
+        aggregateVersion: {
+            Type: 'int',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        type: {
+            Type: 'varchar(32)',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        timestamp: {
+            Type: 'bigint',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        correlationId: {
+            Type: 'varchar(36)',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        causationId: {
+            Type: 'varchar(36)',
+            Null: 'YES',
+            Key: '',
+            Default: null,
+            Extra: ''
+        },
+        payload: {
+            Type: 'text',
+            Null: 'NO',
+            Key: '',
+            Default: null,
+            Extra: ''
+        }
+    },
+    options: {
+        uniqueKey: {
+            name: 'streamId',
+            fields: ['aggregateId', 'aggregateVersion']
+        }
+    }
+};
 
 class Adapter extends EventStoreAdapterInterface
 {
@@ -52,7 +115,6 @@ class Adapter extends EventStoreAdapterInterface
 
     async init()
     {
-        console.log('init');
         await this.createDatabase();
         this.db = await mysql.createConnection(this.config);
         await this.db.connect();
@@ -115,7 +177,7 @@ class Adapter extends EventStoreAdapterInterface
         {
             values.push(filter.limit);
             limit.push('LIMIT ?');
-            if(!filter.cursor === undefined)
+            if(filter.cursor !== undefined)
             {
                 values.push(filter.limit * (filter.cursor));
                 limit.push('OFFSET ?');
@@ -141,28 +203,12 @@ class Adapter extends EventStoreAdapterInterface
 
         if(exists[0][0]['count(*)'])
         {
-            // const table = await this.db.execute('DESCRIBE events', []);
-            // console.log(table[0]);
+            const table = await this.db.execute('DESCRIBE events', []);
+            // todo
         }
         else
         {
-            const fields = [
-                'id VARCHAR(36) NOT NULL',
-                'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
-                'aggregateId VARCHAR(36) NOT NULL',
-                'aggregateVersion INT NOT NULL',
-                'type VARCHAR(32) NOT NULL',
-                'timestamp BIGINT NOT NULL',
-                'correlationId VARCHAR(36) NOT NULL',
-                'causationId VARCHAR(36)',
-                'payload TEXT NOT NULL',
-                'PRIMARY KEY (id)',
-                'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
-            ];
-            await this.db.execute(
-                `CREATE TABLE events (${fields.join(',')})`,
-                fields
-            );
+            await this.db.execute(`CREATE TABLE events (${this.buildFieldListFromSchema()})`, []);
         }
     }
 
@@ -177,16 +223,44 @@ class Adapter extends EventStoreAdapterInterface
                 password: this.config.password,
             });
         }
-        await db.execute(
-            `CREATE DATABASE IF NOT EXISTS ${this.config.database}`,
-            []
-        );
+        await db.execute(`CREATE DATABASE IF NOT EXISTS ${this.config.database}`, []);
         await db.end();
     }
 
     async close()
     {
         await this.db.end();
+    }
+
+    buildFieldListFromSchema()
+    {
+        let primaryKey = '';
+        const fields = Object.keys(databaseSchema.fields).map(field => {
+            const properties = [];
+            properties.push(field);
+            properties.push(databaseSchema.fields[field].Type);
+            if(databaseSchema.fields[field].Null === 'NO')
+                properties.push('not null');
+
+            if(databaseSchema.fields[field].Key === 'PRI')
+                primaryKey = field;
+            if(databaseSchema.fields[field].Key === 'UNI')
+                properties.push('unique');
+
+            if(databaseSchema.fields[field].Default !== null)
+                properties.push(`default ${databaseSchema.fields[field].Default}`);
+
+            if(databaseSchema.fields[field].Extra)
+                properties.push(databaseSchema.fields[field].Extra);
+
+            return properties.join(' ');
+        });
+
+        const queryParts = [];
+        queryParts.push(fields.join(','));
+        queryParts.push(`, primary key (${primaryKey})`);
+        queryParts.push(`, unique key \`${databaseSchema.options.uniqueKey.name}\` (${databaseSchema.options.uniqueKey.fields.join(',')})`);
+        return queryParts.join(' ');
     }
 }
 
