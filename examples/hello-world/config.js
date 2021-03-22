@@ -43,11 +43,13 @@ module.exports = {
         }
     },
     eventBusAdapter: {
+        /*
         args: {
             brokers: ['localhost:9092']
         }
-        // module: Blackrik.ADAPTERS.EVENTBUS.Local,
-        // args: {}
+        */
+        args: {},
+        module: '../adapters/eventbus-local'
     },
     server: {
         config: {
