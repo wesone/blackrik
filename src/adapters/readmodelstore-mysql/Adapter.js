@@ -16,7 +16,7 @@ const tableCheckTypes = {
 
 class Adapter extends ReadModelStoreAdapterInterface
 {
-    constructor(args)
+    constructor(args, transactionConnection = null)
     {
         super();
         if(args.debugSql)
@@ -29,18 +29,21 @@ class Adapter extends ReadModelStoreAdapterInterface
             throw new Error('Readmodelstore needs a database name.');
         }
         this.args = {...args};
+        this.transactionConnection = transactionConnection;
     }
 
     printDebugStatemant(sql, parameters)
     {
         if(!this.debugSql)
             return;
-        console.log(sql, JSON.stringify(parameters ?? '[NO PARAMS]'));
+        console.log(sql, JSON.stringify(parameters ?? '[NO PARAMS]'), 
+            this.transactionConnection ? ['TRANSACTION(',this.transactionConnection.threadId,')'].join('') : ''
+        );
     }
 
     async checkConnection()
     {
-        if(!this.pool)
+        if(!this.transactionConnection && !this.pool)
         {
             await this.connect();
         }
@@ -48,11 +51,19 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async connect()
     {
+        if(this.transactionConnection)
+        {
+            throw new Error('Can not be used inside transactions');
+        }
         this.pool = await mysql.createPool(this.args);
     }
 
     async disconnect()
     {
+        if(this.transactionConnection)
+        {
+            throw new Error('Can not be used inside transactions');
+        }
         await this.pool.end();
         this.pool = null;
     }
@@ -61,7 +72,8 @@ class Adapter extends ReadModelStoreAdapterInterface
     {
         await this.checkConnection();
         this.printDebugStatemant(sql, parameters);
-        return this.pool.execute(sql, parameters);
+        const connection = this.transactionConnection ?? this.pool;
+        return connection.execute(sql, parameters);
     }
 
     getStatementMetaData([results])
@@ -78,9 +90,9 @@ class Adapter extends ReadModelStoreAdapterInterface
         return !!hash && typeof hash === 'string' && hash.length >= 130 && hash.split(':', 3).length === 2;
     }
 
-    async checkTable(tableName, hash)
+    async checkTable(tableName, hash, transaction)
     {
-        const result = await this.findOne('information_schema.TABLES', {
+        const result = await transaction.findOne('information_schema.TABLES', {
             TABLE_SCHEMA: this.args.database,
             TABLE_NAME: tableName,
         },
@@ -108,25 +120,35 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async defineTable(tableName, fieldDefinitions, options = {triggerReplay: true}){
         const {sql, hash} = createTableBuilder(tableName, fieldDefinitions);
-        const checkResult = await this.checkTable(tableName, hash);
-
-        if(options?.triggerReplay && checkResult === tableCheckTypes.unmanaged)
+        const transaction = await this.beginTransaction();
+        try 
         {
-            throw new Error('Tried replay on unmanaged table. Check TABLE_COMMENT.');
-        }
+            const checkResult = await this.checkTable(tableName, hash, transaction);
+
+            if(options?.triggerReplay && checkResult === tableCheckTypes.unmanaged)
+            {
+                throw new Error('Tried replay on unmanaged table. Check TABLE_COMMENT.');
+            }
         
-        if(options?.triggerReplay && checkResult === tableCheckTypes.schemaChanged)
-        {
-            await this.dropTable(tableName);
-        }
+            if(options?.triggerReplay && checkResult === tableCheckTypes.schemaChanged)
+            {
+                await transaction.dropTable(tableName);
+            }
 
-        if((options?.triggerReplay && checkResult === tableCheckTypes.schemaChanged) || 
+            if((options?.triggerReplay && checkResult === tableCheckTypes.schemaChanged) || 
             checkResult === tableCheckTypes.new)
-        {
-            await this.exec(sql);
-            return true;
+            {
+                await transaction.exec(sql);
+                await transaction.commit();
+                return true;
+            }
+            await transaction.commit();
         }
-
+        catch(e)
+        {
+            await transaction.rollback();
+            throw e;
+        }
         return false;
     }
 
@@ -164,6 +186,38 @@ class Adapter extends ReadModelStoreAdapterInterface
         return this.getStatementMetaData(
             await this.exec(['DELETE FROM', quoteIdentifier(tableName), 'WHERE', sql].join(' '), parameters)
         );
+    }
+
+    async beginTransaction()
+    {
+        if(this.transactionConnection)
+        {
+            throw new Error('Transaction already started');
+        }
+        await this.checkConnection();
+        const connection = await this.pool.getConnection();
+        await connection.beginTransaction();
+        return new Adapter({...this.args, debugSql: this.debugSql}, connection);
+    }
+
+    async commit()
+    {
+        if(!this.transactionConnection)
+        {
+            throw new Error('Can only be used within a transaction');
+        }
+        await this.transactionConnection.commit();
+        await this.transactionConnection.release();
+    }
+
+    async rollback()
+    {
+        if(!this.transactionConnection)
+        {
+            throw new Error('Can only be used within a transaction');
+        }
+        await this.transactionConnection.rollback();
+        await this.transactionConnection.release();
     }
 }
 

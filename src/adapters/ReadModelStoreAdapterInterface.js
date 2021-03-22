@@ -12,7 +12,10 @@ class ReadModelStoreAdapterInterface extends Interface
             find: 'function',
             findOne: 'function',
             count: 'function',
-            delete: 'function'
+            delete: 'function',
+            beginTransaction: 'function',
+            commit: 'function',
+            rollback: 'function'
         });
     }
 }
