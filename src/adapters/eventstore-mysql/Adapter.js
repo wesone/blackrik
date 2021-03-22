@@ -190,7 +190,7 @@ class Adapter extends EventStoreAdapterInterface
                 event.payload = JSON.parse(event.payload);
                 return event;
             }),
-            cursor: filter.cursor
+            cursor: events[0]?.length >= filter.limit ? filter.cursor + 1 : null
         };
     }
 
