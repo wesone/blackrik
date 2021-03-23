@@ -28,7 +28,7 @@ class Adapter extends EventBusAdapterInterface
     onMessage({topic, /* partition, */ message})
     {
         const event = JSON.parse(message.value.toString());
-        this.listeners.execute(topic, event);
+        this.listeners.execute(event.type, event);
     }
 
     async init()
@@ -49,27 +49,30 @@ class Adapter extends EventBusAdapterInterface
         await this.consumer.connect(); // connect the client after all topics were created
         
         await this.consumer.run({
+            // eachBatch: async ({ batch }) => {},
             eachMessage: this.onMessage.bind(this)
         });
     }
 
-    async subscribe(type, callback)
+    async subscribe(name, type, callback)
     {
-        if(typeof type !== 'string')
+        if(typeof name !== 'string')
             throw Error(`First parameter of subscribe needs to be of type string (given type: ${typeof type}).`);
+        if(typeof type !== 'string')
+            throw Error(`Second parameter of subscribe needs to be of type string (given type: ${typeof type}).`);
         if(typeof callback !== 'function')
-            throw Error(`Second parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
+            throw Error(`Third parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
 
         this.listeners.add(type, callback);
-        await this.consumer.subscribe({topic: type});
+        await this.consumer.subscribe({topic: name});
     }
 
-    async publish(event)
+    async publish(name, event)
     {
         try
         {
             await this.producer.send({
-                topic: event.type,
+                topic: name,
                 messages: [
                     {
                         // key: '1234',

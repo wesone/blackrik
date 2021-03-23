@@ -36,7 +36,7 @@ class CommandHandler
         };
     }
 
-    async processEvent(event, causationEvent = null)
+    async processEvent(aggregateName, event, causationEvent = null)
     {
         if(causationEvent)
         {
@@ -45,7 +45,7 @@ class CommandHandler
             event.causationId = id;
         }
 
-        event = await this.#blackrik._eventHandler.publish(new Event(event));
+        event = await this.#blackrik._eventHandler.publish(aggregateName, new Event(event));
         if(!event)
             throw new ConflictError('Events overlapped');
             
@@ -87,7 +87,7 @@ class CommandHandler
 
         event.aggregateId = aggregateId;
         event.aggregateVersion = context.aggregateVersion + 1;
-        return await this.processEvent(event, context.causationEvent);
+        return await this.processEvent(aggregateName, event, context.causationEvent);
     }
 }
 

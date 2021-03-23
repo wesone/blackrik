@@ -23,20 +23,20 @@ class EventHandler
         });
     }
 
-    async sendEvent(event)
+    async sendEvent(name, event)
     {
-        return await this.eventBus.publish(event) && event;
+        return await this.eventBus.publish(name, event) && event;
     }
 
-    async subscribe(type, callback)
+    async subscribe(name, type, callback)
     {
-        return await this.eventBus.subscribe(type, callback);
+        return await this.eventBus.subscribe(name, type, callback);
     }
 
-    async publish(event)
+    async publish(name, event)
     {
         return this.persistEvent(event)
-            .then(this.sendEvent.bind(this))
+            .then(event => this.sendEvent(name, event))
             .catch(() => false);
     }
 

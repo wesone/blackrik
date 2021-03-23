@@ -1,4 +1,4 @@
-const Blackrik = require('../../');
+const Blackrik = require('blackrik');
 const config = require('./config');
 
 (async () => {

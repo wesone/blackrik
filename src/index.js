@@ -63,29 +63,19 @@ class Blackrik
         this.#blackrik = new Application(this);
     }
 
-    async executeCommand(command, causationEvent = null)
+    get executeCommand()
     {
-        const context = {blackrik: this};
-        if(causationEvent)
-            context.causationEvent = causationEvent;
-        return !!await this.#blackrik._commandHandler.process(
-            command,
-            context
-        );
+        return this.#blackrik.executeCommand;
     }
 
-    // scheduleCommand(crontime, command)
-    // {
-
-    // }
-
-    async executeQuery(readModel, resolver, query)
+    get scheduleCommand()
     {
-        return await this.#blackrik._queryHandler.process(
-            readModel,
-            resolver,
-            query
-        );
+        return this.#blackrik.scheduleCommand;
+    }
+
+    get executeQuery()
+    {
+        return this.#blackrik.executeQuery;
     }
 
     async start()

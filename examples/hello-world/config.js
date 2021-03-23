@@ -1,4 +1,4 @@
-const Blackrik = require('../../');
+const Blackrik = require('blackrik');
 
 module.exports = {
     aggregates: [
@@ -10,16 +10,16 @@ module.exports = {
     ],
     readModels: [
         {
-            name: 'users',
-            projection: require('./readModels/users.projection'),
-            resolvers: require('./readModels/users.resolvers'),
+            name: 'user',
+            projection: require('./readModels/user.projection'),
+            resolvers: require('./readModels/user.resolvers'),
             adapter: 'default'
         }
     ],
     sagas: [
         {
-            name: 'saga-users',
-            source: require('./sagas/users'),
+            name: 'user',
+            source: require('./sagas/user'),
             adapter: 'default'
         }
     ],
