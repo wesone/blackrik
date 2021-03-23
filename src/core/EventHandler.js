@@ -50,6 +50,7 @@ class EventHandler
                 limit: EVENT_LIMIT_REPLAY,
                 cursor: next
             });
+
             if(events.length)
                 await Promise.all(events.map(event => this.sendEvent({...event, isReplay: true})));
             next = cursor;
