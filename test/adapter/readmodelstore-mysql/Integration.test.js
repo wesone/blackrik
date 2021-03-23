@@ -6,7 +6,7 @@ let adapter;
 
 beforeAll(() => {
     adapter = new Adapter({ 
-        debugSql: true,
+        //debugSql: true,
         host: 'localhost',
         user: 'root',
         password: '1234',
