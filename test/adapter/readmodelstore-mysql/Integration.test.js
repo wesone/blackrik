@@ -6,7 +6,7 @@ let adapter;
 
 beforeAll(() => {
     adapter = new Adapter({ 
-        //debugSql: true,
+        debugSql: true,
         host: 'localhost',
         user: 'root',
         password: '1234',
@@ -98,6 +98,12 @@ test('table schema changes', async () => {
     const id = result.id;
 
     await adapter.defineTable(tableName, schema2);
+
+    result = await adapter.checkTable(tableName + '_new', '');
+    expect(result?.description).toEqual('new');
+
+    result = await adapter.checkTable(tableName + '_old', '');
+    expect(result?.description).toEqual('new');
 
     result = await adapter.findOne(tableName, {id});
 

@@ -90,9 +90,9 @@ class Adapter extends ReadModelStoreAdapterInterface
         return !!hash && typeof hash === 'string' && hash.length >= 130 && hash.split(':', 3).length === 2;
     }
 
-    async checkTable(tableName, hash, transaction)
+    async checkTable(tableName, hash)
     {
-        const result = await transaction.findOne('information_schema.TABLES', {
+        const result = await this.findOne('information_schema.TABLES', {
             TABLE_SCHEMA: this.args.database,
             TABLE_NAME: tableName,
         },
@@ -120,36 +120,40 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async defineTable(tableName, fieldDefinitions, options = {triggerReplay: true}){
         const {sql, hash} = createTableBuilder(tableName, fieldDefinitions);
-        const transaction = await this.beginTransaction();
-        try 
-        {
-            const checkResult = await this.checkTable(tableName, hash, transaction);
-
-            if(options?.triggerReplay && checkResult === tableCheckTypes.unmanaged)
-            {
-                throw new Error('Tried replay on unmanaged table. Check TABLE_COMMENT.');
-            }
         
-            if(options?.triggerReplay && checkResult === tableCheckTypes.schemaChanged)
-            {
-                await transaction.dropTable(tableName);
-            }
+        const checkResult = await this.checkTable(tableName, hash);
 
-            if((options?.triggerReplay && checkResult === tableCheckTypes.schemaChanged) || 
-            checkResult === tableCheckTypes.new)
-            {
-                await transaction.exec(sql);
-                await transaction.commit();
-                return true;
-            }
-            await transaction.commit();
-        }
-        catch(e)
+        if(options?.triggerReplay && checkResult === tableCheckTypes.unmanaged)
         {
-            await transaction.rollback();
-            throw e;
+            throw new Error('Tried replay on unmanaged table. Check TABLE_COMMENT.');
         }
-        return false;
+        
+        if(options?.triggerReplay && checkResult === tableCheckTypes.schemaChanged)
+        {
+            try
+            {
+                await this.exec(createTableBuilder(tableName + '_new', fieldDefinitions)['sql']);
+                await this.exec(['RENAME TABLE', quoteIdentifier(tableName), 'TO', quoteIdentifier(tableName + '_old'),',',
+                    quoteIdentifier(tableName + '_new'), 'TO', quoteIdentifier(tableName)].join(' '));
+                await this.dropTable(tableName + '_old');
+                return true; // trigger replay
+            } 
+            catch(e)
+            {
+                if(e?.errno === 1050) // Table already exists
+                {
+                    // Table recreation already in progress. Do nothing.
+                    return false;
+                }
+                throw e;
+            }
+        } 
+        else if(checkResult === tableCheckTypes.new)
+        {
+            await this.exec(sql);
+            return true; // trigger replay
+        }
+        return false; // Do nothing
     }
 
     async dropTable(tableName){
