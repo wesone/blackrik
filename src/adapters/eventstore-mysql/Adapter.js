@@ -219,7 +219,7 @@ class Adapter extends EventStoreAdapterInterface
 
     async createDatabase(db)
     {
-        if(!db)
+        if(!db) // For testing purposes
         {
             db = await mysql.createConnection({
                 host: this.config.host,

@@ -99,6 +99,12 @@ test('table schema changes', async () => {
 
     await adapter.defineTable(tableName, schema2);
 
+    result = await adapter.checkTable(tableName + '_new', '');
+    expect(result?.description).toEqual('new');
+
+    result = await adapter.checkTable(tableName + '_old', '');
+    expect(result?.description).toEqual('new');
+
     result = await adapter.findOne(tableName, {id});
 
     const expectedResult = {'id':id,'test':'Hello world!', test2: 1};

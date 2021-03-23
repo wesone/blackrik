@@ -8,6 +8,7 @@ const Aggregate = require('./Aggregate');
 const RequestHandler = require('./RequestHandler');
 const CommandHandler = require('./CommandHandler');
 const QueryHandler = require('./QueryHandler');
+const CommandScheduler = require('./CommandScheduler');
 
 const httpMethods = require('../resources/httpMethods');
 
@@ -24,11 +25,11 @@ class Blackrik
     _stores = {};
 
     _aggregates = {};
-    _subscribers = {};
     _resolvers = {};
 
     _commandHandler;
     _queryHandler;
+    _commandScheduler;
 
     constructor(instance)
     {
@@ -84,13 +85,13 @@ class Blackrik
         });
     }
 
-    async _createSubscriptions(eventMap, store, callback, config)
+    async _createSubscriptions(name, eventMap, store, callback, config)
     {
         await Promise.all(
             Object.entries(eventMap).map(
                 ([eventType, handler]) =>
                     eventType !== CONSTANTS.READMODEL_INIT_FUNCTION && 
-                        this._eventHandler.subscribe(eventType, async event => {
+                        this._eventHandler.subscribe(name, eventType, async event => {
                             try
                             {
                                 await callback(handler, store, event, config);
@@ -106,9 +107,6 @@ class Blackrik
 
     async _registerSubscribers(name, handlers, adapter, callback)
     {
-        if(this._subscribers[name])
-            throw Error(`Duplicate ReadModel or Saga name '${name}'.`);
-
         if(!adapter)
             adapter = CONSTANTS.DEFAULT_ADAPTER;
 
@@ -117,12 +115,12 @@ class Blackrik
             ? await handlers[CONSTANTS.READMODEL_INIT_FUNCTION](store) || {}
             : {};
 
-        await this._createSubscriptions(handlers, store, callback, config);
+        await this._createSubscriptions(name, handlers, store, callback, config);
 
-        return (this._subscribers[name] = {
+        return {
             handlers,
             adapter
-        });
+        };
     }
 
     async _processReadModels()
@@ -178,6 +176,15 @@ class Blackrik
         ]);
     }
 
+    async _initHandlers()
+    {
+        this._commandHandler = new CommandHandler(this);
+        this._queryHandler = new QueryHandler(this);
+
+        this._commandScheduler = new CommandScheduler(this);
+        await this._commandScheduler.init();
+    }
+
     _registerInternalMiddlewares()
     {
         this.#server.use((...[req, , next]) => (req.blackrik = Object.freeze(this.#instance)) && next());
@@ -197,9 +204,7 @@ class Blackrik
 
     _registerInternalAPI()
     {
-        this._commandHandler = new CommandHandler(this);
         this.#server.route(CONSTANTS.ROUTE_COMMAND).post(new RequestHandler(this._commandHandler.handle));
-        this._queryHandler = new QueryHandler(this);
         this.#server.route(CONSTANTS.ROUTE_QUERY).get(new RequestHandler(this._queryHandler.handle));
     }
 
@@ -239,6 +244,9 @@ class Blackrik
         console.log('Start EventHandler');
         await this._eventHandler.start(); // needs to run after subscriptions
 
+        console.log('Initialize Handlers');
+        await this._initHandlers();
+
         if(this.#replayEvents.length)
         {
             console.log('Replaying events:', this.#replayEvents.join(', '));
@@ -251,6 +259,35 @@ class Blackrik
         this.#server.start();
 
         return this;
+    }
+
+    async executeCommand(command, causationEvent = null)
+    {
+        const context = {blackrik: this.#instance};
+        if(causationEvent)
+            context.causationEvent = causationEvent;
+        return !!await this._commandHandler.process(
+            command,
+            context
+        );
+    }
+
+    async scheduleCommand(delay, command, causationEvent = null)
+    {
+        return !!await this._commandHandler.schedule(
+            delay,
+            command,
+            causationEvent
+        );
+    }
+
+    async executeQuery(readModel, resolver, query)
+    {
+        return await this._queryHandler.process(
+            readModel,
+            resolver,
+            query
+        );
     }
 }
 
