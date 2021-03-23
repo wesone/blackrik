@@ -7,7 +7,8 @@ class EventStoreAdapterInterface extends Interface
         super({
             init: 'function',
             save: 'function',
-            load: 'function'
+            load: 'function',
+            close: 'function'
         });
     }
 }
