@@ -39,6 +39,7 @@ module.exports = yup.object({
             adapter: yup.string()
         })
     ),
+    adapter: yup.string(),
     readModelStoreAdapters: yup.adapterList(), // object with each value matches {module: string (required), args: object (optional)}
     eventStoreAdapter: yup.object({
         module: yup.string().required(),

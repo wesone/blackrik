@@ -23,6 +23,7 @@ module.exports = {
             adapter: 'default'
         }
     ],
+    adapter: 'default',
     readModelStoreAdapters: {
         default: {
             args: {

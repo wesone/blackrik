@@ -136,10 +136,16 @@ class Blackrik
 
     _constructSideEffects(sideEffects)
     {
-        Object.defineProperty(sideEffects, 'executeCommand', {
-            value: this.#instance.executeCommand,
-            writable: false
-        });
+        [
+            'executeCommand',
+            'scheduleCommand',
+            'executeQuery'
+        ].forEach(fn => 
+            Object.defineProperty(sideEffects, fn, {
+                value: this[fn].bind(this),
+                writable: false
+            })
+        );
         return sideEffects;
     }
 
@@ -181,7 +187,7 @@ class Blackrik
         this._commandHandler = new CommandHandler(this);
         this._queryHandler = new QueryHandler(this);
 
-        this._commandScheduler = new CommandScheduler(this);
+        this._commandScheduler = new CommandScheduler(this, this._createReadModelStore(this.config.adapter || 'default'));
         await this._commandScheduler.init();
     }
 
@@ -274,7 +280,7 @@ class Blackrik
 
     async scheduleCommand(delay, command, causationEvent = null)
     {
-        return !!await this._commandHandler.schedule(
+        return !!await this._commandScheduler.process(
             delay,
             command,
             causationEvent
