@@ -1,17 +1,6 @@
 const EventStoreAdapterInterface = require('../EventStoreAdapterInterface');
 const mysql = require('mysql2/promise');
 const databaseSchema = {
-    // 'id VARCHAR(36) NOT NULL',
-    // 'position BIGINT UNIQUE NOT NULL AUTO_INCREMENT',
-    // 'aggregateId VARCHAR(36) NOT NULL',
-    // 'aggregateVersion INT NOT NULL',
-    // 'type VARCHAR(32) NOT NULL',
-    // 'timestamp BIGINT NOT NULL',
-    // 'correlationId VARCHAR(36) NOT NULL',
-    // 'causationId VARCHAR(36)',
-    // 'payload TEXT NOT NULL',
-    // 'PRIMARY KEY (id)',
-    // 'UNIQUE KEY `streamId` (aggregateId,aggregateVersion)'
     fields: {
         id: {
             Field: 'id',
@@ -203,6 +192,12 @@ class Adapter extends EventStoreAdapterInterface
         };
     }
 
+    async close()
+    {
+        await this.db.end();
+        return true;
+    }
+
     async createTable()
     {
         const exists = await this.db.execute(
@@ -235,11 +230,6 @@ class Adapter extends EventStoreAdapterInterface
         }
         await db.execute(`CREATE DATABASE IF NOT EXISTS ${this.config.database}`, []);
         await db.end();
-    }
-
-    async close()
-    {
-        await this.db.end();
     }
 
     verifySchema(data)
