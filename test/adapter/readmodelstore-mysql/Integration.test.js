@@ -114,3 +114,43 @@ test('table schema changes', async () => {
     expect(result).toEqual(1);
 
 });
+
+test('JSON handling', async () => {
+    let result;
+
+    const schema = {
+        id: {
+            type: 'Integer'
+        },
+        myJSON: {
+            type: 'JSON',
+        }
+    };
+
+    await adapter.dropTable(tableName);
+
+    await adapter.defineTable(tableName, schema);
+
+
+    await adapter.insert(tableName, {
+        id: 1,
+        myJSON: {text: 'Hello World!'},
+    });
+
+    await adapter.insert(tableName, {
+        id: 2,
+        myJSON: ['Hello', 'World', '!'],
+    });
+    
+    result = await adapter.count(tableName);
+    expect(result).toEqual(2);
+
+    result = await adapter.findOne(tableName, {id: 1});
+    let expectedResult = {'id':1, myJSON: {text:'Hello World!'}};
+    expect(result).toEqual(expectedResult);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expectedResult = {'id':2, myJSON: ['Hello', 'World', '!']};
+    expect(result).toEqual(expectedResult);
+
+});

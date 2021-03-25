@@ -4,9 +4,11 @@ const EventEmitter = require('events');
 
 class Adapter extends EventBusAdapterInterface
 {
+    #eventBus;
+
     async init()
     {
-        this.eventBus = new EventEmitter();
+        this.#eventBus = new EventEmitter();
     }
 
     async start()
@@ -14,22 +16,24 @@ class Adapter extends EventBusAdapterInterface
         return true;
     }
 
-    async subscribe(type, callback)
+    async subscribe(name, type, callback)
     {
-        if(typeof type !== 'string')
+        if(typeof name !== 'string')
             throw Error(`First parameter of subscribe needs to be of type string (given type: ${typeof type}).`);
+        if(typeof type !== 'string')
+            throw Error(`Second parameter of subscribe needs to be of type string (given type: ${typeof type}).`);
         if(typeof callback !== 'function')
-            throw Error(`Second parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
-        this.eventBus.on(type, callback);
+            throw Error(`Third parameter of subscribe needs to be of type function (given type: ${typeof callback}).`);
+
+        this.#eventBus.on(type, callback);
         return true;
     }
 
-    async publish(event)
+    async publish(name, event)
     {
-        this.eventBus.emit(event.type, event);
+        this.#eventBus.emit(event.type, event);
         return true;
-    }
-        
+    }    
 }
 
 module.exports = Adapter;

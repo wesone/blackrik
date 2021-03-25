@@ -6,11 +6,10 @@ const schemaVersion = 1;
 const types = {
     'String': 'VARCHAR(512)',
     'Text' : 'TEXT', 
+    'JSON' : 'JSON',
     'Boolean': 'TINYINT(1)', 
-    'Int': 'INTEGER', 
-    'Integer': 'INTEGER', 
-    'Bigint': 'DECIMAL(16,0)', 
-    'Float': 'FLOAT', 
+    'Integer': 'DOUBLE', 
+    'Float': 'DOUBLE', 
     'Double': 'DOUBLE',  
     'Date': 'DATETIME', 
     'Timestamp': 'TIMESTAMP',
@@ -36,9 +35,9 @@ function _validateTypeAttributes(typeDef, attributes, state, fieldIndex)
     }
     if(attributes.autoIncrement)
     {
-        if(typeDef !== 'INTEGER' && typeDef !== 'FLOAT')
+        if(typeDef !== 'DOUBLE')
         {
-            throw new Error('Only Integer or Float field can have the AUTO_INCREMENT attribute');
+            throw new Error('Only Number field can have the AUTO_INCREMENT attribute');
         }
         if(state.hasAutoIncrement)
         {
