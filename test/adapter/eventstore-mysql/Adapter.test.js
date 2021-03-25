@@ -71,14 +71,79 @@ describe('Test createTable', () => {
                 if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
                 {
                     functionCallCheckEventCount++;   
-                    return test = [[{ 'count(*)': 1 }]];
+                    return [[{ 'count(*)': 1 }]];
                 }
                 if(arg1 === 'DESCRIBE events')
                 {
                     functionCallDescribeEvents++;
+                    return [[{
+                        Field: 'id',
+                        Type: 'varchar(36)',
+                        Null: 'NO',
+                        Key: 'PRI',
+                        Default: null,
+                        Extra: ''
+                    },
+                    {
+                        Field: 'position',
+                        Type: 'bigint',
+                        Null: 'NO',
+                        Key: 'UNI',
+                        Default: null,
+                        Extra: 'auto_increment'},
+                    {
+                        Field: 'aggregateId',
+                        Type: 'varchar(36)',
+                        Null: 'NO',
+                        Key: 'MUL',
+                        Default: null,
+                        Extra: ''
+                    },{
+                        Field: 'aggregateVersion',
+                        Type: 'int',
+                        Null: 'NO',
+                        Key: '',
+                        Default: null,
+                        Extra: ''
+                    },{
+                        Field: 'type',
+                        Type: 'varchar(32)',
+                        Null: 'NO',
+                        Key: '',
+                        Default: null,
+                        Extra: ''
+                    },{
+                        Field: 'timestamp',
+                        Type: 'bigint',
+                        Null: 'NO',
+                        Key: '',
+                        Default: null,
+                        Extra: ''
+                    },{
+                        Field: 'correlationId',
+                        Type: 'varchar(36)',
+                        Null: 'NO',
+                        Key: '',
+                        Default: null,
+                        Extra: ''
+                    },{
+                        Field: 'causationId',
+                        Type: 'varchar(36)',
+                        Null: 'YES',
+                        Key: '',
+                        Default: null,
+                        Extra: ''
+                    },{
+                        Field: 'payload',
+                        Type: 'text',
+                        Null: 'NO',
+                        Key: '',
+                        Default: null,
+                        Extra: ''
+                    }]];
                 }
-                else 
-                    functionCallCreateTableEvents++;
+                
+                functionCallCreateTableEvents++;
             }),
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
@@ -144,20 +209,71 @@ describe('Test buildFieldListFromSchema', () => {
     });
 });
 
-// describe('Test load', () => {
-//     test('Check for correct loading of events', () => {
-//         const testObj = new Adapter(testInstance);
-//         expected = 0;
-//         filter = {
-//             types,
-//             limit: EVENT_LIMIT_REPLAY,
-//             cursor: next4
-//         };
+describe('Test load', () => {
+    test('Check for correct loading of events', async () => {
+        const testObj = new Adapter(testInstance);
+        const expected = [
+            { payload: { test: 42 } },
+            { payload: { test: 42 } },
+            { payload: { test: 42 } }
+        ];
+        const next = null;
+        const filter = {
+            aggregateIds: []
+            limit: EVENT_LIMIT_REPLAY,
+            cursor: next,
+            types: 
+                ['USER_CREATED', 'USER_UPDATED']
+            
+        };
 
+        const mockConnection = {
+            execute: jest.fn(() => 
+                [[
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'}
+                ]]) 
+        };
+        const spyExecute= jest.spyOn(mockConnection, 'execute');
+ 
 
-//         const {events, cursor}  = testObj.load(filter);
-//         console.log('events: ', events);
-//         console.log('cursor: ', cursor);
-//         expect(result).toBe(expected);
-//     });
-// });
+        testObj.db = mockConnection;
+        const {events, cursor}  = await testObj.load(filter);
+        expect(spyExecute).toHaveBeenCalled();
+        expect(events).toStrictEqual(expected);
+        expect(cursor).toBe(null);
+    });
+    test('Check for correct loading of events - cursor increment', async () => {
+        const testObj = new Adapter(testInstance);
+        const expected = [
+            { payload: { test: 42 } },
+            { payload: { test: 42 } },
+            { payload: { test: 42 } }
+        ];
+        const next = null;
+        const filter = {
+            limit: 1,
+            cursor: next,
+            types: 
+                ['USER_CREATED', 'USER_UPDATED']
+        };
+
+        const mockConnection = {
+            execute: jest.fn(() => 
+                [[
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'}
+                ]])
+        };
+        const spyExecute= jest.spyOn(mockConnection, 'execute');
+ 
+
+        testObj.db = mockConnection;
+        const {events, cursor}  = await testObj.load(filter);
+        expect(spyExecute).toHaveBeenCalled();
+        expect(events).toStrictEqual(expected);
+        expect(cursor).toBe(1);
+    });
+});
