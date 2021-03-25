@@ -138,8 +138,7 @@ class Blackrik
     {
         [
             'executeCommand',
-            'scheduleCommand',
-            'executeQuery'
+            'scheduleCommand'
         ].forEach(fn => 
             Object.defineProperty(sideEffects, fn, {
                 value: this[fn].bind(this),

@@ -64,6 +64,7 @@ class CommandScheduler
 
     async process(timestamp, command, causationEvent)
     {
+        //TODO should we handle double execution with multiple instances?
         if(
             !timestamp || isNaN(timestamp) ||
             !command || !command.aggregateName || !command.aggregateId || !command.type
