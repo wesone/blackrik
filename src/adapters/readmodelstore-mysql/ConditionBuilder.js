@@ -121,7 +121,7 @@ function _sqlBuilder(ast, field, parameters )
             const operator = token.op;
             let raw;
 
-            value = convertValue(value);
+            value = convertValue(value, false);
             if(value === null)
             {
                 if(token.o === '$eq' || token.o === '$is')

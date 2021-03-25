@@ -14,7 +14,7 @@ module.exports = {
             },
             name: 'String',
             lastPosition: {
-                type: 'Int',
+                type: 'Integer',
                 unique: true,
             },
             createdAt: 'Date',

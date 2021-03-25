@@ -32,8 +32,8 @@ test('Build creat table statement', () => {
         testShorthand: 'Timestamp',
     };
    
-    const expectedSQL = 'CREATE TABLE `TestTable` (`id` CHAR(36) PRIMARY KEY, `test` VARCHAR(512) NULL, `testDate` DATETIME, `testInt` INTEGER UNIQUE, `testInc` FLOAT UNIQUE AUTO_INCREMENT, `testDefault` VARCHAR(512) DEFAULT \'Ein Test\', `testShorthand` TIMESTAMP) COMMENT="1:6f14f634622af59ae5328a0dd9db7d3fb49a7177cfc264d93f2cf5f14b1416a657c9075cbe896ce52e806900012f8910b44ec75ca621952720962fa02b2415c6"';
-    const expectedHash = '1:6f14f634622af59ae5328a0dd9db7d3fb49a7177cfc264d93f2cf5f14b1416a657c9075cbe896ce52e806900012f8910b44ec75ca621952720962fa02b2415c6';
+    const expectedSQL = 'CREATE TABLE `TestTable` (`id` CHAR(36) PRIMARY KEY, `test` VARCHAR(512) NULL, `testDate` DATETIME, `testInt` DOUBLE UNIQUE, `testInc` DOUBLE UNIQUE AUTO_INCREMENT, `testDefault` VARCHAR(512) DEFAULT \'Ein Test\', `testShorthand` TIMESTAMP) COMMENT="1:88006f3b3abcdef52e8ce75a41c96eec2ff5b35c691469b55ddbed4dbed1e64baa6ac006f3fbca55151cc311991d11d9a67e58dd552be50b9d58263b937de837"';
+    const expectedHash = '1:88006f3b3abcdef52e8ce75a41c96eec2ff5b35c691469b55ddbed4dbed1e64baa6ac006f3fbca55151cc311991d11d9a67e58dd552be50b9d58263b937de837';
     const {sql, hash} = createTableBuilder(tableName, fieldDefinition);
     expect(sql).toEqual(expectedSQL);
     expect(hash).toEqual(expectedHash);
