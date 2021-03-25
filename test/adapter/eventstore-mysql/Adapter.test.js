@@ -219,7 +219,7 @@ describe('Test load', () => {
         ];
         const next = null;
         const filter = {
-            aggregateIds: []
+            aggregateIds: [],
             limit: EVENT_LIMIT_REPLAY,
             cursor: next,
             types: 
