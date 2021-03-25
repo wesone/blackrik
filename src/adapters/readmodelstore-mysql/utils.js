@@ -31,15 +31,23 @@ function quoteIdentifier(identifier)
     return [identifierPrefix, identifier, identifierSuffix].join('');
 }
 
-function convertValue(value)
+function convertValue(value, arrayToJSON = true)
 {
     if(value instanceof Date)
     {
         return value.toISOString().slice(0, 19).replace('T', ' ');
     }
-    if(value === undefined)
+    if(value === undefined || value === null)
     {
         return null;
+    }
+    if(typeof value === 'object' && !Array.isArray(value))
+    {
+        return JSON.stringify(value);
+    }
+    if(arrayToJSON && typeof value === 'object' && Array.isArray(value))
+    {
+        return JSON.stringify(value);
     }
     // see https://github.com/sidorares/node-mysql2/issues/1239
     //========MySQL 8.0.22 (and higher) fix========
@@ -47,7 +55,7 @@ function convertValue(value)
     {
         return String(value);
     }
-      
+
     return value;
 }
 

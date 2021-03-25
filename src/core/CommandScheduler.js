@@ -36,7 +36,7 @@ class CommandScheduler
                 sort: {
                     timestamp: 1
                 }
-            })).map(({id, timestamp, command, causationEvent}) => this._schedule(id, timestamp, JSON.parse(command), JSON.parse(causationEvent)))
+            })).map(({id, timestamp, command, causationEvent}) => this._schedule(id, timestamp, command, causationEvent))
         );
     }
 
@@ -73,7 +73,7 @@ class CommandScheduler
         if(this._getDelay(timestamp) <= 0)
             return this._execute(command, causationEvent);
 
-        const {id} = await this.#store.insert(TABLE_NAME, {timestamp, command: JSON.stringify(command), causationEvent: JSON.stringify(causationEvent)});
+        const {id} = await this.#store.insert(TABLE_NAME, {timestamp, command, causationEvent});
         return this._schedule(id, timestamp, command, causationEvent);
     }
 }
