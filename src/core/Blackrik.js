@@ -76,7 +76,7 @@ class Blackrik
                         if(created) // mark readmodel events for replay
                             blackrik.#replayEvents.push([
                                 name,
-                                ...Object.keys(handlers)
+                                Object.keys(handlers)
                                     .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
                             ]);
                         return created;
