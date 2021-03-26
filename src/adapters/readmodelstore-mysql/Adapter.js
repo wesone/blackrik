@@ -28,7 +28,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         {
             throw new Error('Readmodelstore needs a database name.');
         }
-        this.args = {...args};
+        this.args = {...args, timezone: 'Z'}; // All dates are referenced to utc
         this.transactionConnection = transactionConnection;
     }
 
@@ -118,8 +118,22 @@ class Adapter extends ReadModelStoreAdapterInterface
         return tableCheckTypes.unchanged;
     }
 
-    async defineTable(tableName, fieldDefinitions, options = {triggerReplay: true}){
-        const {sql, hash} = createTableBuilder(tableName, fieldDefinitions);
+    async defineTable(tableName, scheme/*, options = {triggerReplay: true}*/){
+        const options = {triggerReplay: true};
+
+        if(scheme.lastPosition)
+        {
+            throw new Error('lastPosition is a reserved field name.');
+        }
+
+        const schemeWithMetaData = {...scheme, 
+            lastPosition: {
+                type: 'Number',
+                unique: true
+            }
+        };
+
+        const {sql, hash} = createTableBuilder(tableName, schemeWithMetaData);
         
         const checkResult = await this.checkTable(tableName, hash);
 
@@ -132,7 +146,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         {
             try
             {
-                await this.exec(createTableBuilder(tableName + '_new', fieldDefinitions)['sql']);
+                await this.exec(createTableBuilder(tableName + '_new', schemeWithMetaData)['sql']);
                 await this.exec(['RENAME TABLE', quoteIdentifier(tableName), 'TO', quoteIdentifier(tableName + '_old'),',',
                     quoteIdentifier(tableName + '_new'), 'TO', quoteIdentifier(tableName)].join(' '));
                 await this.dropTable(tableName + '_old');
@@ -160,17 +174,31 @@ class Adapter extends ReadModelStoreAdapterInterface
         return await this.exec(['DROP TABLE IF EXISTS', quoteIdentifier(tableName)].join(' '));
     }
 
-    async insert(tableName, data){
-        const {sql, parameters} = insertIntoBuilder(tableName, data);
+    async insert(tableName, data, position = null){
+        const {sql, parameters} = insertIntoBuilder(tableName, data, position);
         return this.getStatementMetaData(await this.exec(sql, parameters));
     }
 
-    async update(tableName, conditions, data){
+    async update(tableName, conditions, data, position = null){
+        // TODO: position check
         const {sql, parameters} = updateBuilder(tableName, data, conditions);
         return this.getStatementMetaData(await this.exec(sql, parameters));
     }
 
     async find(tableName, conditions, queryOptions = {}){
+        if(queryOptions.position)
+        {
+            const maxPosition = (await this.findOne(tableName, null, {
+                fields: ['lastPosition'],
+                sort: [{lastPosition: -1}]
+            }))?.lastPosition ?? -1;
+            if(maxPosition < queryOptions.position)
+            {
+                const error =  new Error('Data not yet availible');
+                error.code = 409;
+                throw error;
+            }
+        }
         const {sql, parameters} = selectBuilder(tableName, {...queryOptions, conditions});
         return (await this.exec(sql, parameters))?.[0] ?? [];
     }
@@ -185,7 +213,8 @@ class Adapter extends ReadModelStoreAdapterInterface
         return res?.[0]?.cnt ?? 0;
     }
 
-    async delete(tableName, conditions){
+    async delete(tableName, conditions, position = null){
+        // TODO: position check
         const {sql, parameters} = conditionBuilder(conditions);
         return this.getStatementMetaData(
             await this.exec(['DELETE FROM', quoteIdentifier(tableName), 'WHERE', sql].join(' '), parameters)
