@@ -26,7 +26,7 @@ test('test with MySQL DB', async () => {
 
     await adapter.defineTable(tableName, {
         id: {
-            type: 'Integer',
+            type: 'Number',
             primaryKey: true,
             autoIncrement: true,
         },
@@ -70,7 +70,7 @@ test('table schema changes', async () => {
 
     const schema1 = {
         id: {
-            type: 'Integer',
+            type: 'Number',
             primaryKey: true,
             autoIncrement: true,
         },
@@ -81,7 +81,7 @@ test('table schema changes', async () => {
 
     const schema2 = {
         id: {
-            type: 'Integer',
+            type: 'Number',
             primaryKey: true,
             autoIncrement: true,
         },
@@ -128,7 +128,7 @@ test('JSON handling', async () => {
 
     const schema = {
         id: {
-            type: 'Integer'
+            type: 'Number'
         },
         myJSON: {
             type: 'JSON',

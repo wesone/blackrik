@@ -17,11 +17,11 @@ test('Build creat table statement', () => {
             type: 'Date',
         },
         testInt: {
-            type: 'Integer',
+            type: 'Number',
             unique: true,
         },
         testInc: {
-            type: 'Float',
+            type: 'Number',
             unique: true,
             autoIncrement: true,
         },
