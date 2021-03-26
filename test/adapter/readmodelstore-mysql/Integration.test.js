@@ -32,11 +32,15 @@ test('test with MySQL DB', async () => {
         },
         test: {
             type: 'String',
+        },
+        date: {
+            type: 'Date',
         }
     });
 
     result = await adapter.insert(tableName, {
-        test: 'Hello world'
+        test: 'Hello world',
+        date: new Date('2021-12-17 02:24:00')
     });
     const id = result.id;
 
@@ -44,7 +48,11 @@ test('test with MySQL DB', async () => {
 
     result = await adapter.findOne(tableName, {id});
 
-    const expectedResult = {'id':id,'test':'Hello world!'};
+    const expectedResult = {
+        'id': id,
+        'test': 'Hello world!',
+        'date': new Date('2021-12-17 02:24:00')
+    };
     expect(result).toEqual(expectedResult);
 
     const count = await adapter.count(tableName, {});

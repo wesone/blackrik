@@ -28,7 +28,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         {
             throw new Error('Readmodelstore needs a database name.');
         }
-        this.args = {...args};
+        this.args = {...args, timezone: 'Z'}; // All dates are referenced to utc
         this.transactionConnection = transactionConnection;
     }
 

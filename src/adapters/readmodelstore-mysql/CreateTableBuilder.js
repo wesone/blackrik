@@ -11,8 +11,7 @@ const types = {
     'Integer': 'DOUBLE', 
     'Float': 'DOUBLE', 
     'Double': 'DOUBLE',  
-    'Date': 'DATETIME', 
-    'Timestamp': 'TIMESTAMP',
+    'Date': 'TIMESTAMP', 
     'uuid': 'CHAR(36)'
 };
 
