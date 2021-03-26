@@ -26,6 +26,7 @@ class Blackrik
 
     _aggregates = {};
     _resolvers = {};
+    _sideEffects = [];
 
     _commandHandler;
     _queryHandler;
@@ -154,6 +155,9 @@ class Blackrik
 
     _constructSideEffects(sideEffects)
     {
+        if(this._sideEffects.includes(sideEffects))
+            return sideEffects;
+
         [
             'executeCommand',
             'scheduleCommand'
@@ -163,6 +167,7 @@ class Blackrik
                 writable: false
             })
         );
+        this._sideEffects.push(sideEffects);
         return sideEffects;
     }
 
