@@ -5,7 +5,7 @@ async function getLastPosition(store)
 {
     return (await store.findOne(tableName, null, {
         fields: ['lastPosition'],
-        sort: {lastPosition: -1}
+        sort: [{lastPosition: -1}]
     }))?.lastPosition ?? -1;
 }
 

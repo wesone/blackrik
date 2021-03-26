@@ -14,9 +14,9 @@ test('create select statement', () => {
         offset: 5,
         group: ['a'],
         distinct: true,
-        sort: {
-            a: -1,
-        }
+        sort: [
+            ['a', -1]
+        ]
     };
    
     const expectedSQL = 'SELECT DISTINCT `a`, `b`, `c` FROM `TestTable` WHERE `id` = ? GROUP BY `a` ORDER BY `a` DESC LIMIT ? OFFSET ?';
@@ -25,6 +25,23 @@ test('create select statement', () => {
         '10',
         '5'
     ];
+    const {sql, parameters} = selectBuilder(tableName, queryOptions);
+    expect(sql).toEqual(expectedSQL);
+    expect(parameters).toEqual(expectedParameters);
+});
+
+
+test('sort queryOption', () => {
+    
+    const queryOptions = {
+        sort: [
+            {a: -1},
+            ['b', 1],
+        ]
+    };
+   
+    const expectedSQL = 'SELECT * FROM `TestTable` ORDER BY `a` DESC, `b` ASC';
+    const expectedParameters = [];
     const {sql, parameters} = selectBuilder(tableName, queryOptions);
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);
