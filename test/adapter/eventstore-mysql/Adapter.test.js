@@ -219,14 +219,26 @@ describe('Test load', () => {
         ];
         const next = null;
         const filter = {
-            aggregateIds: [],
+            aggregateIds: ['one', 'two', 'three'],
+            since: 1234,
+            until: 4321,
             limit: EVENT_LIMIT_REPLAY,
             cursor: next,
             types: 
                 ['USER_CREATED', 'USER_UPDATED']
-            
         };
-
+        const expectedToExecute = 'SELECT * FROM events WHERE aggregateId IN (?,?,?) AND type IN (?,?) AND timestamp >= ? AND timestamp < ? ORDER BY position ASC LIMIT ? OFFSET ?';
+        const expectedValues = [
+            'one',
+            'two',
+            'three',
+            'USER_CREATED',
+            'USER_UPDATED',
+            1234,
+            4321,
+            1000,
+            0
+        ];
         const mockConnection = {
             execute: jest.fn(() => 
                 [[
@@ -239,10 +251,58 @@ describe('Test load', () => {
  
 
         testObj.db = mockConnection;
-        const {events, cursor}  = await testObj.load(filter);
+        const {events, cursor, debug}  = await testObj.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
+        expect(debug.toExecute).toEqual(expectedToExecute);
+        expect(debug.values).toEqual(expectedValues);
+    });
+    test('Check for correct loading of events - undefined limit', async () => {
+        const testObj = new Adapter(testInstance);
+        const expected = [
+            { payload: { test: 42 } },
+            { payload: { test: 42 } },
+            { payload: { test: 42 } }
+        ];
+        const next = null;
+        const filter = {
+            aggregateIds: ['one', 'two', 'three'],
+            since: 1234,
+            until: 4321,
+            limit: undefined,
+            cursor: next,
+            types: 
+                ['USER_CREATED', 'USER_UPDATED']
+        };
+        const expectedToExecute = 'SELECT * FROM events WHERE aggregateId IN (?,?,?) AND type IN (?,?) AND timestamp >= ? AND timestamp < ? ORDER BY position ASC ';
+        const expectedValues = [
+            'one',
+            'two',
+            'three',
+            'USER_CREATED',
+            'USER_UPDATED',
+            1234,
+            4321,
+        ];
+        const mockConnection = {
+            execute: jest.fn(() => 
+                [[
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'}
+                ]]) 
+        };
+        const spyExecute= jest.spyOn(mockConnection, 'execute');
+ 
+
+        testObj.db = mockConnection;
+        const {events, cursor, debug}  = await testObj.load(filter);
+        expect(spyExecute).toHaveBeenCalled();
+        expect(events).toStrictEqual(expected);
+        expect(cursor).toBe(null);
+        expect(debug.toExecute).toEqual(expectedToExecute);
+        expect(debug.values).toEqual(expectedValues);
     });
     test('Check for correct loading of events - cursor increment', async () => {
         const testObj = new Adapter(testInstance);

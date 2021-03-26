@@ -181,14 +181,15 @@ class Adapter extends EventStoreAdapterInterface
                 limit.push('OFFSET ?');
             }
         }
-
-        const events = await this.db.execute(`SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY position ASC ${limit.join(' ')}`, values);
+        const toExecute = `SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY position ASC ${limit.join(' ')}`;
+        const events = await this.db.execute(toExecute, values);
         return {
             events: events[0].map(event => {
                 event.payload = JSON.parse(event.payload);
                 return event;
             }),
-            cursor: events[0]?.length >= filter.limit ? filter.cursor + 1 : null
+            cursor: events[0]?.length >= filter.limit ? filter.cursor + 1 : null,
+            debug: {toExecute, values}
         };
     }
 
