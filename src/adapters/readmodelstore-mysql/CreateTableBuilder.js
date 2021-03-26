@@ -8,11 +8,8 @@ const types = {
     'Text' : 'TEXT', 
     'JSON' : 'JSON',
     'Boolean': 'TINYINT(1)', 
-    'Integer': 'DOUBLE', 
-    'Float': 'DOUBLE', 
-    'Double': 'DOUBLE',  
-    'Date': 'DATETIME', 
-    'Timestamp': 'TIMESTAMP',
+    'Number': 'DOUBLE',  
+    'Date': 'TIMESTAMP', 
     'uuid': 'CHAR(36)'
 };
 

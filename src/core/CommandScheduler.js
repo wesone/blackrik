@@ -17,12 +17,12 @@ class CommandScheduler
     {
         await this.#store.defineTable(TABLE_NAME, {
             id: {
-                type: 'Integer',
+                type: 'Number',
                 primaryKey: true,
                 autoIncrement: true
             },
             timestamp: {
-                type: 'Integer'
+                type: 'Number'
             },
             command: {
                 type: 'JSON'
@@ -33,9 +33,9 @@ class CommandScheduler
         });
         await Promise.all(
             (await this.#store.find(TABLE_NAME, null, {
-                sort: {
+                sort: [{
                     timestamp: 1
-                }
+                }]
             })).map(({id, timestamp, command, causationEvent}) => this._schedule(id, timestamp, command, causationEvent))
         );
     }

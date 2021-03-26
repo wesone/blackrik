@@ -26,6 +26,7 @@ class Blackrik
 
     _aggregates = {};
     _resolvers = {};
+    _sideEffects = [];
 
     _commandHandler;
     _queryHandler;
@@ -65,7 +66,7 @@ class Blackrik
         return this._stores[adapterName];
     }
 
-    _wrapReadModelStore(adapter, handlers)
+    _wrapReadModelStore(name, adapter, handlers)
     {
         const blackrik = this;
         return new Proxy(this._createReadModelStore(adapter), {
@@ -74,10 +75,11 @@ class Blackrik
                     return async function(...args){
                         const created = await target[prop](...args);
                         if(created) // mark readmodel events for replay
-                            blackrik.#replayEvents.push(
-                                ...Object.keys(handlers)
+                            blackrik.#replayEvents.push([
+                                name,
+                                Object.keys(handlers)
                                     .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
-                            );
+                            ]);
                         return created;
                     };
                 return Reflect.get(target, prop, ...rest);
@@ -127,7 +129,7 @@ class Blackrik
         if(!adapter)
             adapter = CONSTANTS.DEFAULT_ADAPTER;
 
-        const store = this._wrapReadModelStore(adapter, handlers);
+        const store = this._wrapReadModelStore(name, adapter, handlers);
         const config = typeof handlers[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function'
             ? await handlers[CONSTANTS.READMODEL_INIT_FUNCTION](store) || {}
             : {};
@@ -153,15 +155,19 @@ class Blackrik
 
     _constructSideEffects(sideEffects)
     {
-        [
-            'executeCommand',
-            'scheduleCommand'
-        ].forEach(fn => 
-            Object.defineProperty(sideEffects, fn, {
-                value: this[fn].bind(this),
-                writable: false
-            })
-        );
+        if(!this._sideEffects.includes(sideEffects))
+        {
+            [
+                'executeCommand',
+                'scheduleCommand'
+            ].forEach(fn => 
+                Object.defineProperty(sideEffects, fn, {
+                    value: this[fn].bind(this),
+                    writable: false
+                })
+            );
+            this._sideEffects.push(sideEffects);
+        }
         return sideEffects;
     }
 
@@ -271,7 +277,7 @@ class Blackrik
 
         if(this.#replayEvents.length)
         {
-            console.log('Replaying events:', this.#replayEvents.join(', '));
+            console.log('Replaying events:', this.#replayEvents.map(([, types]) => types.join(', ')).join(', '));
             await this._eventHandler.replayEvents(this.#replayEvents);
         }
 

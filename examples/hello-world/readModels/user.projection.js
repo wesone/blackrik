@@ -13,21 +13,17 @@ module.exports = {
                 primaryKey: true,
             },
             name: 'String',
-            lastPosition: {
-                type: 'Integer',
-                unique: true,
-            },
             createdAt: 'Date',
-            updatedAt: 'Date',
+            updatedAt: 'Date'
         });
     },
     [USER_CREATED]: async (store, event) => {
-        console.log('ReadModel projection executed', event);
+        //console.log('ReadModel projection executed', event.payload.name, event.position);
         const createdAt = new Date(event.timestamp);
-        await store.insert(tableName, {id: event.aggregateId, name: event.payload.name, lastPosition: event.position, createdAt, updatedAt: createdAt});
+        await store.insert(tableName, {id: event.aggregateId, name: event.payload.name, createdAt, updatedAt: createdAt});
     },
     [USER_UPDATED]: async (store, event) => {
-        console.log('ReadModel projection executed', event);
-        await store.update(tableName, {id: event.aggregateId}, {name: event.payload.name, lastPosition: event.position, updatedAt: new Date(event.timestamp)});
+        //console.log('ReadModel projection executed', event.payload.name, event.position);
+        await store.update(tableName, {id: event.aggregateId}, {name: event.payload.name, updatedAt: new Date(event.timestamp)});
     }
 };
