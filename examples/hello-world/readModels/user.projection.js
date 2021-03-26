@@ -14,7 +14,7 @@ module.exports = {
             },
             name: 'String',
             createdAt: 'Date',
-            updatedAt: 'Date',
+            updatedAt: 'Date'
         });
     },
     [USER_CREATED]: async (store, event) => {

@@ -155,19 +155,19 @@ class Blackrik
 
     _constructSideEffects(sideEffects)
     {
-        if(this._sideEffects.includes(sideEffects))
-            return sideEffects;
-
-        [
-            'executeCommand',
-            'scheduleCommand'
-        ].forEach(fn => 
-            Object.defineProperty(sideEffects, fn, {
-                value: this[fn].bind(this),
-                writable: false
-            })
-        );
-        this._sideEffects.push(sideEffects);
+        if(!this._sideEffects.includes(sideEffects))
+        {
+            [
+                'executeCommand',
+                'scheduleCommand'
+            ].forEach(fn => 
+                Object.defineProperty(sideEffects, fn, {
+                    value: this[fn].bind(this),
+                    writable: false
+                })
+            );
+            this._sideEffects.push(sideEffects);
+        }
         return sideEffects;
     }
 
