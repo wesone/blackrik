@@ -93,8 +93,25 @@ class Blackrik
                     eventType !== CONSTANTS.READMODEL_INIT_FUNCTION && 
                         this._eventHandler.subscribe(name, eventType, async event => {
                             try
-                            {
-                                await callback(handler, store, event, config);
+                            {   
+                                const storeProxy = new Proxy(store, {
+                                    get: (target, prop, ...rest) => {
+                                        if(prop === 'insert')
+                                            return async function(table, data){
+                                                return await target[prop](table, data, event.position);
+                                            };
+                                        if(prop === 'update')
+                                            return async function(table, conditions, data){
+                                                return await target[prop](table, conditions, data, event.position);
+                                            };
+                                        if(prop === 'delete')
+                                            return async function(table, conditions){
+                                                return await target[prop](table, conditions, event.position);
+                                            };
+                                        return Reflect.get(target, prop, ...rest);
+                                    }
+                                })
+                                await callback(handler, storeProxy, event, config);
                             }
                             catch(e)
                             {
@@ -138,8 +155,7 @@ class Blackrik
     {
         [
             'executeCommand',
-            'scheduleCommand',
-            'executeQuery'
+            'scheduleCommand'
         ].forEach(fn => 
             Object.defineProperty(sideEffects, fn, {
                 value: this[fn].bind(this),

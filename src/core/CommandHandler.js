@@ -13,8 +13,14 @@ class CommandHandler
 
     createCommand(command)
     {
-        const {aggregateName, aggregateId, type, payload} = command;
-        //TODO validate
+        const {aggregateName, aggregateId, type, payload = null} = command;
+        if(!aggregateName)
+            throw new BadRequestError('Invalid aggregate');
+        if(!aggregateId)
+            throw new BadRequestError('Invalid aggregateId');
+        if(!type)
+            throw new BadRequestError('Invalid type');
+
         return {
             aggregateName,
             aggregateId,
