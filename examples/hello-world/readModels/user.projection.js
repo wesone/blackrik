@@ -13,10 +13,6 @@ module.exports = {
                 primaryKey: true,
             },
             name: 'String',
-            lastPosition: {
-                type: 'Integer',
-                unique: true,
-            },
             createdAt: 'Date',
             updatedAt: 'Date',
         });

@@ -13,12 +13,12 @@ Blackrik is a CQRS and Event-Sourcing Framework for Node.js.
 
 ### Installation
 Make sure you have at least Node.js v14.0.0 installed
-```
+```sh
 $ node --version
 v14.0.0
 ```
 Create a new project (or use an existing one)
-```
+```sh
 $ mkdir hello-world
 $ cd hello-world
 $ npm init -y
