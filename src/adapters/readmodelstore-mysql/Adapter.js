@@ -76,13 +76,9 @@ class Adapter extends ReadModelStoreAdapterInterface
         return connection.execute(sql, parameters);
     }
 
-    getStatementMetaData([results])
+    getAffectedCount([results])
     {
-        return {
-            id: results?.insertId ?? null,
-            affected: results?.affectedRows ?? 0,
-            changed: results?.changedRows ?? 0,
-        };
+        return results?.affectedRows ?? 0;
     }
 
     validateHash(hash)
@@ -176,13 +172,13 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async insert(tableName, data, position = null){
         const {sql, parameters} = insertIntoBuilder(tableName, data, position);
-        return this.getStatementMetaData(await this.exec(sql, parameters));
+        return this.getAffectedCount(await this.exec(sql, parameters));
     }
 
     async update(tableName, conditions, data, position = null){
         // TODO: position check
         const {sql, parameters} = updateBuilder(tableName, data, conditions);
-        return this.getStatementMetaData(await this.exec(sql, parameters));
+        return this.getAffectedCount(await this.exec(sql, parameters));
     }
 
     async find(tableName, conditions, queryOptions = {}){
@@ -216,7 +212,7 @@ class Adapter extends ReadModelStoreAdapterInterface
     async delete(tableName, conditions, position = null){
         // TODO: position check
         const {sql, parameters} = conditionBuilder(conditions);
-        return this.getStatementMetaData(
+        return this.getAffectedCount(
             await this.exec(['DELETE FROM', quoteIdentifier(tableName), 'WHERE', sql].join(' '), parameters)
         );
     }
