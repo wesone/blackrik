@@ -56,7 +56,7 @@ class EventHandler
                 });
 
                 if(events.length)
-                    await Promise.all(events.map(event => this.sendEvent(name, {...event, isReplay: true})));
+                    await this.sendEvent(name, events.map(event => ({...event, isReplay: true})) );
                 next = cursor;
             } while(next); 
         }
