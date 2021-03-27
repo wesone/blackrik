@@ -43,7 +43,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async checkConnection()
     {
-        if(!this.transactionConnection && !this.pool)
+        if(!this.transactionConnection && !this.connection)
         {
             await this.connect();
         }
@@ -55,7 +55,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         {
             throw new Error('Can not be used inside transactions');
         }
-        this.pool = await mysql.createPool(this.args);
+        this.connection = await mysql.createConnection(this.args);
     }
 
     async disconnect()
@@ -64,15 +64,15 @@ class Adapter extends ReadModelStoreAdapterInterface
         {
             throw new Error('Can not be used inside transactions');
         }
-        await this.pool.end();
-        this.pool = null;
+        await this.connection.end();
+        this.connection = null;
     }
 
     async exec(sql, parameters)
     {
         await this.checkConnection();
         this.printDebugStatemant(sql, parameters);
-        const connection = this.transactionConnection ?? this.pool;
+        const connection = this.transactionConnection ?? this.connection;
         return connection.execute(sql, parameters);
     }
 
@@ -223,10 +223,9 @@ class Adapter extends ReadModelStoreAdapterInterface
         {
             throw new Error('Transaction already started');
         }
-        await this.checkConnection();
-        const connection = await this.pool.getConnection();
-        await connection.beginTransaction();
-        return new Adapter({...this.args, debugSql: this.debugSql}, connection);
+
+        await this.connection.beginTransaction();
+        return new Adapter({...this.args, debugSql: this.debugSql}, this.connection);
     }
 
     async commit()
@@ -236,7 +235,6 @@ class Adapter extends ReadModelStoreAdapterInterface
             throw new Error('Can only be used within a transaction');
         }
         await this.transactionConnection.commit();
-        await this.transactionConnection.release();
     }
 
     async rollback()
@@ -246,7 +244,6 @@ class Adapter extends ReadModelStoreAdapterInterface
             throw new Error('Can only be used within a transaction');
         }
         await this.transactionConnection.rollback();
-        await this.transactionConnection.release();
     }
 }
 
