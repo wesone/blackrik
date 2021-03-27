@@ -46,7 +46,7 @@ const databaseSchema = {
             Field: 'timestamp',
             Type: 'bigint',
             Null: 'NO',
-            Key: '',
+            Key: 'MUL',
             Default: null,
             Extra: ''
         },
@@ -54,7 +54,7 @@ const databaseSchema = {
             Field: 'correlationId',
             Type: 'varchar(36)',
             Null: 'NO',
-            Key: '',
+            Key: 'MUL',
             Default: null,
             Extra: ''
         },
@@ -62,7 +62,7 @@ const databaseSchema = {
             Field: 'causationId',
             Type: 'varchar(36)',
             Null: 'YES',
-            Key: '',
+            Key: 'MUL',
             Default: null,
             Extra: ''
         },
@@ -148,14 +148,26 @@ class Adapter extends EventStoreAdapterInterface
         const where = [];
         if(filter.aggregateIds)
         {
-            filter.aggregateIds.forEach(aggregateId => values.push(aggregateId));
+            values.push(...filter.aggregateIds);
             where.push(`aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')})`);
         }
 
         if(filter.types)
         {
-            filter.types.forEach(type => values.push(type));
+            values.push(...filter.types);
             where.push(`type IN (${filter.types.map(() => '?').join(',')})`);
+        }
+
+        if(filter.correlationIds)
+        {
+            values.push(...filter.correlationIds);
+            where.push(`correlationId IN (${filter.correlationIds.map(() => '?').join(',')})`);
+        }
+
+        if(filter.causationIds)
+        {
+            values.push(...filter.causationIds);
+            where.push(`causationId IN (${filter.causationIds.map(() => '?').join(',')})`);
         }
 
         if(filter.since)
@@ -177,7 +189,7 @@ class Adapter extends EventStoreAdapterInterface
             limit.push('LIMIT ?');
             if(filter.cursor !== undefined)
             {
-                values.push(filter.limit * (filter.cursor));
+                values.push(filter.limit * filter.cursor);
                 limit.push('OFFSET ?');
             }
         }
@@ -209,7 +221,6 @@ class Adapter extends EventStoreAdapterInterface
         if(exists[0][0]['count(*)'])
         {
             const table = await this.db.execute('DESCRIBE events', []);
-            console.log(table[0]);
             if(!await this.verifySchema(table[0], databaseSchema))
                 throw Error('Existing table schema is not valid.');
         }
@@ -295,9 +306,9 @@ class Adapter extends EventStoreAdapterInterface
 
         const queryParts = [];
         queryParts.push(fields.join(','));
-        queryParts.push(`, primary key (${primaryKey})`);
-        queryParts.push(`, unique key \`${databaseSchema.options.uniqueKey.name}\` (${databaseSchema.options.uniqueKey.fields.join(',')})`);
-        queryParts.push(`, index (${index.join(',')})`);
+        queryParts.push(`, PRIMARY KEY (${primaryKey})`);
+        queryParts.push(`, UNIQUE KEY \`${databaseSchema.options.uniqueKey.name}\` (${databaseSchema.options.uniqueKey.fields.join(',')})`);
+        index.forEach(field => queryParts.push(`, INDEX USING BTREE (${field})`));
         return queryParts.join(' ');
     }
 }
