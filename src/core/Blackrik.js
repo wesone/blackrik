@@ -3,6 +3,7 @@ const CONSTANTS = require('./Constants');
 const Server = require('./Server');
 const Adapter = require('./Adapter');
 const EventHandler = require('./EventHandler');
+const ReadModelStore = require('./ReadModelStore');
 
 const Aggregate = require('./Aggregate');
 const RequestHandler = require('./RequestHandler');
@@ -66,28 +67,7 @@ class Blackrik
         return this._stores[adapterName];
     }
 
-    _wrapReadModelStore(name, adapter, handlers)
-    {
-        const blackrik = this;
-        return new Proxy(this._createReadModelStore(adapter), {
-            get: (target, prop, ...rest) => {
-                if(prop === 'defineTable')
-                    return async function(...args){
-                        const created = await target[prop](...args);
-                        if(created) // mark readmodel events for replay
-                            blackrik.#replayEvents.push([
-                                name,
-                                Object.keys(handlers)
-                                    .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
-                            ]);
-                        return created;
-                    };
-                return Reflect.get(target, prop, ...rest);
-            }
-        });
-    }
-
-    async _createSubscriptions(name, eventMap, store, callback, config)
+    async _createSubscriptions(name, eventMap, store, callback)
     {
         await Promise.all(
             Object.entries(eventMap).map(
@@ -96,24 +76,12 @@ class Blackrik
                         this._eventHandler.subscribe(name, eventType, async event => {
                             try
                             {   
-                                const storeProxy = new Proxy(store, {
-                                    get: (target, prop, ...rest) => {
-                                        if(prop === 'insert')
-                                            return async function(table, data){
-                                                return await target[prop](table, data, event.position);
-                                            };
-                                        if(prop === 'update')
-                                            return async function(table, conditions, data){
-                                                return await target[prop](table, conditions, data, event.position);
-                                            };
-                                        if(prop === 'delete')
-                                            return async function(table, conditions){
-                                                return await target[prop](table, conditions, event.position);
-                                            };
-                                        return Reflect.get(target, prop, ...rest);
-                                    }
-                                })
-                                await callback(handler, storeProxy, event, config);
+                                await callback(
+                                    handler,
+                                    store.createProxy(event),
+                                    event,
+                                    store.config
+                                );
                             }
                             catch(e)
                             {
@@ -129,12 +97,15 @@ class Blackrik
         if(!adapter)
             adapter = CONSTANTS.DEFAULT_ADAPTER;
 
-        const store = this._wrapReadModelStore(name, adapter, handlers);
-        const config = typeof handlers[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function'
-            ? await handlers[CONSTANTS.READMODEL_INIT_FUNCTION](store) || {}
-            : {};
+        const store = new ReadModelStore(this._createReadModelStore(adapter), handlers);
+        if(await store.init())
+            this.#replayEvents.push([
+                name,
+                Object.keys(handlers)
+                    .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
+            ]);
 
-        await this._createSubscriptions(name, handlers, store, callback, config);
+        await this._createSubscriptions(name, handlers, store, callback);
 
         return {
             handlers,
