@@ -32,7 +32,7 @@ function insertIntoBuilder(tableName, data, position = null)
     
     const valueList = [parameters.map(() => '?').join(', ')].join('');
     const subQuery = ['SELECT', 'MAX(', quoteIdentifier('lastPosition'), ')', 'FROM', quoteIdentifier(tableName)].join(' ');
-    const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'SELECT', valueList, 'WHERE', '?', '>', 'COALESCE((', subQuery, '),0)'].join(' ');
+    const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'SELECT', valueList, 'WHERE', '?', '>', 'COALESCE((', subQuery, '),-1)'].join(' ');
     parameters.push(convertValue(position));
     return {sql, parameters};
 }

@@ -183,6 +183,7 @@ test('position check handling', async () => {
 
     await adapter.defineTable(tableName, schema);
 
+    // insert with check
 
     await adapter.insert(tableName, {
         id: 1,
@@ -213,6 +214,8 @@ test('position check handling', async () => {
     result = await adapter.count(tableName);
     expect(result).toEqual(2);
 
+    // Find with check
+
     result = await adapter.find(tableName, null, {position: 2});
     expectedResult = [{'id':1, name: 'Row1', lastPosition: 1}, {'id':2, name: 'Row2', lastPosition: 2}];
     expect(result).toEqual(expectedResult);
@@ -220,5 +223,44 @@ test('position check handling', async () => {
     const expectedError = new Error('Data not yet availible');
     expectedError.code = 409;
     await expect(adapter.find(tableName, null, {position: 3})).rejects.toThrow(expectedError);
-    
+
+    // Update with check
+
+    result = await adapter.update(tableName, {id: 2}, {
+        name: 'Row2 mod',
+    }, 2);
+    expect(result).toEqual(0);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expectedResult = {'id':2, name: 'Row2', lastPosition: 2};
+    expect(result).toEqual(expectedResult);
+
+    result = await adapter.update(tableName, {id: 2}, {
+        name: 'Row2 mod',
+    }, 3);
+    expect(result).toEqual(1);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expectedResult = {'id':2, name: 'Row2 mod', lastPosition: 3};
+    expect(result).toEqual(expectedResult);
+
+    // Delete with check
+
+    result = await adapter.delete(tableName, {id: 2}, 2);
+    expect(result).toEqual(0);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expectedResult = {'id':2, name: 'Row2 mod', lastPosition: 3};
+    expect(result).toEqual(expectedResult);
+
+    result = await adapter.delete(tableName, {id: 2}, 4);
+    expect(result).toEqual(1);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expect(result).toEqual(null);
+
+    result = await adapter.findOne(tableName, {id: 1});
+    expectedResult = {'id':1, name: 'Row1', lastPosition: 4};
+    expect(result).toEqual(expectedResult);
+
 });

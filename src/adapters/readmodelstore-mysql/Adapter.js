@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 const ReadModelStoreAdapterInterface = require('../ReadModelStoreAdapterInterface');
 const { conditionBuilder } = require('./ConditionBuilder');
-const { quoteIdentifier } = require('./utils');
+const { quoteIdentifier, convertValue, getPositionCheckCondition } = require('./utils');
 const { createTableBuilder } = require('./CreateTableBuilder');
 const { insertIntoBuilder } = require('./InsertIntoBuilder');
 const { updateBuilder } = require('./UpdateBuilder');
@@ -16,7 +16,7 @@ const tableCheckTypes = {
 
 class Adapter extends ReadModelStoreAdapterInterface
 {
-    constructor(args, transactionConfig = null)
+    constructor(args)
     {
         super();
         if(args.debugSql)
@@ -29,7 +29,7 @@ class Adapter extends ReadModelStoreAdapterInterface
             throw new Error('Readmodelstore needs a database name.');
         }
         this.args = {...args, timezone: 'Z'}; // All dates are referenced to utc
-        this.transactionConnection = transactionConfig?.Connection;
+        this.isTransaction = false;
     }
 
     printDebugStatemant(sql, parameters)
@@ -37,13 +37,13 @@ class Adapter extends ReadModelStoreAdapterInterface
         if(!this.debugSql)
             return;
         console.log(sql, JSON.stringify(parameters ?? '[NO PARAMS]'), 
-            this.transactionConnection ? ['TRANSACTION(',this.transactionConnection.threadId,')'].join('') : ''
+            this.isTransaction ? ['TRANSACTION(',this.connection.threadId,')'].join('') : ''
         );
     }
 
     async checkConnection()
     {
-        if(!this.transactionConnection && !this.connection)
+        if(!this.connection)
         {
             await this.connect();
         }
@@ -51,19 +51,11 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async connect()
     {
-        if(this.transactionConnection)
-        {
-            throw new Error('Can not be used inside transactions');
-        }
         this.connection = await mysql.createConnection(this.args);
     }
 
     async disconnect()
     {
-        if(this.transactionConnection)
-        {
-            throw new Error('Can not be used inside transactions');
-        }
         await this.connection.end();
         this.connection = null;
     }
@@ -176,8 +168,7 @@ class Adapter extends ReadModelStoreAdapterInterface
     }
 
     async update(tableName, conditions, data, position = null){
-        // TODO: position check
-        const {sql, parameters} = updateBuilder(tableName, data, conditions);
+        const {sql, parameters} = updateBuilder(tableName, data, conditions, position);
         return this.getAffectedCount(await this.exec(sql, parameters));
     }
 
@@ -186,7 +177,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         const queries = [
             this.exec(sql, parameters)
         ];
-        if(queryOptions.position)
+        if(typeof queryOptions.position === 'number')
         {
             queries.push(this.findOne(tableName, null, {
                 fields: ['lastPosition'],
@@ -196,7 +187,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
         const results = await Promise.all(queries);
 
-        if(queryOptions.position)
+        if(typeof queryOptions.position === 'number')
         {
             const maxPosition = results[1]?.lastPosition ?? -1;
             if(maxPosition < queryOptions.position)
@@ -221,40 +212,68 @@ class Adapter extends ReadModelStoreAdapterInterface
     }
 
     async delete(tableName, conditions, position = null){
-        // TODO: position check
-        const {sql, parameters} = conditionBuilder(conditions);
-        return this.getAffectedCount(
-            await this.exec(['DELETE FROM', quoteIdentifier(tableName), 'WHERE', sql].join(' '), parameters)
-        );
+        let {sql, parameters} = conditionBuilder(conditions);
+        let affectedCount;
+        if(position !== null)
+        {
+            const checkCondition = getPositionCheckCondition(tableName, position);
+            sql += [' AND', checkCondition[0]].join(' ');
+            parameters.push(convertValue(checkCondition[1]));
+            await this.beginTransaction();
+        }
+        try 
+        {
+            affectedCount = this.getAffectedCount(
+                await this.exec(['DELETE FROM', quoteIdentifier(tableName), 'WHERE', sql].join(' '), parameters)
+            );
+            if(affectedCount > 0 && position)
+            {
+                await this.exec(['UPDATE', quoteIdentifier(tableName), 'SET', quoteIdentifier('lastPosition'), '=', '?', 
+                    'ORDER BY', quoteIdentifier('lastPosition'), 'DESC', 'LIMIT', '?'].join(' '), 
+                [convertValue(position), convertValue(1)]);
+            }
+            if(position !== null)
+                await this.commit();
+        }
+        catch(e)
+        {
+            console.log('Error', e);
+            if(position !== null)
+                await this.rollback();
+            throw e;
+        }
+        
+        return affectedCount;
     }
 
     async beginTransaction()
     {
-        if(this.transactionConnection)
+        if(this.isTransaction)
         {
             throw new Error('Transaction already started');
         }
-
         await this.connection.beginTransaction();
-        return new Adapter({...this.args, debugSql: this.debugSql}, {connection: this.connection});
+        this.isTransaction = true;
     }
 
     async commit()
     {
-        if(!this.transactionConnection)
+        if(!this.isTransaction)
         {
-            throw new Error('Can only be used within a transaction');
+            throw new Error('Can only be used in a transaction');
         }
-        await this.transactionConnection.commit();
+        await this.connection.commit();
+        this.isTransaction = false;
     }
 
     async rollback()
     {
-        if(!this.transactionConnection)
+        if(!this.isTransaction)
         {
-            throw new Error('Can only be used within a transaction');
+            throw new Error('Can only be used in a transaction');
         }
-        await this.transactionConnection.rollback();
+        await this.connection.rollback();
+        this.isTransaction = false;
     }
 }
 

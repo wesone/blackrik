@@ -59,8 +59,28 @@ function convertValue(value, arrayToJSON = true)
     return value;
 }
 
+function getPositionCheckCondition(tableName, position)
+{
+    /*
+        COALESCE((SELECT * FROM (SELECT MAX(lastPosition) FROM table) AS maxPosition), -1) < position
+        
+        The query optimizer does a derived merge optimization for the first subquery (which causes it to fail with the error #1093), 
+        but the second subquery doesn't qualify for the derived merge optimization. 
+        Hence the optimizer is forced to execute the subquery first.
+
+        See: https://stackoverflow.com/questions/45494/mysql-error-1093-cant-specify-target-table-for-update-in-from-clause
+        And: https://dev.mysql.com/doc/refman/8.0/en/update.html
+    */
+    
+    const maxPositionSubQuery = ['SELECT', 'MAX(', quoteIdentifier('lastPosition'), ')', 'FROM', quoteIdentifier(tableName)].join(' ');
+    const maxPositionQuery = ['SELECT', '*', 'FROM', '(', maxPositionSubQuery, ')', 'AS', 'maxPosition'].join(' ');
+    const condition = ['COALESCE((', maxPositionQuery, '), -1)', '<', '?'].join(' ');
+    return [condition, position];
+}
+
 module.exports =  {
     validateIdentifier,
     quoteIdentifier,
     convertValue,
+    getPositionCheckCondition,
 };
