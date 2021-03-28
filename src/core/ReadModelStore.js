@@ -74,19 +74,19 @@ class ReadModelStore
                 //         return await target[prop](table, conditions, event.position);
                 //     };
 
-                let originalProperty = Reflect.get(target, prop, ...rest);
-                if(typeof originalProperty === 'function')
-                    originalProperty = originalProperty.bind(proxy);
+                let originalValue = Reflect.get(target, prop, ...rest);
+                if(typeof originalValue === 'function')
+                    originalValue = originalValue.bind(proxy);
                 if(event.isReplay)
                 {
                     if(prop === 'insert')
-                        return self._wrapReadModelStoreFunction(originalProperty, false);
+                        return self._wrapReadModelStoreFunction(originalValue, false);
                     if(prop === 'update')
-                        return self._wrapReadModelStoreFunction(originalProperty, 0);
+                        return self._wrapReadModelStoreFunction(originalValue, 0);
                     if(prop === 'delete')
-                        return self._wrapReadModelStoreFunction(originalProperty, 0);
+                        return self._wrapReadModelStoreFunction(originalValue, 0);
                 }
-                return originalProperty;
+                return originalValue;
             }
         });
         return proxy;
