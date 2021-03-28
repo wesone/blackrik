@@ -112,7 +112,7 @@ class Blackrik
                                             };
                                         return Reflect.get(target, prop, ...rest);
                                     }
-                                })
+                                });
                                 await callback(handler, storeProxy, event, config);
                             }
                             catch(e)
