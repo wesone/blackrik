@@ -16,8 +16,8 @@ function insertIntoBuilder(tableName, data, position = null)
 
     if(position !== null)
     {
-        data.lastPosition = position;
-        fieldNames.push('lastPosition');
+        data._lastPosition = position;
+        fieldNames.push('_lastPosition');
     }
 
     const parameters = fieldNames.map(name => convertValue(data[name]));
@@ -31,7 +31,7 @@ function insertIntoBuilder(tableName, data, position = null)
     }
     
     const valueList = [parameters.map(() => '?').join(', ')].join('');
-    const subQuery = ['SELECT', 'MAX(', quoteIdentifier('lastPosition'), ')', 'FROM', quoteIdentifier(tableName)].join(' ');
+    const subQuery = ['SELECT', 'MAX(', quoteIdentifier('_lastPosition'), ')', 'FROM', quoteIdentifier(tableName)].join(' ');
     const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'SELECT', valueList, 'WHERE', '?', '>', 'COALESCE((', subQuery, '),-1)'].join(' ');
     parameters.push(convertValue(position));
     return {sql, parameters};

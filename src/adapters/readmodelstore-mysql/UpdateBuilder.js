@@ -17,8 +17,8 @@ function updateBuilder(tableName, data, conditions, position = null)
 
     if(position !== null)
     {
-        data.lastPosition = position;
-        fieldNames.push('lastPosition');
+        data._lastPosition = position;
+        fieldNames.push('_lastPosition');
     }
 
     const assignments = fieldNames.map(n => [quoteIdentifier(n), '=', '?'].join(' '));
@@ -34,7 +34,7 @@ function updateBuilder(tableName, data, conditions, position = null)
     }
     return {sql, parameters: values.concat(condition.parameters)};
 }
-// COALESCE((SELECT * FROM (SELECT MAX(lastPosition) FROM users) as maxPosition), -1) < 282440
+
 module.exports =  {
     updateBuilder,
 };

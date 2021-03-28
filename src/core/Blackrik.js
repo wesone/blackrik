@@ -163,7 +163,8 @@ class Blackrik
             ].forEach(fn => 
                 Object.defineProperty(sideEffects, fn, {
                     value: this[fn].bind(this),
-                    writable: false
+                    writable: false,
+                    configurable: true
                 })
             );
             this._sideEffects.push(sideEffects);

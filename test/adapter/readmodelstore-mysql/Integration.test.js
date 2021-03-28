@@ -51,7 +51,7 @@ test('test with MySQL DB', async () => {
         'id': 1,
         'test': 'Hello world!',
         'date': new Date('2021-12-17 02:24:00'),
-        'lastPosition': null,
+        '_lastPosition': null,
     };
     expect(result).toEqual(expectedResult);
 
@@ -117,7 +117,7 @@ test('table schema changes', async () => {
         id: 1,
         test: 'Hello world!', 
         test2: 1, 
-        lastPosition: null,
+        _lastPosition: null,
     };
     expect(result).toEqual(expectedResult);
 
@@ -157,11 +157,11 @@ test('JSON handling', async () => {
     expect(result).toEqual(2);
 
     result = await adapter.findOne(tableName, {id: 1});
-    let expectedResult = {'id':1, myJSON: {text:'Hello World!'}, lastPosition: null};
+    let expectedResult = {'id':1, myJSON: {text:'Hello World!'}, _lastPosition: null};
     expect(result).toEqual(expectedResult);
 
     result = await adapter.findOne(tableName, {id: 2});
-    expectedResult = {'id':2, myJSON: ['Hello', 'World', '!'], lastPosition: null};
+    expectedResult = {'id':2, myJSON: ['Hello', 'World', '!'], _lastPosition: null};
     expect(result).toEqual(expectedResult);
 
 });
@@ -199,11 +199,11 @@ test('position check handling', async () => {
     expect(result).toEqual(2);
 
     result = await adapter.findOne(tableName, {id: 1});
-    let expectedResult = {'id':1, name: 'Row1', lastPosition: 1};
+    let expectedResult = {'id':1, name: 'Row1', _lastPosition: 1};
     expect(result).toEqual(expectedResult);
 
     result = await adapter.findOne(tableName, {id: 2});
-    expectedResult = {'id':2, name: 'Row2', lastPosition: 2};
+    expectedResult = {'id':2, name: 'Row2', _lastPosition: 2};
     expect(result).toEqual(expectedResult);
 
     await adapter.insert(tableName, {
@@ -217,7 +217,7 @@ test('position check handling', async () => {
     // Find with check
 
     result = await adapter.find(tableName, null, {position: 2});
-    expectedResult = [{'id':1, name: 'Row1', lastPosition: 1}, {'id':2, name: 'Row2', lastPosition: 2}];
+    expectedResult = [{'id':1, name: 'Row1', _lastPosition: 1}, {'id':2, name: 'Row2', _lastPosition: 2}];
     expect(result).toEqual(expectedResult);
 
     const expectedError = new Error('Data not yet availible');
@@ -232,7 +232,7 @@ test('position check handling', async () => {
     expect(result).toEqual(0);
 
     result = await adapter.findOne(tableName, {id: 2});
-    expectedResult = {'id':2, name: 'Row2', lastPosition: 2};
+    expectedResult = {'id':2, name: 'Row2', _lastPosition: 2};
     expect(result).toEqual(expectedResult);
 
     result = await adapter.update(tableName, {id: 2}, {
@@ -241,7 +241,7 @@ test('position check handling', async () => {
     expect(result).toEqual(1);
 
     result = await adapter.findOne(tableName, {id: 2});
-    expectedResult = {'id':2, name: 'Row2 mod', lastPosition: 3};
+    expectedResult = {'id':2, name: 'Row2 mod', _lastPosition: 3};
     expect(result).toEqual(expectedResult);
 
     // Delete with check
@@ -250,7 +250,7 @@ test('position check handling', async () => {
     expect(result).toEqual(0);
 
     result = await adapter.findOne(tableName, {id: 2});
-    expectedResult = {'id':2, name: 'Row2 mod', lastPosition: 3};
+    expectedResult = {'id':2, name: 'Row2 mod', _lastPosition: 3};
     expect(result).toEqual(expectedResult);
 
     result = await adapter.delete(tableName, {id: 2}, 4);
@@ -260,7 +260,7 @@ test('position check handling', async () => {
     expect(result).toEqual(null);
 
     result = await adapter.findOne(tableName, {id: 1});
-    expectedResult = {'id':1, name: 'Row1', lastPosition: 4};
+    expectedResult = {'id':1, name: 'Row1', _lastPosition: 4};
     expect(result).toEqual(expectedResult);
 
 });

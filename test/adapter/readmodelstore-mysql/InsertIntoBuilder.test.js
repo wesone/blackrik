@@ -34,7 +34,7 @@ test('create insert into statement with position check', () => {
         testUndefined: undefined,
     };
    
-    const expectedSQL = 'INSERT INTO `TestTable` (`test`, `testDate`, `testInt`, `testNull`, `testUndefined`, `lastPosition`) SELECT ?, ?, ?, ?, ?, ? WHERE ? > COALESCE(( SELECT MAX( `lastPosition` ) FROM `TestTable` ),-1)';
+    const expectedSQL = 'INSERT INTO `TestTable` (`test`, `testDate`, `testInt`, `testNull`, `testUndefined`, `_lastPosition`) SELECT ?, ?, ?, ?, ?, ? WHERE ? > COALESCE(( SELECT MAX( `_lastPosition` ) FROM `TestTable` ),-1)';
     const expectedParameters = [
         'Hello world',
         '2021-12-17 02:24:00',

@@ -109,13 +109,13 @@ class Adapter extends ReadModelStoreAdapterInterface
     async defineTable(tableName, scheme/*, options = {triggerReplay: true}*/){
         const options = {triggerReplay: true};
 
-        if(scheme.lastPosition)
+        if(scheme._lastPosition)
         {
-            throw new Error('lastPosition is a reserved field name.');
+            throw new Error('_lastPosition is a reserved field name.');
         }
 
         const schemeWithMetaData = {...scheme, 
-            lastPosition: {
+            _lastPosition: {
                 type: 'Number',
                 unique: true
             }
@@ -180,8 +180,8 @@ class Adapter extends ReadModelStoreAdapterInterface
         if(typeof queryOptions.position === 'number')
         {
             queries.push(this.findOne(tableName, null, {
-                fields: ['lastPosition'],
-                sort: [{lastPosition: -1}]
+                fields: ['_lastPosition'],
+                sort: [{_lastPosition: -1}]
             }));
         }
 
@@ -189,7 +189,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
         if(typeof queryOptions.position === 'number')
         {
-            const maxPosition = results[1]?.lastPosition ?? -1;
+            const maxPosition = results[1]?._lastPosition ?? -1;
             if(maxPosition < queryOptions.position)
             {
                 const error =  new Error('Data not yet availible');
@@ -228,8 +228,8 @@ class Adapter extends ReadModelStoreAdapterInterface
             );
             if(affectedCount > 0 && position)
             {
-                await this.exec(['UPDATE', quoteIdentifier(tableName), 'SET', quoteIdentifier('lastPosition'), '=', '?', 
-                    'ORDER BY', quoteIdentifier('lastPosition'), 'DESC', 'LIMIT', '?'].join(' '), 
+                await this.exec(['UPDATE', quoteIdentifier(tableName), 'SET', quoteIdentifier('_lastPosition'), '=', '?', 
+                    'ORDER BY', quoteIdentifier('_lastPosition'), 'DESC', 'LIMIT', '?'].join(' '), 
                 [convertValue(position), convertValue(1)]);
             }
             if(position !== null)
