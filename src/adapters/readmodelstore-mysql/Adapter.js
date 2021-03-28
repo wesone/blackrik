@@ -16,7 +16,7 @@ const tableCheckTypes = {
 
 class Adapter extends ReadModelStoreAdapterInterface
 {
-    constructor(args, transactionConnection = null)
+    constructor(args, transactionConfig = null)
     {
         super();
         if(args.debugSql)
@@ -29,7 +29,7 @@ class Adapter extends ReadModelStoreAdapterInterface
             throw new Error('Readmodelstore needs a database name.');
         }
         this.args = {...args, timezone: 'Z'}; // All dates are referenced to utc
-        this.transactionConnection = transactionConnection;
+        this.transactionConnection = transactionConfig?.Connection;
     }
 
     printDebugStatemant(sql, parameters)
@@ -182,12 +182,23 @@ class Adapter extends ReadModelStoreAdapterInterface
     }
 
     async find(tableName, conditions, queryOptions = {}){
+        const {sql, parameters} = selectBuilder(tableName, {...queryOptions, conditions});
+        const queries = [
+            this.exec(sql, parameters)
+        ];
         if(queryOptions.position)
         {
-            const maxPosition = (await this.findOne(tableName, null, {
+            queries.push(this.findOne(tableName, null, {
                 fields: ['lastPosition'],
                 sort: [{lastPosition: -1}]
-            }))?.lastPosition ?? -1;
+            }));
+        }
+
+        const results = await Promise.all(queries);
+
+        if(queryOptions.position)
+        {
+            const maxPosition = results[1]?.lastPosition ?? -1;
             if(maxPosition < queryOptions.position)
             {
                 const error =  new Error('Data not yet availible');
@@ -195,8 +206,8 @@ class Adapter extends ReadModelStoreAdapterInterface
                 throw error;
             }
         }
-        const {sql, parameters} = selectBuilder(tableName, {...queryOptions, conditions});
-        return (await this.exec(sql, parameters))?.[0] ?? [];
+        
+        return results?.[0]?.[0] ?? [];
     }
 
     async findOne(tableName, conditions, queryOptions = {}){
@@ -225,7 +236,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         }
 
         await this.connection.beginTransaction();
-        return new Adapter({...this.args, debugSql: this.debugSql}, this.connection);
+        return new Adapter({...this.args, debugSql: this.debugSql}, {connection: this.connection});
     }
 
     async commit()
