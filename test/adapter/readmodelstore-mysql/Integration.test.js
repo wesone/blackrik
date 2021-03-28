@@ -28,7 +28,6 @@ test('test with MySQL DB', async () => {
         id: {
             type: 'Number',
             primaryKey: true,
-            autoIncrement: true,
         },
         test: {
             type: 'String',
@@ -39,17 +38,17 @@ test('test with MySQL DB', async () => {
     });
 
     result = await adapter.insert(tableName, {
+        id: 1,
         test: 'Hello world',
         date: new Date('2021-12-17 02:24:00')
     });
-    const id = result.id;
 
-    await adapter.update(tableName,{id}, {test: 'Hello world!'});
+    await adapter.update(tableName,{id: 1}, {test: 'Hello world!'});
 
-    result = await adapter.findOne(tableName, {id});
+    result = await adapter.findOne(tableName, {id: 1});
 
     const expectedResult = {
-        'id': id,
+        'id': 1,
         'test': 'Hello world!',
         'date': new Date('2021-12-17 02:24:00'),
         'lastPosition': null,
@@ -59,7 +58,7 @@ test('test with MySQL DB', async () => {
     const count = await adapter.count(tableName, {});
     expect(count).toEqual(1);
 
-    await adapter.delete(tableName, {id});
+    await adapter.delete(tableName, {id: 1});
 
     const count2 = await adapter.count(tableName, {});
     expect(count2).toEqual(0);
@@ -73,7 +72,6 @@ test('table schema changes', async () => {
         id: {
             type: 'Number',
             primaryKey: true,
-            autoIncrement: true,
         },
         test: {
             type: 'String',
@@ -84,7 +82,6 @@ test('table schema changes', async () => {
         id: {
             type: 'Number',
             primaryKey: true,
-            autoIncrement: true,
         },
         test: {
             type: 'String',
@@ -101,10 +98,10 @@ test('table schema changes', async () => {
     await adapter.defineTable(tableName, schema2);
 
     result = await adapter.insert(tableName, {
+        id: 1,
         test: 'Hello world!',
         test2: true
     });
-    const id = result.id;
 
     await adapter.defineTable(tableName, schema2);
 
@@ -114,10 +111,10 @@ test('table schema changes', async () => {
     result = await adapter.checkTable(tableName + '_old', '');
     expect(result?.description).toEqual('new');
 
-    result = await adapter.findOne(tableName, {id});
+    result = await adapter.findOne(tableName, {id: 1});
 
     const expectedResult = {
-        id,
+        id: 1,
         test: 'Hello world!', 
         test2: 1, 
         lastPosition: null,
