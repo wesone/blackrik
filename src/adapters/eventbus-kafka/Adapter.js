@@ -69,16 +69,24 @@ class Adapter extends EventBusAdapterInterface
 
     async publish(name, event)
     {
+        const messages = [];
+        if(Array.isArray(event))
+        {
+            event.forEach(evt => messages.push({
+                value: JSON.stringify(evt)
+            }));
+        } 
+        else 
+        {
+            messages.push({
+                value: JSON.stringify(event)
+            });
+        }
         try
         {
             await this.producer.send({
                 topic: name,
-                messages: [
-                    {
-                        // key: '1234',
-                        value: JSON.stringify(event)
-                    }
-                ]
+                messages
             });
             return true;
         }

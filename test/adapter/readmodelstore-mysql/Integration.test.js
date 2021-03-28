@@ -28,7 +28,6 @@ test('test with MySQL DB', async () => {
         id: {
             type: 'Number',
             primaryKey: true,
-            autoIncrement: true,
         },
         test: {
             type: 'String',
@@ -39,17 +38,17 @@ test('test with MySQL DB', async () => {
     });
 
     result = await adapter.insert(tableName, {
+        id: 1,
         test: 'Hello world',
         date: new Date('2021-12-17 02:24:00')
     });
-    const id = result.id;
 
-    await adapter.update(tableName,{id}, {test: 'Hello world!'});
+    await adapter.update(tableName,{id: 1}, {test: 'Hello world!'});
 
-    result = await adapter.findOne(tableName, {id});
+    result = await adapter.findOne(tableName, {id: 1});
 
     const expectedResult = {
-        'id': id,
+        'id': 1,
         'test': 'Hello world!',
         'date': new Date('2021-12-17 02:24:00'),
         '_lastPosition': null,
@@ -59,7 +58,7 @@ test('test with MySQL DB', async () => {
     const count = await adapter.count(tableName, {});
     expect(count).toEqual(1);
 
-    await adapter.delete(tableName, {id});
+    await adapter.delete(tableName, {id: 1});
 
     const count2 = await adapter.count(tableName, {});
     expect(count2).toEqual(0);
@@ -73,7 +72,6 @@ test('table schema changes', async () => {
         id: {
             type: 'Number',
             primaryKey: true,
-            autoIncrement: true,
         },
         test: {
             type: 'String',
@@ -84,7 +82,6 @@ test('table schema changes', async () => {
         id: {
             type: 'Number',
             primaryKey: true,
-            autoIncrement: true,
         },
         test: {
             type: 'String',
@@ -101,10 +98,10 @@ test('table schema changes', async () => {
     await adapter.defineTable(tableName, schema2);
 
     result = await adapter.insert(tableName, {
+        id: 1,
         test: 'Hello world!',
         test2: true
     });
-    const id = result.id;
 
     await adapter.defineTable(tableName, schema2);
 
@@ -114,10 +111,10 @@ test('table schema changes', async () => {
     result = await adapter.checkTable(tableName + '_old', '');
     expect(result?.description).toEqual('new');
 
-    result = await adapter.findOne(tableName, {id});
+    result = await adapter.findOne(tableName, {id: 1});
 
     const expectedResult = {
-        id,
+        id: 1,
         test: 'Hello world!', 
         test2: 1, 
         _lastPosition: null,
@@ -186,6 +183,7 @@ test('position check handling', async () => {
 
     await adapter.defineTable(tableName, schema);
 
+    // insert with check
 
     await adapter.insert(tableName, {
         id: 1,
@@ -216,6 +214,8 @@ test('position check handling', async () => {
     result = await adapter.count(tableName);
     expect(result).toEqual(2);
 
+    // Find with check
+
     result = await adapter.find(tableName, null, {position: 2});
     expectedResult = [{'id':1, name: 'Row1', _lastPosition: 1}, {'id':2, name: 'Row2', _lastPosition: 2}];
     expect(result).toEqual(expectedResult);
@@ -223,5 +223,44 @@ test('position check handling', async () => {
     const expectedError = new Error('Data not yet availible');
     expectedError.code = 409;
     await expect(adapter.find(tableName, null, {position: 3})).rejects.toThrow(expectedError);
-    
+
+    // Update with check
+
+    result = await adapter.update(tableName, {id: 2}, {
+        name: 'Row2 mod',
+    }, 2);
+    expect(result).toEqual(0);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expectedResult = {'id':2, name: 'Row2', _lastPosition: 2};
+    expect(result).toEqual(expectedResult);
+
+    result = await adapter.update(tableName, {id: 2}, {
+        name: 'Row2 mod',
+    }, 3);
+    expect(result).toEqual(1);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expectedResult = {'id':2, name: 'Row2 mod', _lastPosition: 3};
+    expect(result).toEqual(expectedResult);
+
+    // Delete with check
+
+    result = await adapter.delete(tableName, {id: 2}, 2);
+    expect(result).toEqual(0);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expectedResult = {'id':2, name: 'Row2 mod', _lastPosition: 3};
+    expect(result).toEqual(expectedResult);
+
+    result = await adapter.delete(tableName, {id: 2}, 4);
+    expect(result).toEqual(1);
+
+    result = await adapter.findOne(tableName, {id: 2});
+    expect(result).toEqual(null);
+
+    result = await adapter.findOne(tableName, {id: 1});
+    expectedResult = {'id':1, name: 'Row1', _lastPosition: 4};
+    expect(result).toEqual(expectedResult);
+
 });

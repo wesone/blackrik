@@ -31,6 +31,11 @@ class Adapter extends EventBusAdapterInterface
 
     async publish(name, event)
     {
+        if(Array.isArray(event))
+        {
+            event.forEach(evt => this.#eventBus.emit(evt.type, evt));
+            return true;
+        }
         this.#eventBus.emit(event.type, event);
         return true;
     }    
