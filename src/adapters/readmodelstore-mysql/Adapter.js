@@ -177,7 +177,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         const queries = [
             this.exec(sql, parameters)
         ];
-        if(typeof queryOptions.position === 'number')
+        if(queryOptions.position)
         {
             queries.push(this.findOne(tableName, null, {
                 fields: ['_lastPosition'],
@@ -187,7 +187,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
         const results = await Promise.all(queries);
 
-        if(typeof queryOptions.position === 'number')
+        if(queryOptions.position)
         {
             const maxPosition = results[1]?._lastPosition ?? -1;
             if(maxPosition < queryOptions.position)
