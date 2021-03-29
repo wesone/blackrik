@@ -1,6 +1,7 @@
 const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
 const instance = require('../../../examples/hello-world/config');
 const {EVENT_LIMIT_REPLAY} = require('../../../src/core/Constants');
+const Event = require('../../../src/core/Event');
 
 
 const testInstance = instance.eventStoreAdapter.args;
@@ -363,19 +364,42 @@ describe('Test init', () => {
         testObj.createDatabase = mockCreateDatabase;
         testObj.createTable = mockCreateTable;
 
-        const mockSpyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
-        const mockSpyCreateConnection = jest.spyOn(mockMysql, 'createConnection');
-        const mockSpyConnect= jest.spyOn(object, 'mockConnect');
+        const spyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
+        const spyCreateConnection = jest.spyOn(mockMysql, 'createConnection');
+        const spyConnect= jest.spyOn(object, 'mockConnect');
         
         await testObj.init();
 
-        expect(mockSpyCreateDatabase).toHaveBeenCalled();
-        expect(mockSpyCreateConnection).toHaveBeenCalled();
-        expect(mockSpyConnect).toHaveBeenCalled();
+        expect(spyCreateDatabase).toHaveBeenCalled();
+        expect(spyCreateConnection).toHaveBeenCalled();
+        expect(spyConnect).toHaveBeenCalled();
     });
 });
 
 describe('Test save', () => {
+    test('Check for execute and return value', async () => {
+        const testObj = new Adapter(testInstance);
+        const mockConnection = {execute: jest.fn(() => [{insertId: '123'}])};
+        testObj.db = mockConnection;
+        const data = {
+            aggregateId: '001',
+            aggregateVersion: 0,
+            type: 'USER_UPDATED',
+            correlationId: '111',
+            causation: '100',
+            payload: 'TEST'
+        };
+        const expected = '123';
+        const testEvent = new Event(data);
+        const result = await testObj.save(testEvent);
+        
+        const spyExecute = jest.spyOn(mockConnection, 'execute');
+        
+        testObj.db.execute();
+
+        expect(spyExecute).toHaveBeenCalled();
+        expect(result).toBe(expected);
+    });
 }),
 
 describe('Test verifySchema', () => {
