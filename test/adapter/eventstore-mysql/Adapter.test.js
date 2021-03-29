@@ -2,6 +2,7 @@ const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
 const instance = require('../../../examples/hello-world/config');
 const {EVENT_LIMIT_REPLAY} = require('../../../src/core/Constants');
 
+
 const testInstance = instance.eventStoreAdapter.args;
 
 describe('Correct object construction', () => {
@@ -245,7 +246,7 @@ describe('Test load', () => {
                     {payload: '{"test": 42}'},
                     {payload: '{"test": 42}'},
                     {payload: '{"test": 42}'}
-                ]]) 
+                ]])
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
  
@@ -336,4 +337,49 @@ describe('Test load', () => {
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(1);
     });
+});
+
+describe('Test init', () => {
+    test('Check for function calls', async () => {
+        const mockCreateDatabase = jest.fn();
+        const mockConnect = jest.fn();
+        const mockExecute= jest.fn();
+
+        const object = { // Object to spy on
+            mockConnect, mockExecute
+        };
+        const mockCreateConnection = jest.fn(() => {
+            return {
+                connect: object.mockConnect,
+                execute: object.mockExecute // does not get executeted in init() but still needed for a bind
+            };
+        });
+        const mockMysql = {
+            createConnection: mockCreateConnection
+        };
+        
+        const mockCreateTable = jest.fn();
+        const testObj = new Adapter(testInstance, mockMysql);
+        testObj.createDatabase = mockCreateDatabase;
+        testObj.createTable = mockCreateTable;
+
+        const mockSpyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
+        const mockSpyCreateConnection = jest.spyOn(mockMysql, 'createConnection');
+        const mockSpyConnect= jest.spyOn(object, 'mockConnect');
+        
+        await testObj.init();
+
+        expect(mockSpyCreateDatabase).toHaveBeenCalled();
+        expect(mockSpyCreateConnection).toHaveBeenCalled();
+        expect(mockSpyConnect).toHaveBeenCalled();
+    });
+});
+
+describe('Test save', () => {
+}),
+
+describe('Test verifySchema', () => {
+}),
+
+describe('Test FieldListFromSchema', () => {
 });
