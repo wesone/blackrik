@@ -76,71 +76,80 @@ describe('Test createTable', () => {
                 if(arg1 === 'DESCRIBE events')
                 {
                     functionCallDescribeEvents++;
-                    return [[{
-                        Field: 'id',
-                        Type: 'varchar(36)',
-                        Null: 'NO',
-                        Key: 'PRI',
-                        Default: null,
-                        Extra: ''
-                    },
-                    {
-                        Field: 'position',
-                        Type: 'bigint',
-                        Null: 'NO',
-                        Key: 'UNI',
-                        Default: null,
-                        Extra: 'auto_increment'},
-                    {
-                        Field: 'aggregateId',
-                        Type: 'varchar(36)',
-                        Null: 'NO',
-                        Key: 'MUL',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'aggregateVersion',
-                        Type: 'int',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'type',
-                        Type: 'varchar(32)',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'timestamp',
-                        Type: 'bigint',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'correlationId',
-                        Type: 'varchar(36)',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'causationId',
-                        Type: 'varchar(36)',
-                        Null: 'YES',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'payload',
-                        Type: 'text',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    }]];
+                    return [[
+                        {
+                            Field: 'id',
+                            Type: 'varchar(36)',
+                            Null: 'NO',
+                            Key: 'PRI',
+                            Default: null,
+                            Extra: ''
+                        },
+                        {
+                            Field: 'position',
+                            Type: 'bigint',
+                            Null: 'NO',
+                            Key: 'UNI',
+                            Default: null,
+                            Extra: 'auto_increment'
+                        },
+                        {
+                            Field: 'aggregateId',
+                            Type: 'varchar(36)',
+                            Null: 'NO',
+                            Key: 'MUL',
+                            Default: null,
+                            Extra: ''
+                        },
+                        {
+                            Field: 'aggregateVersion',
+                            Type: 'int',
+                            Null: 'NO',
+                            Key: '',
+                            Default: null,
+                            Extra: ''
+                        },
+                        {
+                            Field: 'type',
+                            Type: 'varchar(32)',
+                            Null: 'NO',
+                            Key: 'MUL',
+                            Default: null,
+                            Extra: ''
+                        },
+                        {
+                            Field: 'timestamp',
+                            Type: 'bigint',
+                            Null: 'NO',
+                            Key: 'MUL',
+                            Default: null,
+                            Extra: ''
+                        },
+                        {
+                            Field: 'correlationId',
+                            Type: 'varchar(36)',
+                            Null: 'NO',
+                            Key: 'MUL',
+                            Default: null,
+                            Extra: ''
+                        },
+                        {
+                            Field: 'causationId',
+                            Type: 'varchar(36)',
+                            Null: 'YES',
+                            Key: 'MUL',
+                            Default: null,
+                            Extra: ''
+                        },
+                        {
+                            Field: 'payload',
+                            Type: 'text',
+                            Null: 'NO',
+                            Key: '',
+                            Default: null,
+                            Extra: ''
+                        }
+                    ]];
                 }
                 
                 functionCallCreateTableEvents++;
@@ -201,10 +210,92 @@ describe('Test close', () => {
 });
 
 describe('Test buildFieldListFromSchema', () => {
-    const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text not null , primary key (id) , unique key `streamId` (aggregateId,aggregateVersion)';
+    const databaseSchema = {
+        fields: {
+            id: {
+                Field: 'id',
+                Type: 'varchar(36)',
+                Null: 'NO',
+                Key: 'PRI',
+                Default: null,
+                Extra: ''
+            },
+            position: {
+                Field: 'position',
+                Type: 'bigint',
+                Null: 'NO',
+                Key: 'UNI',
+                Default: null,
+                Extra: 'auto_increment'
+            },
+            aggregateId: {
+                Field: 'aggregateId',
+                Type: 'varchar(36)',
+                Null: 'NO',
+                Key: 'MUL',
+                Default: null,
+                Extra: ''
+            },
+            aggregateVersion: {
+                Field: 'aggregateVersion',
+                Type: 'int',
+                Null: 'NO',
+                Key: '',
+                Default: null,
+                Extra: ''
+            },
+            type: {
+                Field: 'type',
+                Type: 'varchar(32)',
+                Null: 'NO',
+                Key: 'MUL',
+                Default: null,
+                Extra: ''
+            },
+            timestamp: {
+                Field: 'timestamp',
+                Type: 'bigint',
+                Null: 'NO',
+                Key: 'MUL',
+                Default: null,
+                Extra: ''
+            },
+            correlationId: {
+                Field: 'correlationId',
+                Type: 'varchar(36)',
+                Null: 'NO',
+                Key: 'MUL',
+                Default: null,
+                Extra: ''
+            },
+            causationId: {
+                Field: 'causationId',
+                Type: 'varchar(36)',
+                Null: 'YES',
+                Key: 'MUL',
+                Default: null,
+                Extra: ''
+            },
+            payload: {
+                Field: 'payload',
+                Type: 'text',
+                Null: 'NO',
+                Key: '',
+                Default: null,
+                Extra: ''
+            }
+        },
+        options: {
+            uniqueKey: {
+                name: 'streamId',
+                fields: ['aggregateId', 'aggregateVersion']
+            }
+        }
+    };
+    const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text not null , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
     test('Correct build of fieldlist from scheme', () => {
         const testObj = new Adapter(testInstance);
-        const result = testObj.buildFieldListFromSchema();
+        const result = testObj.buildFieldListFromSchema(databaseSchema);
         expect(result).toBe(expected);
     });
 });
