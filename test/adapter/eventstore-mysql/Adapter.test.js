@@ -5,6 +5,71 @@ const Event = require('../../../src/core/Event');
 
 
 const testInstance = instance.eventStoreAdapter.args;
+const schema = [[{
+    Field: 'id',
+    Type: 'varchar(36)',
+    Null: 'NO',
+    Key: 'PRI',
+    Default: null,
+    Extra: ''
+},
+{
+    Field: 'position',
+    Type: 'bigint',
+    Null: 'NO',
+    Key: 'UNI',
+    Default: null,
+    Extra: 'auto_increment'},
+{
+    Field: 'aggregateId',
+    Type: 'varchar(36)',
+    Null: 'NO',
+    Key: 'MUL',
+    Default: null,
+    Extra: ''
+},{
+    Field: 'aggregateVersion',
+    Type: 'int',
+    Null: 'NO',
+    Key: '',
+    Default: null,
+    Extra: ''
+},{
+    Field: 'type',
+    Type: 'varchar(32)',
+    Null: 'NO',
+    Key: '',
+    Default: null,
+    Extra: ''
+},{
+    Field: 'timestamp',
+    Type: 'bigint',
+    Null: 'NO',
+    Key: '',
+    Default: null,
+    Extra: ''
+},{
+    Field: 'correlationId',
+    Type: 'varchar(36)',
+    Null: 'NO',
+    Key: '',
+    Default: null,
+    Extra: ''
+},{
+    Field: 'causationId',
+    Type: 'varchar(36)',
+    Null: 'YES',
+    Key: '',
+    Default: null,
+    Extra: ''
+},{
+    Field: 'payload',
+    Type: 'text',
+    Null: 'NO',
+    Key: '',
+    Default: null,
+    Extra: ''
+}]];
 
 describe('Correct object construction', () => {
     test('Constructor set config', () => {
@@ -45,171 +110,67 @@ describe('Test validateConfig ', () => {
     });
 });
 
-describe('Test createDatabase', () => {
-    test('Create database and terminate connection', async () => {
-        const testObj = new Adapter(testInstance);
-        const mockConnection = {
-            execute: jest.fn(),
-            end: jest.fn()
+describe('Test init', () => {
+    test('Check for function calls', async () => {
+        const mockCreateDatabase = jest.fn();
+        const mockConnect = jest.fn();
+        const mockExecute= jest.fn();
+
+        const object = { // Object to spy on
+            mockConnect, mockExecute
         };
-        const spyExecute= jest.spyOn(mockConnection, 'execute');
-        const spyEnd = jest.spyOn(mockConnection, 'end');
-    
-        await testObj.createDatabase(mockConnection);
-        await testObj.createDatabase();
+        const mockCreateConnection = jest.fn(() => {
+            return {
+                connect: object.mockConnect,
+                execute: object.mockExecute // does not get executeted in init() but still needed for a bind
+            };
+        });
+        const mockMysql = {
+            createConnection: mockCreateConnection
+        };
+        
+        const mockCreateTable = jest.fn();
+        const testObj = new Adapter(testInstance, mockMysql);
+        testObj.createDatabase = mockCreateDatabase;
+        testObj.createTable = mockCreateTable;
+
+        const spyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
+        const spyCreateConnection = jest.spyOn(mockMysql, 'createConnection');
+        const spyConnect= jest.spyOn(object, 'mockConnect');
+        
+        await testObj.init();
+
+        expect(spyCreateDatabase).toHaveBeenCalled();
+        expect(spyCreateConnection).toHaveBeenCalled();
+        expect(spyConnect).toHaveBeenCalled();
+    });
+});
+
+describe('Test save', () => {
+    test('Check for execute and return value', async () => {
+        const testObj = new Adapter(testInstance);
+        const mockConnection = {execute: jest.fn(() => [{insertId: '123'}])};
+        testObj.db = mockConnection;
+        const data = {
+            aggregateId: '001',
+            aggregateVersion: 0,
+            type: 'USER_UPDATED',
+            correlationId: '111',
+            causation: '100',
+            payload: 'TEST'
+        };
+        const expected = '123';
+        const testEvent = new Event(data);
+        const result = await testObj.save(testEvent);
+        
+        const spyExecute = jest.spyOn(mockConnection, 'execute');
+        
+        testObj.db.execute();
+
         expect(spyExecute).toHaveBeenCalled();
-        expect(spyEnd).toHaveBeenCalled();
-    });
-});
-
-describe('Test createTable', () => {
-    test('Create table - event count >= 1', async () => {
-        const testObj = new Adapter(testInstance);
-        let functionCallCheckEventCount = 0;
-        let functionCallDescribeEvents = 0;
-        let functionCallCreateTableEvents = 0;
-        const mockConnection = {
-            execute: jest.fn(arg1 => {
-                if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
-                {
-                    functionCallCheckEventCount++;   
-                    return [[{ 'count(*)': 1 }]];
-                }
-                if(arg1 === 'DESCRIBE events')
-                {
-                    functionCallDescribeEvents++;
-                    return [[{
-                        Field: 'id',
-                        Type: 'varchar(36)',
-                        Null: 'NO',
-                        Key: 'PRI',
-                        Default: null,
-                        Extra: ''
-                    },
-                    {
-                        Field: 'position',
-                        Type: 'bigint',
-                        Null: 'NO',
-                        Key: 'UNI',
-                        Default: null,
-                        Extra: 'auto_increment'},
-                    {
-                        Field: 'aggregateId',
-                        Type: 'varchar(36)',
-                        Null: 'NO',
-                        Key: 'MUL',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'aggregateVersion',
-                        Type: 'int',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'type',
-                        Type: 'varchar(32)',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'timestamp',
-                        Type: 'bigint',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'correlationId',
-                        Type: 'varchar(36)',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'causationId',
-                        Type: 'varchar(36)',
-                        Null: 'YES',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    },{
-                        Field: 'payload',
-                        Type: 'text',
-                        Null: 'NO',
-                        Key: '',
-                        Default: null,
-                        Extra: ''
-                    }]];
-                }
-                
-                functionCallCreateTableEvents++;
-            }),
-        };
-        const spyExecute= jest.spyOn(mockConnection, 'execute');
-
-        testObj.db = mockConnection;
-        await testObj.createTable();
-        expect(spyExecute).toHaveBeenCalledTimes(2);
-        expect(functionCallCheckEventCount).toBe(1);
-        expect(functionCallDescribeEvents).toBe(1);
-        expect(functionCallCreateTableEvents).toBe(0);
-    });
-    test('Create table - no events', async () => {
-        const testObj = new Adapter(testInstance);
-        let functionCallCheckEventCount = 0;
-        let functionCallDescribeEvents = 0;
-        let functionCallCreateTableEvents = 0;
-        const mockConnection = {
-            execute: jest.fn(arg1 => {
-                if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
-                {
-                    functionCallCheckEventCount++;   
-                    return test = [[{ 'count(*)': 0 }]];
-                }
-                if(arg1 === 'DESCRIBE events')
-                {
-                    functionCallDescribeEvents++;
-                }
-                else 
-                    functionCallCreateTableEvents++;
-            }),
-        };
-        const spyExecute= jest.spyOn(mockConnection, 'execute');
-
-        testObj.db = mockConnection;
-        await testObj.createTable();
-        expect(spyExecute).toHaveBeenCalledTimes(2);
-        expect(functionCallCheckEventCount).toBe(1);
-        expect(functionCallDescribeEvents).toBe(0);
-        expect(functionCallCreateTableEvents).toBe(1);
-    });
-});
-
-describe('Test close', () => {
-    test('Calling end on db connection', async () => {
-        const testObj = new Adapter(testInstance);
-        const mockConnection = {
-            end: jest.fn()
-        };
-        const spyEnd= jest.spyOn(mockConnection, 'end');
-
-        testObj.db = mockConnection;
-        await testObj.close();
-        expect(spyEnd).toHaveBeenCalled();
-    });
-});
-
-describe('Test buildFieldListFromSchema', () => {
-    const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text not null , primary key (id) , unique key `streamId` (aggregateId,aggregateVersion)';
-    test('Correct build of fieldlist from scheme', () => {
-        const testObj = new Adapter(testInstance);
-        const result = testObj.buildFieldListFromSchema();
         expect(result).toBe(expected);
     });
-});
+}),
 
 describe('Test load', () => {
     test('Check for correct loading of events', async () => {
@@ -340,70 +301,147 @@ describe('Test load', () => {
     });
 });
 
-describe('Test init', () => {
-    test('Check for function calls', async () => {
-        const mockCreateDatabase = jest.fn();
-        const mockConnect = jest.fn();
-        const mockExecute= jest.fn();
-
-        const object = { // Object to spy on
-            mockConnect, mockExecute
+describe('Test close', () => {
+    test('Calling end on db connection', async () => {
+        const testObj = new Adapter(testInstance);
+        const mockConnection = {
+            end: jest.fn()
         };
-        const mockCreateConnection = jest.fn(() => {
-            return {
-                connect: object.mockConnect,
-                execute: object.mockExecute // does not get executeted in init() but still needed for a bind
-            };
-        });
-        const mockMysql = {
-            createConnection: mockCreateConnection
-        };
-        
-        const mockCreateTable = jest.fn();
-        const testObj = new Adapter(testInstance, mockMysql);
-        testObj.createDatabase = mockCreateDatabase;
-        testObj.createTable = mockCreateTable;
+        const spyEnd= jest.spyOn(mockConnection, 'end');
 
-        const spyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
-        const spyCreateConnection = jest.spyOn(mockMysql, 'createConnection');
-        const spyConnect= jest.spyOn(object, 'mockConnect');
-        
-        await testObj.init();
-
-        expect(spyCreateDatabase).toHaveBeenCalled();
-        expect(spyCreateConnection).toHaveBeenCalled();
-        expect(spyConnect).toHaveBeenCalled();
+        testObj.db = mockConnection;
+        await testObj.close();
+        expect(spyEnd).toHaveBeenCalled();
     });
 });
 
-describe('Test save', () => {
-    test('Check for execute and return value', async () => {
+describe('Test createTable', () => {
+    test('Create table - event count >= 1', async () => {
         const testObj = new Adapter(testInstance);
-        const mockConnection = {execute: jest.fn(() => [{insertId: '123'}])};
-        testObj.db = mockConnection;
-        const data = {
-            aggregateId: '001',
-            aggregateVersion: 0,
-            type: 'USER_UPDATED',
-            correlationId: '111',
-            causation: '100',
-            payload: 'TEST'
+        let functionCallCheckEventCount = 0;
+        let functionCallDescribeEvents = 0;
+        let functionCallCreateTableEvents = 0;
+        const mockConnection = {
+            execute: jest.fn(arg1 => {
+                if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
+                {
+                    functionCallCheckEventCount++;   
+                    return [[{ 'count(*)': 1 }]];
+                }
+                if(arg1 === 'DESCRIBE events')
+                {
+                    functionCallDescribeEvents++;
+                    return schema;
+                }
+                
+                functionCallCreateTableEvents++;
+            }),
         };
-        const expected = '123';
-        const testEvent = new Event(data);
-        const result = await testObj.save(testEvent);
-        
-        const spyExecute = jest.spyOn(mockConnection, 'execute');
-        
-        testObj.db.execute();
+        const spyExecute= jest.spyOn(mockConnection, 'execute');
 
+        testObj.db = mockConnection;
+        await testObj.createTable();
+        expect(spyExecute).toHaveBeenCalledTimes(2);
+        expect(functionCallCheckEventCount).toBe(1);
+        expect(functionCallDescribeEvents).toBe(1);
+        expect(functionCallCreateTableEvents).toBe(0);
+    });
+    test('Create table - no events', async () => {
+        const testObj = new Adapter(testInstance);
+        let functionCallCheckEventCount = 0;
+        let functionCallDescribeEvents = 0;
+        let functionCallCreateTableEvents = 0;
+        const mockConnection = {
+            execute: jest.fn(arg1 => {
+                if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
+                {
+                    functionCallCheckEventCount++;   
+                    return test = [[{ 'count(*)': 0 }]];
+                }
+                if(arg1 === 'DESCRIBE events')
+                {
+                    functionCallDescribeEvents++;
+                }
+                else 
+                    functionCallCreateTableEvents++;
+            }),
+        };
+        const spyExecute= jest.spyOn(mockConnection, 'execute');
+
+        testObj.db = mockConnection;
+        await testObj.createTable();
+        expect(spyExecute).toHaveBeenCalledTimes(2);
+        expect(functionCallCheckEventCount).toBe(1);
+        expect(functionCallDescribeEvents).toBe(0);
+        expect(functionCallCreateTableEvents).toBe(1);
+    });
+});
+
+describe('Test createDatabase', () => {
+    test('Create database and terminate connection', async () => {
+        const testObj = new Adapter(testInstance);
+        const mockConnection = {
+            execute: jest.fn(),
+            end: jest.fn()
+        };
+        const spyExecute= jest.spyOn(mockConnection, 'execute');
+        const spyEnd = jest.spyOn(mockConnection, 'end');
+    
+        await testObj.createDatabase(mockConnection);
+        await testObj.createDatabase();
         expect(spyExecute).toHaveBeenCalled();
-        expect(result).toBe(expected);
+        expect(spyEnd).toHaveBeenCalled();
+    });
+});
+
+describe('Test verifySchema', () => {
+    test('Verify schema successfully', async () => {
+        const testObj = new Adapter(testInstance);
+        expect(await testObj.verifySchema(schema[0])).toBe(true);
+    });
+    test('Verify schema - field not found', async () => {
+        const testObj = new Adapter(testInstance);
+        const copy = JSON.parse(JSON.stringify(schema));
+        copy[0][0].Field = 'not a viable field';
+        expect(await testObj.verifySchema(copy[0])).toBe(false);
+    });
+    test('Verify schema - no "Type" field', async () => {
+        const testObj = new Adapter(testInstance);
+        const copy = JSON.parse(JSON.stringify(schema));
+        copy[0][0].Type = 'not a viable field';
+        expect(await testObj.verifySchema(copy[0])).toBe(false);
+    });
+    test('Verify schema - no "Null" field', async () => {
+        const testObj = new Adapter(testInstance);
+        const copy = JSON.parse(JSON.stringify(schema));
+        copy[0][0].Null = 'not a viable field';
+        expect(await testObj.verifySchema(copy[0])).toBe(false);
+    });
+    test('Verify schema - no "Key" field', async () => {
+        const testObj = new Adapter(testInstance);
+        const copy = JSON.parse(JSON.stringify(schema));
+        copy[0][0].Key = 'not a viable field';
+        expect(await testObj.verifySchema(copy[0])).toBe(false);
+    });
+    test('Verify schema - no "Default" field', async () => {
+        const testObj = new Adapter(testInstance);
+        const copy = JSON.parse(JSON.stringify(schema));
+        copy[0][0].Default = 'not a viable field';
+        expect(await testObj.verifySchema(copy[0])).toBe(false);
+    });
+    test('Verify schema - no "Extra" field', async () => {
+        const testObj = new Adapter(testInstance);
+        const copy = JSON.parse(JSON.stringify(schema));
+        copy[0][0].Extra = 'not a viable field';
+        expect(await testObj.verifySchema(copy[0])).toBe(false);
     });
 }),
 
-describe('Test verifySchema', () => {
-}),
-
-describe('Test FieldListFromSchema', () => {
+describe('Test buildFieldListFromSchema', () => {
+    const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text not null , primary key (id) , unique key `streamId` (aggregateId,aggregateVersion)';
+    test('Correct build of fieldlist from scheme', () => {
+        const testObj = new Adapter(testInstance);
+        const result = testObj.buildFieldListFromSchema();
+        expect(result).toBe(expected);
+    });
 });
