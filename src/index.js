@@ -63,14 +63,14 @@ class Blackrik
         this.#blackrik = new Application(this);
     }
 
-    get executeCommand()
+    executeCommand(command)
     {
-        return this.#blackrik.executeCommand;
+        return this.#blackrik.executeCommand(command);
     }
 
-    get scheduleCommand()
+    scheduleCommand(timestamp, command)
     {
-        return this.#blackrik.scheduleCommand;
+        return this.#blackrik.scheduleCommand(timestamp, command);
     }
 
     get executeQuery()

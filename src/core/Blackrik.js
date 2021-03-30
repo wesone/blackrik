@@ -27,7 +27,6 @@ class Blackrik
 
     _aggregates = {};
     _resolvers = {};
-    _sideEffects = [];
 
     _commandHandler;
     _queryHandler;
@@ -124,27 +123,9 @@ class Blackrik
         );
     }
 
-    _constructSideEffects(sideEffects)
-    {
-        if(!this._sideEffects.includes(sideEffects))
-        {
-            [
-                'executeCommand',
-                'scheduleCommand'
-            ].forEach(fn => 
-                Object.defineProperty(sideEffects, fn, {
-                    value: this[fn].bind(this),
-                    writable: false,
-                    configurable: true
-                })
-            );
-            this._sideEffects.push(sideEffects);
-        }
-        return sideEffects;
-    }
-
     async _processSagas()
     {
+        const blackrik = this;
         return Promise.all(
             this.config.sagas.map(
                 ({name, source: {handlers, sideEffects}, adapter}) =>
@@ -155,11 +136,31 @@ class Blackrik
                         async (handler, store, event, config) => await handler(
                             store,
                             event,
-                            new Proxy(this._constructSideEffects(sideEffects), {
-                                get: (...args) => {
+                            new Proxy(sideEffects, {
+                                get: (target, prop, ...rest) => {
                                     if(event.isReplay && config.noopSideEffectsOnReplay !== false)
                                         return () => {};
-                                    return Reflect.get(...args);
+                                    
+                                    for(const [fn, argCount] of Object.entries({
+                                        'executeCommand': 1,
+                                        'scheduleCommand': 2
+                                    }))
+                                    {
+                                        if(prop !== fn)
+                                            continue;
+
+                                        return function(...args){
+                                            const params = [];
+                                            if(args.length >= argCount)
+                                            { 
+                                                args.every((arg, idx) => idx < argCount ? params.push(arg) : false);
+                                                params.push(event);
+                                            }
+                                            return this[fn](...params);
+                                        }.bind(blackrik);
+                                    }
+
+                                    return Reflect.get(target, prop, ...rest);
                                 }
                             })
                         )
@@ -272,10 +273,10 @@ class Blackrik
         );
     }
 
-    async scheduleCommand(delay, command, causationEvent = null)
+    async scheduleCommand(timestamp, command, causationEvent = null)
     {
         return !!await this._commandScheduler.process(
-            delay,
+            timestamp,
             command,
             causationEvent
         );

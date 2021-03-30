@@ -18,7 +18,7 @@ module.exports = {
                 payload: {
                     'name': `${event.payload.name} Lastname`
                 }
-            }, event);
+            });
         }
     },
     sideEffects: {
