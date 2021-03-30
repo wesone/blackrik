@@ -56,7 +56,7 @@ class EventHandler
                     await Promise.all(
                         this.listeners[name]
                             .execute(event.type, event)
-                            .map(cb => cb.catch(error => console.error(error)))
+                            // .map(cb => cb.catch(error => console.error(error)))
                     );
             });
     }
