@@ -21,6 +21,7 @@ class Blackrik
 
     #replayEvents = [];
 
+    #store;
     _eventHandler;
     _eventStore;
     _stores = {};
@@ -38,13 +39,26 @@ class Blackrik
         this.config = instance.config;
     }
 
+    _createReadModelStore(adapterName)
+    {
+        if(!this._stores[adapterName] && !(this._stores[adapterName] = Adapter.create(this.config.readModelStoreAdapters[adapterName])))
+            throw Error(`ReadModel adapter '${adapterName}' is invalid.`);
+        return this._stores[adapterName];
+    }
+
+    async _initStore()
+    {
+        this.#store = this._createReadModelStore(this.config.adapter || 'default');
+    }
+
     async _initEventHandler()
     {
         const eventBus = Adapter.create(this.config.eventBusAdapter);
         if(!eventBus)
             throw Error(`EventBus adapter '${this.config.eventBusAdapter.module}' is invalid.`);
         await eventBus.init();
-        this._eventHandler = new EventHandler(this, eventBus);
+        this._eventHandler = new EventHandler(this, eventBus, this.#store);
+        await this._eventHandler.init();
     }
 
     async _initEventStore()
@@ -57,13 +71,6 @@ class Blackrik
     _processAggregates()
     {
         this._aggregates = Aggregate.fromArray(this.config.aggregates);
-    }
-
-    _createReadModelStore(adapterName)
-    {
-        if(!this._stores[adapterName] && !(this._stores[adapterName] = Adapter.create(this.config.readModelStoreAdapters[adapterName])))
-            throw Error(`ReadModel adapter '${adapterName}' is invalid.`);
-        return this._stores[adapterName];
     }
 
     async _createSubscriptions(name, eventMap, store, callback)
@@ -182,7 +189,7 @@ class Blackrik
         this._commandHandler = new CommandHandler(this);
         this._queryHandler = new QueryHandler(this);
 
-        this._commandScheduler = new CommandScheduler(this, this._createReadModelStore(this.config.adapter || 'default'));
+        this._commandScheduler = new CommandScheduler(this, this.#store);
         await this._commandScheduler.init();
     }
 
@@ -232,6 +239,8 @@ class Blackrik
 
     async start()
     {
+        await this._initStore();
+
         console.log('Initialize EventHandler');
         await this._initEventHandler();
         console.log('Initialize EventStore');
