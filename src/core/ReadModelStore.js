@@ -61,19 +61,6 @@ class ReadModelStore
         const self = this;
         const proxy = new Proxy(this.#store, {
             get: (target, prop, ...rest) => {
-                // if(prop === 'insert')
-                //     return async function(table, data){
-                //         return await target[prop](table, data, event.position);
-                //     };
-                // if(prop === 'update')
-                //     return async function(table, conditions, data){
-                //         return await target[prop](table, conditions, data, event.position);
-                //     };
-                // if(prop === 'delete')
-                //     return async function(table, conditions){
-                //         return await target[prop](table, conditions, event.position);
-                //     };
-
                 let originalValue = Reflect.get(target, prop, ...rest);
                 if(typeof originalValue === 'function')
                     originalValue = originalValue.bind(proxy);

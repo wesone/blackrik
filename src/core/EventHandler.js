@@ -53,7 +53,11 @@ class EventHandler
             await this.eventBus.subscribe(name, type, async event => {
                 const {position} = event;
                 if(await this.store.update(TABLE_NAME, {position: {$lt: position}}, {position}))
-                    await Promise.all(this.listeners[name].execute(event.type, event));
+                    await Promise.all(
+                        this.listeners[name]
+                            .execute(event.type, event)
+                            .map(cb => cb.catch(error => console.error(error)))
+                    );
             });
     }
 
