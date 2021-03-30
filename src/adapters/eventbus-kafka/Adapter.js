@@ -38,7 +38,9 @@ class Adapter extends EventBusAdapterInterface
             ...this.args
         });
 
-        this.producer = kafka.producer();
+        this.producer = kafka.producer({
+            // idempotent: true // https://github.com/tulios/kafkajs/issues/598
+        });
         await this.producer.connect();
 
         this.consumer = kafka.consumer({groupId: this.args.clientId});
