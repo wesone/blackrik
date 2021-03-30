@@ -164,7 +164,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async insert(tableName, data, position = null){
         const {sql, parameters} = insertIntoBuilder(tableName, data, position);
-        return this.getAffectedCount(await this.exec(sql, parameters));
+        return !!this.getAffectedCount(await this.exec(sql, parameters));
     }
 
     async update(tableName, conditions, data, position = null){
