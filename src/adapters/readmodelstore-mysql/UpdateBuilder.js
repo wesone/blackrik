@@ -24,15 +24,22 @@ function updateBuilder(tableName, data, conditions, position = null)
     const assignments = fieldNames.map(n => [quoteIdentifier(n), '=', '?'].join(' '));
     const assignmentList = assignments.join(', ');
     const values = fieldNames.map(v => convertValue(data[v]));
-    const condition = conditionBuilder(conditions);
-    let sql = ['UPDATE', quoteIdentifier(tableName), 'SET', assignmentList, 'WHERE', condition.sql].join(' ');
+    let parameters = [];
+    let sql = ['UPDATE', quoteIdentifier(tableName), 'SET', assignmentList].join(' ');
+    if(conditions && typeof conditions === 'object')
+    {
+        const condition = conditionBuilder(conditions);
+        sql += [' WHERE', condition.sql].join(' ');
+        parameters = parameters.concat(condition.parameters);
+    }
     if(position)
     {
+        const startString = conditions && typeof conditions === 'object' ? ' AND' : ' WHERE';
         const checkCondition = getPositionCheckCondition(tableName, position);
-        sql += [' AND', checkCondition[0]].join(' ');
-        condition.parameters.push(convertValue(checkCondition[1]));
+        sql += [startString, checkCondition[0]].join(' ');
+        parameters.push(convertValue(checkCondition[1]));
     }
-    return {sql, parameters: values.concat(condition.parameters)};
+    return {sql, parameters: values.concat(parameters)};
 }
 
 module.exports =  {

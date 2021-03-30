@@ -29,3 +29,31 @@ test('create update statement', () => {
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);
 });
+
+test('with no conditions', () => {
+    const data = {
+        test: 'Hello world'
+    };
+    const expectedSQL = 'UPDATE `TestTable` SET `test` = ?';
+    const expectedParameters = [
+        'Hello world',
+    ];
+    const {sql, parameters} = updateBuilder(tableName, data, null);
+    expect(sql).toEqual(expectedSQL);
+    expect(parameters).toEqual(expectedParameters);
+});
+
+test('with position but no conditions', () => {
+    const data = {
+        test: 'Hello world'
+    };
+    const expectedSQL = 'UPDATE `TestTable` SET `test` = ?, `_lastPosition` = ? WHERE COALESCE(( SELECT * FROM ( SELECT MAX( `_lastPosition` ) FROM `TestTable` ) AS _maxPosition ), -1) < ?';
+    const expectedParameters = [
+        'Hello world',
+        '1',
+        '1'
+    ];
+    const {sql, parameters} = updateBuilder(tableName, data, null, 1);
+    expect(sql).toEqual(expectedSQL);
+    expect(parameters).toEqual(expectedParameters);
+});
