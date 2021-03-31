@@ -24,7 +24,9 @@ $ cd hello-world
 $ npm init -y
 ```
 Then install the Blackrik module
-TODO
+```sh
+$ npm i blackrik
+```
 
 ### Usage
 ```javascript
@@ -41,7 +43,7 @@ Read the [documentation](https://github.com/wesone/blackrik/wiki).
 See [config](https://github.com/wesone/blackrik/wiki/API-Reference#config) for details about the config.
 
 ## How to contribute
-TODO
+Please check the [CONTRIBUTING.md](https://github.com/wesone/blackrik/blob/master/CONTRIBUTING.md) for details.
 
 ## License
 Copyright (c) 2021, wesone
