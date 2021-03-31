@@ -54,7 +54,7 @@ class EventHandler
         //TODO needs more tests to decide which way to go
         if(this.addListener(name, type, callback))
             await this.eventBus.subscribe(name, type, async event => {
-                const {position} = event;
+                // const {position} = event;
                 // if(await this.store.update(TABLE_NAME, {position: {$lt: position}}, {position}))
                 //     await Promise.all(
                 //         this.listeners[name]
