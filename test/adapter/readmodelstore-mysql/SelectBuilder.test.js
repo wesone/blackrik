@@ -2,7 +2,7 @@
 import { selectBuilder } from '../../../src/adapters/readmodelstore-mysql/SelectBuilder';
 
 const tableName = 'TestTable';
-/*
+
 test('create select statement', () => {
     
     const queryOptions = {
@@ -46,7 +46,7 @@ test('sort queryOption', () => {
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);
 });
-*/
+
 test('dates', () => {
     const queryOptions = {
         conditions: {
