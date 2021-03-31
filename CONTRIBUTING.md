@@ -11,7 +11,7 @@ Otherwise
 1. Create a new [issue](https://guides.github.com/features/issues/) so your proposal can be discussed first.
 2. Create a new [branch](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-branches) of this repository to work in.
 3. Implement your feature or fix or enhancement.
-4. Add (or update) tests if needed.
+4. Add (or update) [tests](#testing) if needed.
 5. Make sure your code complies with our [codestyle](#codestyle): `$ npx eslint .`.
 6. Make sure all [tests](#testing) pass: `$ npm run test`.
 7. Commit all changes to your branch (from step 2) and write useful commit messages for others to be able to undestand what changed.
@@ -23,7 +23,7 @@ Otherwise
 We use [ESLint](https://eslint.org/) to make sure the code has a constant style. That style is described via rules inside the [.eslintrc.js](https://github.com/wesone/blackrik/blob/master/.eslintrc.js) file.
 
 To test if all rules are satisfied run `$ npx eslint .` from the project's root directory (or `$ npx eslint <dir>`).  
-ESLint can fix some problems automatically if you use `$ npx eslint --fix .` but be advised that the `--fix` flag will manipulate your code.
+ESLint can fix some problems automatically if you use `$ npx eslint --fix .` but be advised that the `--fix` flag might manipulate your code.
 
 ### Naming
 Please use descriptive names (for functions, parameters, classes, variables, ...) in [camel case](https://en.wikipedia.org/wiki/Camel_case) and avoid abbreviations when possible.
