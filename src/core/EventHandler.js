@@ -49,6 +49,9 @@ class EventHandler
 
     async subscribe(name, type, callback)
     {
+        // we have one listener that will execute all callbacks, to prevent sending a message multiple times to a callback
+        // this way we create idempotence which is good but the also bypass the retry strategy which is bad
+        //TODO needs more tests to decide which way to go
         if(this.addListener(name, type, callback))
             await this.eventBus.subscribe(name, type, async event => {
                 const {position} = event;
