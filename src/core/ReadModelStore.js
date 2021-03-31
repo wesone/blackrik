@@ -61,32 +61,22 @@ class ReadModelStore
         const self = this;
         const proxy = new Proxy(this.#store, {
             get: (target, prop, ...rest) => {
-                // if(prop === 'insert')
-                //     return async function(table, data){
-                //         return await target[prop](table, data, event.position);
-                //     };
-                // if(prop === 'update')
-                //     return async function(table, conditions, data){
-                //         return await target[prop](table, conditions, data, event.position);
-                //     };
-                // if(prop === 'delete')
-                //     return async function(table, conditions){
-                //         return await target[prop](table, conditions, event.position);
-                //     };
-
-                let originalValue = Reflect.get(target, prop, ...rest);
-                if(typeof originalValue === 'function')
-                    originalValue = originalValue.bind(proxy);
+                const originalValue = Reflect.get(target, prop, ...rest);
+                const handler = typeof originalValue === 'function'
+                    ? function(...args){
+                        return originalValue.bind(proxy)(...args, event.position);
+                    }
+                    : originalValue;
                 if(event.isReplay)
                 {
                     if(prop === 'insert')
-                        return self._wrapReadModelStoreFunction(originalValue, false);
+                        return self._wrapReadModelStoreFunction(handler, false);
                     if(prop === 'update')
-                        return self._wrapReadModelStoreFunction(originalValue, 0);
+                        return self._wrapReadModelStoreFunction(handler, 0);
                     if(prop === 'delete')
-                        return self._wrapReadModelStoreFunction(originalValue, 0);
+                        return self._wrapReadModelStoreFunction(handler, 0);
                 }
-                return originalValue;
+                return handler;
             }
         });
         return proxy;

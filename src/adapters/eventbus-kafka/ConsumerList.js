@@ -15,7 +15,7 @@ class ConsumerList
     execute(type, ...args)
     {
         if(this.list[type] && this.list[type].length)
-            this.list[type].forEach(consumer => consumer(...args));
+            return this.list[type].map(consumer => consumer(...args));
     }
 }
 

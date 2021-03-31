@@ -1,4 +1,4 @@
-const TABLE_NAME = '__SCHEDULED_COMMANDS';
+const {COMMAND_SCHEDULER_TABLE_NAME: TABLE_NAME} = require('./Constants');
 
 class CommandScheduler
 {

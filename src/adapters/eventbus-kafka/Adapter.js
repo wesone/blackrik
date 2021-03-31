@@ -25,10 +25,10 @@ class Adapter extends EventBusAdapterInterface
             throw Error('EventBus-Kafka please provide at least one broker inside the \'brokers\' array.');
     }
 
-    onMessage({/* topic, partition, */ message})
+    async onMessage({/* topic, partition, */ message})
     {
         const event = JSON.parse(message.value.toString());
-        this.listeners.execute(event.type, event);
+        await Promise.all(this.listeners.execute(event.type, event));
     }
 
     async init()
