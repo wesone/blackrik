@@ -25,7 +25,7 @@ class Adapter extends EventBusAdapterInterface
             throw Error('EventBus-Kafka please provide at least one broker inside the \'brokers\' array.');
     }
 
-    onMessage({topic, /* partition, */ message})
+    onMessage({/* topic, partition, */ message})
     {
         const event = JSON.parse(message.value.toString());
         this.listeners.execute(event.type, event);
@@ -38,7 +38,9 @@ class Adapter extends EventBusAdapterInterface
             ...this.args
         });
 
-        this.producer = kafka.producer();
+        this.producer = kafka.producer({
+            // idempotent: true // https://github.com/tulios/kafkajs/issues/598
+        });
         await this.producer.connect();
 
         this.consumer = kafka.consumer({groupId: this.args.clientId});
@@ -69,16 +71,24 @@ class Adapter extends EventBusAdapterInterface
 
     async publish(name, event)
     {
+        const messages = [];
+        if(Array.isArray(event))
+        {
+            event.forEach(evt => messages.push({
+                value: JSON.stringify(evt)
+            }));
+        } 
+        else 
+        {
+            messages.push({
+                value: JSON.stringify(event)
+            });
+        }
         try
         {
             await this.producer.send({
                 topic: name,
-                messages: [
-                    {
-                        // key: '1234',
-                        value: JSON.stringify(event)
-                    }
-                ]
+                messages
             });
             return true;
         }

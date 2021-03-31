@@ -38,15 +38,37 @@ function selectBuilder(tableName, queryOptions)
 
     if(queryOptions.sort)
     {
-        const sort = Object.keys(queryOptions.sort).map(field => {
-            const direction = queryOptions.sort[field];
-            if(direction !== 1 && direction !== -1)
+        if(!Array.isArray(queryOptions.sort))
+        {
+            throw new Error('Array expected for sort queryOption');
+        }
+        let sort = [];
+        for(let sortObject of queryOptions.sort)
+        {
+            if(Array.isArray(sortObject))
             {
-                throw new Error('direction of sort has to be 1 for ASC or -1 for DESC');
+                if(sortObject.length !== 2)
+                {
+                    throw new Error('Sort array needs 2 elements. [field, order]');
+                }
+                sortObject = {[sortObject[0]] : sortObject[1]};
             }
-            return [quoteIdentifier(field), direction === 1 ? 'ASC' : 'DESC'].join(' ');
-        }).join(', ');
-        sqlList.push('ORDER BY', sort);
+            const keys = Object.keys(sortObject);
+            if(!keys || keys.length === 0)
+            {
+                throw new Error('Sort object cannot be empty. Needs: {field: order}');
+            }
+            const partSort = keys.map(field => {
+                const direction = sortObject[field];
+                if(direction !== 1 && direction !== -1)
+                {
+                    throw new Error('direction of sort has to be 1 for ASC or -1 for DESC');
+                }
+                return [quoteIdentifier(field), direction === 1 ? 'ASC' : 'DESC'].join(' ');
+            });
+            sort = sort.concat(partSort);
+        }
+        sqlList.push('ORDER BY', sort.join(', '));
     }
 
     if(queryOptions.limit)

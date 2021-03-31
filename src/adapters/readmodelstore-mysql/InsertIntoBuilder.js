@@ -1,6 +1,6 @@
 const { quoteIdentifier, convertValue } = require('./utils');
 
-function insertIntoBuilder(tableName, data)
+function insertIntoBuilder(tableName, data, position = null)
 {
     if(typeof data !== 'object')
     {
@@ -14,13 +14,26 @@ function insertIntoBuilder(tableName, data)
         throw new Error('No Fields given');
     }
 
-    const fieldList = ['(', fieldNames.map(n => quoteIdentifier(n)).join(', '), ')'].join('');
+    if(position !== null)
+    {
+        data._lastPosition = position;
+        fieldNames.push('_lastPosition');
+    }
 
     const parameters = fieldNames.map(name => convertValue(data[name]));
-    const valueList = ['(', parameters.map(() => '?').join(', ') ,')'].join('');
-    
-    const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'VALUES', valueList].join(' ');
+    const fieldList = ['(', fieldNames.map(n => quoteIdentifier(n)).join(', '), ')'].join('');
 
+    if(position === null)
+    {
+        const valueList = ['(', parameters.map(() => '?').join(', ') ,')'].join('');
+        const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'VALUES', valueList].join(' ');
+        return {sql, parameters};
+    }
+    
+    const valueList = [parameters.map(() => '?').join(', ')].join('');
+    const subQuery = ['SELECT', 'MAX(', quoteIdentifier('_lastPosition'), ')', 'FROM', quoteIdentifier(tableName)].join(' ');
+    const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'SELECT', valueList, 'WHERE', '?', '>', 'COALESCE((', subQuery, '),-1)'].join(' ');
+    parameters.push(convertValue(position));
     return {sql, parameters};
 }
 

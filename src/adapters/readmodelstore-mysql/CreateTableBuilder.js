@@ -8,11 +8,8 @@ const types = {
     'Text' : 'TEXT', 
     'JSON' : 'JSON',
     'Boolean': 'TINYINT(1)', 
-    'Integer': 'DOUBLE', 
-    'Float': 'DOUBLE', 
-    'Double': 'DOUBLE',  
-    'Date': 'DATETIME', 
-    'Timestamp': 'TIMESTAMP',
+    'Number': 'DOUBLE',  
+    'Date': 'TIMESTAMP', 
     'uuid': 'CHAR(36)'
 };
 
@@ -32,26 +29,6 @@ function _validateTypeAttributes(typeDef, attributes, state, fieldIndex)
         {
             throw new Error('PRIMARY_KEY must be defined as NOT NULL');
         }
-    }
-    if(attributes.autoIncrement)
-    {
-        if(typeDef !== 'DOUBLE')
-        {
-            throw new Error('Only Number field can have the AUTO_INCREMENT attribute');
-        }
-        if(state.hasAutoIncrement)
-        {
-            throw new Error('Only one AUTO_INCREMENT is allowed');
-        }
-
-        if(!attributes.primaryKey && !attributes.unique)
-        {
-            throw new Error('AUTO_INCREMENT field must be indexed');
-        }
-        if(attributes.defaultValue)
-        {
-            throw new Error('AUTO_INCREMENT field cannot have a DEFAULT value');
-        }       
     }
     if(attributes.defaultValue)
     {
@@ -88,11 +65,6 @@ function _translateType(type, attributes, state, fieldIndex)
     {
         state.hasPrimaryKey = true;
         typeDef = [typeDef, 'PRIMARY KEY'].join(' ');
-    }
-    if(attributes.autoIncrement)
-    {
-        state.hasAutoIncrement = true;
-        typeDef = [typeDef, 'AUTO_INCREMENT'].join(' ');
     }
         
     return typeDef;

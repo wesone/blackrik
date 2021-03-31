@@ -13,12 +13,12 @@ Blackrik is a CQRS and Event-Sourcing Framework for Node.js.
 
 ### Installation
 Make sure you have at least Node.js v14.0.0 installed
-```
+```sh
 $ node --version
 v14.0.0
 ```
 Create a new project (or use an existing one)
-```
+```sh
 $ mkdir hello-world
 $ cd hello-world
 $ npm init -y
@@ -27,10 +27,18 @@ Then install the Blackrik module
 TODO
 
 ### Usage
-TODO
+```javascript
+const Blackrik = require('blackrik');
+const config = require('./config');
+
+const blackrik = new Blackrik(config);
+blackrik.start()
+    .then(() => console.log('Blackrik started...'));
+```
 
 ## Documentation
-TODO
+Read the [documentation](https://github.com/wesone/blackrik/wiki).  
+See [config](https://github.com/wesone/blackrik/wiki/API-Reference#config) for details about the config.
 
 ## How to contribute
 TODO

@@ -3,6 +3,7 @@ const CONSTANTS = require('./Constants');
 const Server = require('./Server');
 const Adapter = require('./Adapter');
 const EventHandler = require('./EventHandler');
+const ReadModelStore = require('./ReadModelStore');
 
 const Aggregate = require('./Aggregate');
 const RequestHandler = require('./RequestHandler');
@@ -65,27 +66,7 @@ class Blackrik
         return this._stores[adapterName];
     }
 
-    _wrapReadModelStore(adapter, handlers)
-    {
-        const blackrik = this;
-        return new Proxy(this._createReadModelStore(adapter), {
-            get: (target, prop, ...rest) => {
-                if(prop === 'defineTable')
-                    return async function(...args){
-                        const created = await target[prop](...args);
-                        if(created) // mark readmodel events for replay
-                            blackrik.#replayEvents.push(
-                                ...Object.keys(handlers)
-                                    .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
-                            );
-                        return created;
-                    };
-                return Reflect.get(target, prop, ...rest);
-            }
-        });
-    }
-
-    async _createSubscriptions(name, eventMap, store, callback, config)
+    async _createSubscriptions(name, eventMap, store, callback)
     {
         await Promise.all(
             Object.entries(eventMap).map(
@@ -93,8 +74,13 @@ class Blackrik
                     eventType !== CONSTANTS.READMODEL_INIT_FUNCTION && 
                         this._eventHandler.subscribe(name, eventType, async event => {
                             try
-                            {
-                                await callback(handler, store, event, config);
+                            {   
+                                await callback(
+                                    handler,
+                                    store.createProxy(event),
+                                    event,
+                                    store.config
+                                );
                             }
                             catch(e)
                             {
@@ -110,12 +96,15 @@ class Blackrik
         if(!adapter)
             adapter = CONSTANTS.DEFAULT_ADAPTER;
 
-        const store = this._wrapReadModelStore(adapter, handlers);
-        const config = typeof handlers[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function'
-            ? await handlers[CONSTANTS.READMODEL_INIT_FUNCTION](store) || {}
-            : {};
+        const store = new ReadModelStore(this._createReadModelStore(adapter), handlers);
+        if(await store.init())
+            this.#replayEvents.push([
+                name,
+                Object.keys(handlers)
+                    .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
+            ]);
 
-        await this._createSubscriptions(name, handlers, store, callback, config);
+        await this._createSubscriptions(name, handlers, store, callback);
 
         return {
             handlers,
@@ -134,22 +123,9 @@ class Blackrik
         );
     }
 
-    _constructSideEffects(sideEffects)
-    {
-        [
-            'executeCommand',
-            'scheduleCommand'
-        ].forEach(fn => 
-            Object.defineProperty(sideEffects, fn, {
-                value: this[fn].bind(this),
-                writable: false
-            })
-        );
-        return sideEffects;
-    }
-
     async _processSagas()
     {
+        const blackrik = this;
         return Promise.all(
             this.config.sagas.map(
                 ({name, source: {handlers, sideEffects}, adapter}) =>
@@ -160,11 +136,31 @@ class Blackrik
                         async (handler, store, event, config) => await handler(
                             store,
                             event,
-                            new Proxy(this._constructSideEffects(sideEffects), {
-                                get: (...args) => {
+                            new Proxy(sideEffects, {
+                                get: (target, prop, ...rest) => {
                                     if(event.isReplay && config.noopSideEffectsOnReplay !== false)
                                         return () => {};
-                                    return Reflect.get(...args);
+                                    
+                                    for(const [fn, argCount] of Object.entries({
+                                        'executeCommand': 1,
+                                        'scheduleCommand': 2
+                                    }))
+                                    {
+                                        if(prop !== fn)
+                                            continue;
+
+                                        return function(...args){
+                                            const params = [];
+                                            if(args.length >= argCount)
+                                            { 
+                                                args.every((arg, idx) => idx < argCount ? params.push(arg) : false);
+                                                params.push(event);
+                                            }
+                                            return this[fn](...params);
+                                        }.bind(blackrik);
+                                    }
+
+                                    return Reflect.get(target, prop, ...rest);
                                 }
                             })
                         )
@@ -254,7 +250,7 @@ class Blackrik
 
         if(this.#replayEvents.length)
         {
-            console.log('Replaying events:', this.#replayEvents.join(', '));
+            console.log('Replaying events:', this.#replayEvents.map(([, types]) => types.join(', ')).join(', '));
             await this._eventHandler.replayEvents(this.#replayEvents);
         }
 
@@ -277,10 +273,10 @@ class Blackrik
         );
     }
 
-    async scheduleCommand(delay, command, causationEvent = null)
+    async scheduleCommand(timestamp, command, causationEvent = null)
     {
         return !!await this._commandScheduler.process(
-            delay,
+            timestamp,
             command,
             causationEvent
         );

@@ -40,21 +40,28 @@ class EventHandler
             .catch(() => false);
     }
 
-    async replayEvents(types)
+    async replayEvents(jobs)
     {
-        let next = null;
-        do
+        for(let i = 0; i < jobs.length; i++)
         {
-            const {events, cursor} = await this.blackrik._eventStore.load({
-                types,
-                limit: EVENT_LIMIT_REPLAY,
-                cursor: next
-            });
+            const [name, types] = jobs[i];
 
-            if(events.length)
-                await Promise.all(events.map(event => this.sendEvent({...event, isReplay: true})));
-            next = cursor;
-        } while(next);
+            let next = null;
+            do
+            {
+                const {events, cursor} = await this.blackrik._eventStore.load({
+                    types,
+                    limit: EVENT_LIMIT_REPLAY,
+                    cursor: next
+                });
+
+                if(events.length)
+                    // await Promise.all(events.map(event => this.sendEvent(name, {...event, isReplay: true}))); //TODO make sure events are send in the right order
+                    for(let i = 0; i < events.length; i++)
+                        await this.sendEvent(name, {...events[i], isReplay: true});
+                next = cursor;
+            } while(next); 
+        }
     }
 }
 

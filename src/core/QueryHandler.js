@@ -21,12 +21,12 @@ class QueryHandler
         if(!Object.prototype.hasOwnProperty.call(this.#blackrik._resolvers, readModel))
             throw new NotFoundError('Unknown ReadModel');
 
-        const {handlers: resolvers, adapter} = this.#blackrik._resolvers[readModel];
+        const {handlers, adapter} = this.#blackrik._resolvers[readModel];
 
-        if(!Object.prototype.hasOwnProperty.call(resolvers, resolver))
+        if(!Object.prototype.hasOwnProperty.call(handlers, resolver))
             throw new NotFoundError('Unknown resolver');
 
-        return await resolvers[resolver](this.#blackrik._stores[adapter], query);
+        return await handlers[resolver](this.#blackrik._stores[adapter], query);
     }
 }
 
