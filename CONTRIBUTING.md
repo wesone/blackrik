@@ -1,1 +1,3 @@
+# Contributing to Blackrik
+
 TODO
