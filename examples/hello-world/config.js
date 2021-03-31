@@ -67,7 +67,7 @@ module.exports = {
             {
                 method: 'GET',
                 path: '/test',
-                callback: (req, res) => {
+                callback: (/* req, res */) => {
                     console.log('CALLED /TEST');
                 }
             }
