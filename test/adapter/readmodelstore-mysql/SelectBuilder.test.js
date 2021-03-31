@@ -2,7 +2,7 @@
 import { selectBuilder } from '../../../src/adapters/readmodelstore-mysql/SelectBuilder';
 
 const tableName = 'TestTable';
-
+/*
 test('create select statement', () => {
     
     const queryOptions = {
@@ -42,6 +42,24 @@ test('sort queryOption', () => {
    
     const expectedSQL = 'SELECT * FROM `TestTable` ORDER BY `a` DESC, `b` ASC';
     const expectedParameters = [];
+    const {sql, parameters} = selectBuilder(tableName, queryOptions);
+    expect(sql).toEqual(expectedSQL);
+    expect(parameters).toEqual(expectedParameters);
+});
+*/
+test('dates', () => {
+    const queryOptions = {
+        conditions: {
+            $or: [
+                {name: {$like: 'J%'}, createdAt: {$lte: '2021-12-17 02:24:00'}},
+                {name: {$like: 'H%'}, createdAt: {$gt: '2021-12-17 02:24:00'}}
+            ]
+        }
+        
+    };
+   
+    const expectedSQL = 'SELECT * FROM `TestTable` WHERE ((`name` LIKE ? AND `createdAt` <= ?) OR (`name` LIKE ? AND `createdAt` > ?))';
+    const expectedParameters = ['J%', '2021-12-17 02:24:00', 'H%', '2021-12-17 02:24:00'];
     const {sql, parameters} = selectBuilder(tableName, queryOptions);
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);

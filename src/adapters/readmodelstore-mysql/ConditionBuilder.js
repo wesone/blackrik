@@ -50,10 +50,18 @@ function _tokenizer(condition, field)
         const token = allOperators[field];
         if(!token || token.t !== 'logical')
             throw new Error('Logical operator expected');
-
         return [{
             ...token,
-            value: condition.map(c => ({..._buildAST(c)[0]}))
+            value: condition.map(c => { 
+                const subAst = _buildAST(c);
+                if(subAst.length === 1)
+                    return {...subAst[0]};
+                return {
+                    ...allOperators['$and'],
+                    value: subAst,
+                };
+                
+            })
         }];
     }
     if(typeof condition === 'string' || typeof condition === 'number' || condition instanceof Date || condition === null)

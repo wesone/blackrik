@@ -23,7 +23,8 @@ function selectBuilder(tableName, queryOptions)
     const sqlList = [distinct ? 'SELECT DISTINCT' : 'SELECT', selectList, 'FROM', quoteIdentifier(tableName)];
     const parameters = [];
 
-    if(queryOptions.conditions && Object.keys(queryOptions.conditions).length > 0)
+    if(queryOptions.conditions && ((Array.isArray(queryOptions.conditions) && queryOptions.conditions.length > 0) || 
+        Object.keys(queryOptions.conditions).length > 0))
     {
         const condition = conditionBuilder(queryOptions.conditions);
         sqlList.push('WHERE', condition.sql);
