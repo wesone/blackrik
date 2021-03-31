@@ -22,10 +22,10 @@ class EventHandler
 
     async init()
     {
-        if(await this.store.defineTable(TABLE_NAME, {
-            position: 'Number'
-        }))
-            await this.store.insert(TABLE_NAME, {position: -1});
+        // if(await this.store.defineTable(TABLE_NAME, {
+        //     position: 'Number'
+        // }))
+        //     await this.store.insert(TABLE_NAME, {position: -1});
     }
 
     async start()
@@ -49,18 +49,22 @@ class EventHandler
 
     async subscribe(name, type, callback)
     {
-        // we have one listener that will execute all callbacks, to prevent sending a message multiple times to a callback
-        // this way we create idempotence which is good but the also bypass the retry strategy which is bad
+        // we have one listener that will execute all callbacks, we could prevent sending a message multiple times to a callback
+        // this way we create idempotence which is good but we also bypass the retry strategy which is bad
         //TODO needs more tests to decide which way to go
         if(this.addListener(name, type, callback))
             await this.eventBus.subscribe(name, type, async event => {
                 const {position} = event;
-                if(await this.store.update(TABLE_NAME, {position: {$lt: position}}, {position}))
-                    await Promise.all(
-                        this.listeners[name]
-                            .execute(event.type, event)
-                            // .map(cb => cb.catch(error => console.error(error)))
-                    );
+                // if(await this.store.update(TABLE_NAME, {position: {$lt: position}}, {position}))
+                //     await Promise.all(
+                //         this.listeners[name]
+                //             .execute(event.type, event)
+                //             // .map(cb => cb.catch(error => console.error(error)))
+                //     );
+                await Promise.all(
+                    this.listeners[name]
+                        .execute(event.type, event)
+                );
             });
     }
 
@@ -73,7 +77,7 @@ class EventHandler
 
     async replayEvents(jobs)
     {
-        await this.store.update(TABLE_NAME, null, {position: -1});
+        // await this.store.update(TABLE_NAME, null, {position: -1});
 
         for(let i = 0; i < jobs.length; i++)
         {

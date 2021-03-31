@@ -46,12 +46,12 @@ class ReadModelStore
         return this.#replayEvents;
     }
 
-    _wrapReadModelStoreFunction(originalHandler, defaultReturn)
+    _wrapReadModelStoreFunction(originalHandler, defaultReturn, event)
     {
         const self = this;
         return async function(table, ...args){
             return self.#affectedTables.includes(table)
-                ? await originalHandler(table, ...args)
+                ? await originalHandler(table, ...args, event.position)
                 : defaultReturn;
         };
     }
@@ -67,11 +67,11 @@ class ReadModelStore
                 if(event.isReplay)
                 {
                     if(prop === 'insert')
-                        return self._wrapReadModelStoreFunction(originalValue, false);
+                        return self._wrapReadModelStoreFunction(originalValue, false, event);
                     if(prop === 'update')
-                        return self._wrapReadModelStoreFunction(originalValue, 0);
+                        return self._wrapReadModelStoreFunction(originalValue, 0, event);
                     if(prop === 'delete')
-                        return self._wrapReadModelStoreFunction(originalValue, 0);
+                        return self._wrapReadModelStoreFunction(originalValue, 0, event);
                 }
                 return originalValue;
             }
