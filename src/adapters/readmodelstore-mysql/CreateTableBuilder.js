@@ -21,10 +21,6 @@ function _validateTypeAttributes(typeDef, attributes, state, fieldIndex)
         {
             throw new Error('PRIMARY_KEY has to be the first field');
         }
-        if(state.hasPrimaryKey)
-        {
-            throw new Error('Only one PRIMARY_KEY is allowed');
-        }
         if(attributes.allowNull)
         {
             throw new Error('PRIMARY_KEY must be defined as NOT NULL');

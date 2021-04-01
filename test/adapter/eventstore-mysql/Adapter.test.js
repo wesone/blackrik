@@ -123,7 +123,12 @@ describe('Test validateConfig ', () => {
         const copyInstance = JSON.parse(JSON.stringify(testInstance));
         copyInstance.host = null;
         expect(() => new Adapter(copyInstance)).toThrow();
-
+    });
+    test('No port', () => {
+        const copyInstance = JSON.parse(JSON.stringify(testInstance));
+        copyInstance.port = null;
+        const testObj = new Adapter(copyInstance);
+        expect(testObj.config.port).toBe(3306);
     });
     test('No database error', () => {
         const copyInstance = JSON.parse(JSON.stringify(testInstance));
@@ -149,11 +154,9 @@ describe('Test validateConfig ', () => {
 
 describe('Test init', () => {
     test('Check for function calls', async () => {
-        const mockCreateDatabase = jest.fn();
-        const mockCreateTable = jest.fn();
         const testObj = new Adapter(testInstance);
-        testObj.createDatabase = mockCreateDatabase;
-        testObj.createTable = mockCreateTable;
+        testObj.createDatabase = jest.fn();
+        testObj.createTable = jest.fn();
 
         const spyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
         const spyCreateTable = jest.spyOn(testObj, 'createTable');
@@ -205,8 +208,7 @@ describe('Test load', () => {
         const next = null;
         const filter = {
             aggregateIds: ['one', 'two', 'three'],
-            types: 
-                ['USER_CREATED', 'USER_UPDATED'],
+            types: ['USER_CREATED', 'USER_UPDATED'],
             correlationIds: ['id1', 'id2', 'id3'],
             causationIds: ['id3', 'id2', 'id1'],
             since: 1234,

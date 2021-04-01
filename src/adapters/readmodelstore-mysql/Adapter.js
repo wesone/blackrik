@@ -56,8 +56,11 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async disconnect()
     {
-        await this.connection.end();
-        this.connection = null;
+        if(this.connection)
+        {
+            await this.connection.end();
+            this.connection = null;
+        }
     }
 
     async exec(sql, parameters)
