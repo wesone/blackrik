@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest --testMatch=**/test/**/*.test.js --verbose --passWithNoTests",
-    "coverage": "jest --collectCoverage"
+    "coverage": "jest --coverage"
   },
   "repository": {
     "type": "git",

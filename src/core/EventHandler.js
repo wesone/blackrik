@@ -1,4 +1,7 @@
-const {EVENT_HANDLER_TABLE_NAME: TABLE_NAME, EVENT_LIMIT_REPLAY} = require('./Constants');
+const {
+    // EVENT_HANDLER_TABLE_NAME: TABLE_NAME,
+    EVENT_LIMIT_REPLAY
+} = require('./Constants');
 const Event = require('./Event');
 const ListenerMap = require('../utils/ListenerMap');
 
