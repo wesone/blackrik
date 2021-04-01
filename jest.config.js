@@ -5,7 +5,11 @@ module.exports = {
     transform: {
         '^.+\\.js$': 'babel-jest',
     },
-    'collectCoverage': true,
-    'coverageReporters': ['text','html'],
-    'coverageDirectory': '<rootDir>/coverage/'
+    collectCoverage: true,
+    coverageReporters: ['text','html'],
+    coverageDirectory: '<rootDir>/coverage/',
+    coveragePathIgnorePatterns: [
+        'examples',
+        'src/resources/YupExtensions'
+    ]
 };
