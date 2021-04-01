@@ -2,7 +2,25 @@ const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
 const instance = require('../../../examples/hello-world/config');
 const {EVENT_LIMIT_REPLAY} = require('../../../src/core/Constants');
 const Event = require('../../../src/core/Event');
+const mysql = require('mysql2/promise');
+jest.mock('mysql2/promise', () => {
+    const mockConnect = jest.fn();
+    const mockExecute= jest.fn();
 
+    const object = { // Object to spy on
+        mockConnect, mockExecute
+    };
+    const mockCreateConnection = jest.fn(() => {
+        return {
+            connect: object.mockConnect,
+            execute: object.mockExecute // does not get executeted in init() but still needed for a bind
+        };
+    });
+    const mockMysql = {
+        createConnection: mockCreateConnection
+    };
+    return mockMysql;
+});
 
 const testInstance = instance.eventStoreAdapter.args;
 const schema = {
@@ -130,34 +148,19 @@ describe('Test validateConfig ', () => {
 describe('Test init', () => {
     test('Check for function calls', async () => {
         const mockCreateDatabase = jest.fn();
-        const mockConnect = jest.fn();
-        const mockExecute= jest.fn();
-
-        const object = { // Object to spy on
-            mockConnect, mockExecute
-        };
-        const mockCreateConnection = jest.fn(() => {
-            return {
-                connect: object.mockConnect,
-                execute: object.mockExecute // does not get executeted in init() but still needed for a bind
-            };
-        });
-        const mockMysql = {
-            createConnection: mockCreateConnection
-        };
-        
         const mockCreateTable = jest.fn();
-        const testObj = new Adapter(testInstance, mockMysql);
+        const testObj = new Adapter(testInstance);
         testObj.createDatabase = mockCreateDatabase;
         testObj.createTable = mockCreateTable;
 
         const spyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
-        const spyCreateConnection = jest.spyOn(mockMysql, 'createConnection');
-        const spyConnect= jest.spyOn(object, 'mockConnect');
-        
+        const spyCreateTable = jest.spyOn(testObj, 'createTable');
+        const spyCreateConnection = jest.spyOn(mysql, 'createConnection');
+        const spyConnect= jest.spyOn(mysql.createConnection(), 'connect');        
         await testObj.init();
 
         expect(spyCreateDatabase).toHaveBeenCalled();
+        expect(spyCreateTable).toHaveBeenCalled();
         expect(spyCreateConnection).toHaveBeenCalled();
         expect(spyConnect).toHaveBeenCalled();
     });
@@ -200,20 +203,28 @@ describe('Test load', () => {
         const next = null;
         const filter = {
             aggregateIds: ['one', 'two', 'three'],
+            types: 
+                ['USER_CREATED', 'USER_UPDATED'],
+            correlationIds: ['id1', 'id2', 'id3'],
+            causationIds: ['id3', 'id2', 'id1'],
             since: 1234,
             until: 4321,
             limit: EVENT_LIMIT_REPLAY,
-            cursor: next,
-            types: 
-                ['USER_CREATED', 'USER_UPDATED']
+            cursor: next
         };
-        const expectedToExecute = 'SELECT * FROM events WHERE aggregateId IN (?,?,?) AND type IN (?,?) AND timestamp >= ? AND timestamp < ? ORDER BY position ASC LIMIT ? OFFSET ?';
+        const expectedToExecute = 'SELECT * FROM events WHERE aggregateId IN (?,?,?) AND type IN (?,?) AND correlationId IN (?,?,?) AND causationId IN (?,?,?) AND timestamp >= ? AND timestamp < ? ORDER BY position ASC LIMIT ? OFFSET ?';
         const expectedValues = [
             'one',
             'two',
             'three',
             'USER_CREATED',
             'USER_UPDATED',
+            'id1',
+            'id2',
+            'id3',
+            'id3',
+            'id2',
+            'id1',
             1234,
             4321,
             1000,
@@ -351,20 +362,28 @@ describe('Test load', () => {
         const next = null;
         const filter = {
             aggregateIds: ['one', 'two', 'three'],
+            types: 
+                ['USER_CREATED', 'USER_UPDATED'],
+            correlationIds: ['id1', 'id2', 'id3'],
+            causationIds: ['id3', 'id2', 'id1'],
             since: 1234,
             until: 4321,
             limit: undefined,
-            cursor: next,
-            types: 
-                ['USER_CREATED', 'USER_UPDATED']
+            cursor: next
         };
-        const expectedToExecute = 'SELECT * FROM events WHERE aggregateId IN (?,?,?) AND type IN (?,?) AND timestamp >= ? AND timestamp < ? ORDER BY position ASC ';
+        const expectedToExecute = 'SELECT * FROM events WHERE aggregateId IN (?,?,?) AND type IN (?,?) AND correlationId IN (?,?,?) AND causationId IN (?,?,?) AND timestamp >= ? AND timestamp < ? ORDER BY position ASC ';
         const expectedValues = [
             'one',
             'two',
             'three',
             'USER_CREATED',
             'USER_UPDATED',
+            'id1',
+            'id2',
+            'id3',
+            'id3',
+            'id2',
+            'id1',
             1234,
             4321,
         ];
@@ -466,89 +485,7 @@ describe('Test createTable', () => {
         expect(functionCallDescribeEvents).toBe(1);
         expect(functionCallCreateTableEvents).toBe(0);
     });
-    test('Create table - schema invalid', async () => {
-        const invalidSchema = {
-            fields: {
-                id: {
-                    Field: 'id',
-                    Type: 'varchar(360)',
-                    Null: 'NO',
-                    Key: 'PRI',
-                    Default: null,
-                    Extra: ''
-                },
-                position: {
-                    Field: 'position',
-                    Type: 'bigint',
-                    Null: 'NO',
-                    Key: 'UNI',
-                    Default: null,
-                    Extra: 'auto_increment'
-                },
-                aggregateId: {
-                    Field: 'aggregateId',
-                    Type: 'varchar(36)',
-                    Null: 'NO',
-                    Key: 'MUL',
-                    Default: null,
-                    Extra: ''
-                },
-                aggregateVersion: {
-                    Field: 'aggregateVersion',
-                    Type: 'int',
-                    Null: 'NO',
-                    Key: '',
-                    Default: null,
-                    Extra: ''
-                },
-                type: {
-                    Field: 'type',
-                    Type: 'varchar(32)',
-                    Null: 'NO',
-                    Key: 'MUL',
-                    Default: null,
-                    Extra: ''
-                },
-                timestamp: {
-                    Field: 'timestamp',
-                    Type: 'bigint',
-                    Null: 'NO',
-                    Key: 'MUL',
-                    Default: null,
-                    Extra: ''
-                },
-                correlationId: {
-                    Field: 'correlationId',
-                    Type: 'varchar(36)',
-                    Null: 'NO',
-                    Key: 'MUL',
-                    Default: null,
-                    Extra: ''
-                },
-                causationId: {
-                    Field: 'causationId',
-                    Type: 'varchar(36)',
-                    Null: 'YES',
-                    Key: 'MUL',
-                    Default: null,
-                    Extra: ''
-                },
-                payload: {
-                    Field: 'payload',
-                    Type: 'text',
-                    Null: 'NO',
-                    Key: '',
-                    Default: null,
-                    Extra: ''
-                }
-            },
-            options: {
-                uniqueKey: {
-                    name: 'streamId',
-                    fields: ['aggregateId', 'aggregateVersion']
-                }
-            }
-        };
+    test('Create table - event count >= 1 and wrong schema', async () => {
         const testObj = new Adapter(testInstance);
         let functionCallCheckEventCount = 0;
         let functionCallDescribeEvents = 0;
@@ -563,20 +500,31 @@ describe('Test createTable', () => {
                 if(arg1 === 'DESCRIBE events')
                 {
                     functionCallDescribeEvents++;
-                    return invalidSchema;
+                    const copy = JSON.parse(JSON.stringify(schema));
+                    copy.fields = 'not a viable field';
+                    return copy;
                 }
-
+                
                 functionCallCreateTableEvents++;
             }),
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
         testObj.db = mockConnection;
-        // expect(spyExecute).toHaveBeenCalledTimes(1);
-        // expect(functionCallCheckEventCount).toBe(1);
-        // expect(functionCallDescribeEvents).toBe(1);
-        // expect(functionCallCreateTableEvents).toBe(0);
-        await expect(testObj.createTable()).toThrow('Existing table schema is not valid.');
+        try
+        {
+            await testObj.createTable();
+            
+        } 
+        catch(error)
+        {
+            expect(error.message).toBe('Existing table schema is not valid.');
+        }
+
+        expect(spyExecute).toHaveBeenCalledTimes(2);
+        expect(functionCallCheckEventCount).toBe(1);
+        expect(functionCallDescribeEvents).toBe(1);
+        expect(functionCallCreateTableEvents).toBe(0);
     });
     test('Create table - no events', async () => {
         const testObj = new Adapter(testInstance);
@@ -620,7 +568,6 @@ describe('Test createDatabase', () => {
         const spyEnd = jest.spyOn(mockConnection, 'end');
     
         await testObj.createDatabase(mockConnection);
-        await testObj.createDatabase();
         expect(spyExecute).toHaveBeenCalled();
         expect(spyEnd).toHaveBeenCalled();
     });

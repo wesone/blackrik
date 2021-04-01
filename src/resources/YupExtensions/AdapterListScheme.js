@@ -4,7 +4,7 @@ class AdapterListScheme extends BaseSchema
 {
     static create()
     {
-        return MiddlewareScheme();
+        return AdapterListScheme();
     }
 
     constructor()
