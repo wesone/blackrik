@@ -101,7 +101,7 @@ class Adapter extends EventStoreAdapterInterface
             throw Error('EventStore-MySQL needs a config.');
         if(!this.config.host || !this.config.host.length)
             throw Error('EventStore-MySQL needs a host.');
-        if(!this.config.port || !this.config.host.port)
+        if(!this.config.port)
             this.config.port = 3306;
         if(!this.config.database || !this.config.database.length)
             throw Error('EventStore-MySQL needs a database name.');
@@ -153,6 +153,7 @@ class Adapter extends EventStoreAdapterInterface
             where.push(`aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')})`);
         }
 
+        /* istanbul ignore else */
         if(filter.types)
         {
             values.push(...filter.types);
@@ -188,6 +189,7 @@ class Adapter extends EventStoreAdapterInterface
         {
             values.push(filter.limit);
             limit.push('LIMIT ?');
+            /* istanbul ignore else */
             if(filter.cursor !== undefined)
             {
                 values.push(filter.limit * filter.cursor);
