@@ -241,7 +241,6 @@ describe('Test load', () => {
                 ]])
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
- 
 
         testObj.db = mockConnection;
         const {events, cursor, debug}  = await testObj.load(filter);
@@ -497,7 +496,7 @@ describe('Test createTable', () => {
             execute: jest.fn(arg1 => {
                 if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
                 {
-                    functionCallCheckEventCount++;   
+                    functionCallCheckEventCount++;
                     return [[{ 'count(*)': 1 }]];
                 }
                 if(arg1 === 'DESCRIBE events')
@@ -514,8 +513,7 @@ describe('Test createTable', () => {
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
         testObj.db = mockConnection;
-        
-        try 
+        try
         {
             await testObj.createTable();
             
@@ -615,8 +613,15 @@ describe('Test verifySchema', () => {
 });
 
 describe('Test buildFieldListFromSchema', () => {
-    const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text not null , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
     test('Correct build of fieldlist from scheme', () => {
+        const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text not null , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
+        const testObj = new Adapter(testInstance);
+        const result = testObj.buildFieldListFromSchema(schema);
+        expect(result).toBe(expected);
+    });
+    test('Correct build of fieldlist from scheme with default values', () => {
+        schema.fields.causationId.Default = 'NULL';
+        const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36) default NULL,payload text not null , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
         const testObj = new Adapter(testInstance);
         const result = testObj.buildFieldListFromSchema(schema);
         expect(result).toBe(expected);
