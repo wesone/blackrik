@@ -2,6 +2,25 @@ const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
 const instance = require('../../../examples/hello-world/config');
 const {EVENT_LIMIT_REPLAY} = require('../../../src/core/Constants');
 const Event = require('../../../src/core/Event');
+const mysql = require('mysql2/promise');
+jest.mock('mysql2/promise', () => {
+    const mockConnect = jest.fn();
+    const mockExecute= jest.fn();
+
+    const object = { // Object to spy on
+        mockConnect, mockExecute
+    };
+    const mockCreateConnection = jest.fn(() => {
+        return {
+            connect: object.mockConnect,
+            execute: object.mockExecute // does not get executeted in init() but still needed for a bind
+        };
+    });
+    const mockMysql = {
+        createConnection: mockCreateConnection
+    };
+    return mockMysql;
+});
 
 const testInstance = instance.eventStoreAdapter.args;
 const schema = {
@@ -87,10 +106,6 @@ const schema = {
     }
 };
 
-// beforeEach(() => {
-//     const testObj = 'test';
-// });
-
 describe('Correct object construction', () => {
     test('Constructor set config', () => {
         const testObj = new Adapter(testInstance);
@@ -133,34 +148,19 @@ describe('Test validateConfig ', () => {
 describe('Test init', () => {
     test('Check for function calls', async () => {
         const mockCreateDatabase = jest.fn();
-        const mockConnect = jest.fn();
-        const mockExecute= jest.fn();
-
-        const object = { // Object to spy on
-            mockConnect, mockExecute
-        };
-        const mockCreateConnection = jest.fn(() => {
-            return {
-                connect: object.mockConnect,
-                execute: object.mockExecute // does not get executeted in init() but still needed for a bind
-            };
-        });
-        const mockMysql = {
-            createConnection: mockCreateConnection
-        };
-        
         const mockCreateTable = jest.fn();
-        const testObj = new Adapter(testInstance, mockMysql);
+        const testObj = new Adapter(testInstance);
         testObj.createDatabase = mockCreateDatabase;
         testObj.createTable = mockCreateTable;
 
         const spyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
-        const spyCreateConnection = jest.spyOn(mockMysql, 'createConnection');
-        const spyConnect= jest.spyOn(object, 'mockConnect');
-        
+        const spyCreateTable = jest.spyOn(testObj, 'createTable');
+        const spyCreateConnection = jest.spyOn(mysql, 'createConnection');
+        const spyConnect= jest.spyOn(mysql.createConnection(), 'connect');        
         await testObj.init();
 
         expect(spyCreateDatabase).toHaveBeenCalled();
+        expect(spyCreateTable).toHaveBeenCalled();
         expect(spyCreateConnection).toHaveBeenCalled();
         expect(spyConnect).toHaveBeenCalled();
     });

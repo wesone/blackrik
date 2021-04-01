@@ -88,14 +88,11 @@ class Adapter extends EventStoreAdapterInterface
     config;
     db;
 
-    constructor(config, mockMysql)
+    constructor(config)
     {
         super();
         this.config = config;
         this.validateConfig();
-        
-        // Unit-Test
-        this.mysql = mockMysql;
     }
 
     validateConfig()
@@ -117,12 +114,7 @@ class Adapter extends EventStoreAdapterInterface
     async init()
     {
         await this.createDatabase();
-        if(!this.mysql)
-            this.db = await mysql.createConnection(this.config);
-        else // Unit-Test 
-        {
-            this.db =  this.mysql.createConnection(this.config);
-        }
+        this.db = await mysql.createConnection(this.config);
         await this.db.connect();
         await this.createTable();
         // see https://github.com/sidorares/node-mysql2/issues/1239
