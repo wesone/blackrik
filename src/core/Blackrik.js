@@ -259,7 +259,7 @@ class Blackrik
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();
         this._processAPI();
-        this.#server.start();
+        await this.#server.start();
 
         return this;
     }

@@ -37,8 +37,10 @@
     "@babel/plugin-transform-runtime": "^7.13.9",
     "@babel/preset-env": "^7.13.9",
     "@babel/preset-react": "^7.12.13",
+    "axios": "^0.21.1",
     "eslint": "^7.21.0",
     "eslint-plugin-brace-rules": "^0.1.6",
-    "jest": "^26.6.3"
+    "jest": "^26.6.3",
+    "ws": "^5.2.2"
   }
 }

@@ -58,9 +58,14 @@ class Server
         return this.#app.ws(...args);
     }
 
-    start()
+    async start()
     {
-        this.#server = this.#app.listen(this.config.port, () => console.log('Application started on port', this.config.port));
+        return new Promise(resolve => {
+            this.#server = this.#app.listen(this.config.port, () => {
+                console.log('Application started on port', this.config.port);
+                resolve();
+            });
+        });    
     }
 
     async stop()
