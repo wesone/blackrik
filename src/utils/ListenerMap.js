@@ -18,6 +18,7 @@ class ListenerMap
     {
         if(this.map[type] && this.map[type].length)
             return this.map[type].map(listener => listener(...args));
+        return [];
     }
 }
 

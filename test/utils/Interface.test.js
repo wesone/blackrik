@@ -1,86 +1,109 @@
 const Interface = require('../../src/utils/Interface');
 
-test('Interface implemented correctly', () => {
-    class ValidClass extends Interface
-    {
-        constructor()
+describe('Interface', () => {
+    test('allows a correct implementation', () => {
+        class ValidClass extends Interface
         {
-            super({
-                test: 'function',
-                test2: 'function',
-                test3: 'boolean'
-            });
-        }
+            constructor()
+            {
+                super({
+                    test: 'function',
+                    test2: 'function',
+                    test3: 'boolean'
+                });
+            }
 
-        get test3()
+            get test3()
+            {
+                return true;
+            }
+
+            test()
+            {
+
+            }
+
+            test2()
+            {
+
+            }
+        }
+        expect(() => new ValidClass()).not.toThrow();
+    });
+
+    test('allows an undefined scheme', () => {
+        class ValidClass extends Interface
         {
-            return true;
-        }
+            get test3()
+            {
+                return true;
+            }
 
-        test()
+            test()
+            {
+
+            }
+
+            test2()
+            {
+
+            }
+        }
+        expect(() => new ValidClass()).not.toThrow();
+    });
+
+    test('detects a missing function', () => {
+        class InvalidClass extends Interface
         {
+            constructor()
+            {
+                super({
+                    test: 'function',
+                    test2: 'function',
+                    test3: 'boolean'
+                });
+            }
 
+            get test3()
+            {
+                return true;
+            }
+
+            test()
+            {
+
+            }
         }
+        expect(() => new InvalidClass()).toThrow();
+    });
 
-        test2()
+    test('detects a wrong type', () => {
+        class InvalidClass extends Interface
         {
+            constructor()
+            {
+                super({
+                    test: 'function',
+                    test2: 'function',
+                    test3: 'boolean'
+                });
+            }
 
+            get test3()
+            {
+                return 'true';
+            }
+
+            test()
+            {
+
+            }
+
+            test2()
+            {
+
+            }
         }
-    }
-    expect(() => new ValidClass()).not.toThrow();
-});
-
-test('Interface missing function', () => {
-    class InvalidClass extends Interface
-    {
-        constructor()
-        {
-            super({
-                test: 'function',
-                test2: 'function',
-                test3: 'boolean'
-            });
-        }
-
-        get test3()
-        {
-            return true;
-        }
-
-        test()
-        {
-
-        }
-    }
-    expect(() => new InvalidClass()).toThrow();
-});
-
-test('Interface wrong type', () => {
-    class InvalidClass extends Interface
-    {
-        constructor()
-        {
-            super({
-                test: 'function',
-                test2: 'function',
-                test3: 'boolean'
-            });
-        }
-
-        get test3()
-        {
-            return 'true';
-        }
-
-        test()
-        {
-
-        }
-
-        test2()
-        {
-
-        }
-    }
-    expect(() => new InvalidClass()).toThrow();
+        expect(() => new InvalidClass()).toThrow();
+    });
 });
