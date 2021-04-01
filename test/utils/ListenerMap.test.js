@@ -45,7 +45,7 @@ describe('ListenerMap', () => {
         const type = 'type1';
         const errorMessage = 'Test error';
         listenerMap.add(type, async () => {});
-        listenerMap.add(type, async () => {throw errorMessage});
+        listenerMap.add(type, async () => {throw errorMessage;});
         listenerMap.add(type, async () => {});
 
         const executions = listenerMap.execute(type);
@@ -59,7 +59,7 @@ describe('ListenerMap', () => {
 
         const callbacks = [];
         const addCallback = type => {
-            const callback = jest.fn((...args) => {});
+            const callback = jest.fn(() => {});
             callbacks.push(callback);
             listenerMap.add(type, callback);
         };
