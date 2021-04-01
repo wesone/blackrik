@@ -4,6 +4,9 @@ class RequestHandler
 
     constructor(handler)
     {
+        if(typeof handler !== 'function')
+            throw Error('RequestHandler expects parameter 1 to be of type function.');
+
         this.#handler = handler;
         return this.handle.bind(this);
     }
@@ -24,7 +27,7 @@ class RequestHandler
                 console.error(e);
                 return res.sendStatus(500).end(); // do not expose critical errors
             }
-            return res.status(e.code || 500).send(e.message || e).end();
+            return res.status(e.code).send(e.message || e).end();
         }
     }
 }
