@@ -5,7 +5,8 @@ const Event = require('../../../src/core/Event');
 const mysql = require('mysql2/promise');
 jest.mock('mysql2/promise', () => {
     const mockConnect = jest.fn();
-    const mockExecute= jest.fn();
+    const mockExecute = jest.fn();
+    const mockEnd = jest.fn();
 
     const object = { // Object to spy on
         mockConnect, mockExecute
@@ -13,7 +14,8 @@ jest.mock('mysql2/promise', () => {
     const mockCreateConnection = jest.fn(() => {
         return {
             connect: object.mockConnect,
-            execute: object.mockExecute // does not get executeted in init() but still needed for a bind
+            execute: object.mockExecute, // does not get executeted in init() but still needed for a bind
+            end: mockEnd
         };
     });
     const mockMysql = {
@@ -562,16 +564,10 @@ describe('Test createTable', () => {
 describe('Test createDatabase', () => {
     test('Create database and terminate connection', async () => {
         const testObj = new Adapter(testInstance);
-        const mockConnection = {
-            execute: jest.fn(),
-            end: jest.fn()
-        };
-        const spyExecute= jest.spyOn(mockConnection, 'execute');
-        const spyEnd = jest.spyOn(mockConnection, 'end');
-    
-        await testObj.createDatabase(mockConnection);
-        expect(spyExecute).toHaveBeenCalled();
-        expect(spyEnd).toHaveBeenCalled();
+        await testObj.createDatabase();
+        expect(mysql.createConnection().execute).toHaveBeenCalled();
+        expect(mysql.createConnection).toHaveBeenCalled();
+        expect(mysql.createConnection().end).toHaveBeenCalled();
     });
 });
 
