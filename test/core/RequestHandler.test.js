@@ -135,7 +135,7 @@ describe('RequestHandler', () => {
 
     test('handles exceptions inside the handler correctly', async () => {
         const error = new BaseError('I\'m a teapot', 418);
-        const handler = jest.fn(() => {throw error});
+        const handler = jest.fn(() => {throw error;});
         
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);
@@ -146,7 +146,7 @@ describe('RequestHandler', () => {
 
     test('does not expose critical errors', async () => {
         const errorMessage = 'Critical error with sensitive data';
-        const handler = jest.fn(() => {throw Error(errorMessage)});
+        const handler = jest.fn(() => {throw Error(errorMessage);});
         
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);
@@ -170,7 +170,7 @@ describe('RequestHandler', () => {
             }
         }
         const error = new CustomError();
-        const handler = jest.fn(() => {throw error});
+        const handler = jest.fn(() => {throw error;});
         
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);

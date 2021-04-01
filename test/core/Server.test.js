@@ -12,7 +12,7 @@ test('Unnecessary call to stop()', () => {
 });
 
 describe('Server handles', () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(10000);
     const port = 4242;
     const url = `http://localhost:${port}`;
     const createServer = (config = {port}) => new Server(config);
@@ -65,11 +65,11 @@ describe('Server handles', () => {
     test('websockets', async () => {
         const server = createServer();
         const path = '/test';
-        server.ws(path, (ws, req) => {
-            ws.on('message', (msg) => {
+        server.ws(path, (ws/* , req */) => {
+            ws.on('message', msg => {
                 ws.send(msg.split('').reverse().join(''));
             });
-        })
+        });
 
         await server.start();
         const messages = [];
@@ -103,7 +103,7 @@ describe('Server handles', () => {
             const response = await request.get(`${url}${path}`);
             await server.stop();
             return response;
-        }
+        };
         
         expect((await getSampleResponse({port, skipDefaultMiddlewares: true})).headers['x-powered-by']).toBe('Express');
         expect((await getSampleResponse({port, skipDefaultMiddlewares: false})).headers['x-powered-by']).toBeUndefined();
