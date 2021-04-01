@@ -1,6 +1,10 @@
 const config = { host: 'localhost', port: 3306, user: 'root', password: '1234', database: 'eventStore' };
 const eventStoreAdapter = require('./src/adapters/eventstore-mysql');
 
+test('testfile needs a test', () => {
+    expect(1 + 1).toBe(2);
+});
+
 (async () => {
     const eventStore = eventStoreAdapter(config);
     await eventStore.init();

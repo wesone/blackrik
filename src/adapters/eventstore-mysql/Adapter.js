@@ -119,7 +119,10 @@ class Adapter extends EventStoreAdapterInterface
         await this.createDatabase();
         if(!this.mysql)
             this.db = await mysql.createConnection(this.config);
-        this.db =  this.mysql.createConnection(this.config);
+        else // Unit-Test 
+        {
+            this.db =  this.mysql.createConnection(this.config);
+        }
         await this.db.connect();
         await this.createTable();
         // see https://github.com/sidorares/node-mysql2/issues/1239
