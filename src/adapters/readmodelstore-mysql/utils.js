@@ -6,13 +6,13 @@ function validateIdentifier(identifier)
 {
     if(!identifier)
     {
-        throw new Error('identifier "'+identifier+'" is required');
+        throw new Error('identifier is required');
     }
     if(typeof identifier !== 'string')
     {
         throw new Error('identifier "'+identifier+'" has to be a string');
     }
-    if(identifier.length < 1 || identifier.length > 64)
+    if(identifier.length > 64)
     {
         throw new Error('identifier "'+identifier+'" length has to be between 1 and 64 characters');
     }
