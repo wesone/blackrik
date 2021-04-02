@@ -2,13 +2,13 @@ const {COMMAND_SCHEDULER_TABLE_NAME: TABLE_NAME} = require('./Constants');
 
 class CommandScheduler
 {
-    #blackrik;
+    #exec;
     #store;
     #jobs;
 
-    constructor(blackrik, store)
+    constructor(executor, store)
     {
-        this.#blackrik = blackrik;
+        this.#exec = executor;
         this.#store = store;
         this.#jobs = new Set();
     }
@@ -40,11 +40,6 @@ class CommandScheduler
         );
     }
 
-    async _execute(command, causationEvent)
-    {
-        return this.#blackrik.executeCommand(command, causationEvent);
-    }
-
     _getDelay(timestamp)
     {
         return timestamp - Date.now();
@@ -56,7 +51,7 @@ class CommandScheduler
         const timer = setTimeout(async () => {
             this.#jobs.delete(timer);
             if((await this.#store.delete(TABLE_NAME, {id})).affected)
-                await this._execute(command, causationEvent);
+                await this.#exec(command, causationEvent);
         }, delay);
         this.#jobs.add(timer);
         return true;
@@ -72,7 +67,7 @@ class CommandScheduler
             return false;
 
         if(this._getDelay(timestamp) <= 0)
-            return this._execute(command, causationEvent);
+            return this.#exec(command, causationEvent);
 
         const {id} = await this.#store.insert(TABLE_NAME, {timestamp, command, causationEvent});
         return this._schedule(id, timestamp, command, causationEvent);
