@@ -54,7 +54,7 @@ describe('ReadModelStore init function', () => {
         expect(init).toHaveBeenNthCalledWith(1, store);
     });
 
-    test('is optional', async () => {
+    test('is optional', () => {
         const store = new StoreMock();
         const rms = new ReadModelStore(store, {});
         expect(rms.init()).resolves.not.toThrow();
