@@ -1,4 +1,4 @@
-import QueryHandler from '../../src/core/QueryHandler';
+const QueryHandler = require('../../src/core/QueryHandler');
 
 describe('QueryHandler handles', () => {
     class BlackrikMock
