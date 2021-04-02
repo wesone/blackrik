@@ -39,7 +39,6 @@ describe('Server handles', () => {
         await server.stop();
 
         expect(response.status).toBe(200);
-        expect(response.data).toBeInstanceOf(Object);
         expect(response.data).toStrictEqual({value: testValue}); 
     });
 
@@ -58,12 +57,12 @@ describe('Server handles', () => {
         await server.stop();
 
         expect(response.status).toBe(200);
-        expect(response.data).toBeInstanceOf(Object);
         expect(response.data).toStrictEqual({value: testValue}); 
     });
 
     test('websockets', async () => {
         const server = createServer();
+
         const path = '/test';
         server.ws(path, (ws/* , req */) => {
             ws.on('message', msg => {
@@ -91,12 +90,12 @@ describe('Server handles', () => {
         ]); 
     });
 
-    test('default middlewares', async () => {
+    test('default middlewares secure Express', async () => {
         const getSampleResponse = async config => {
             const server = createServer(config);
             const path = '/test';
             server.route(path).get((req, res) => {
-                res.json({value: req.test});
+                res.json({route: req.route});
             });
 
             await server.start();

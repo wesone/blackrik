@@ -1,37 +1,6 @@
 const RequestHandler = require('../../src/core/RequestHandler');
 const {BaseError} = require('../../src/core/Errors');
 
-// class RequestHandler
-// {
-//     #handler;
-
-//     constructor(handler)
-//     {
-//         this.#handler = handler;
-//         return this.handle.bind(this);
-//     }
-
-//     async handle(req, res)
-//     {
-//         try
-//         {
-//             const response = await this.#handler(req);
-//             if(!response)
-//                 return res.sendStatus(200).end();
-//             res.json(response).end();
-//         }
-//         catch(e)
-//         {
-//             if(!e.code)
-//             {
-//                 console.error(e);
-//                 return res.sendStatus(500).end(); // do not expose critical errors
-//             }
-//             return res.status(e.code || 500).send(e.message || e).end();
-//         }
-//     }
-// }
-
 describe('A new RequestHandler', () => {
     test('expects a function as parameter', () => {
         expect(() => new RequestHandler()).toThrow();
@@ -112,7 +81,7 @@ describe('RequestHandler', () => {
         console.error.mockClear();
     });
 
-    test('wraps handler inside an express callback', async () => {
+    test('wraps handler inside an Express callback', async () => {
         const handler = jest.fn(() => {});
 
         const req = createReq();
