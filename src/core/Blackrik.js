@@ -51,21 +51,21 @@ class Blackrik
         this.#store = this._createReadModelStore(this.config.adapter || 'default');
     }
 
+    async _initEventStore()
+    {
+        if(!(this._eventStore = Adapter.create(this.config.eventStoreAdapter)))
+            throw Error(`EventStore adapter '${this.config.eventStoreAdapter.module}' is invalid.`);
+        await this._eventStore.init();
+    }
+
     async _initEventHandler()
     {
         const eventBus = Adapter.create(this.config.eventBusAdapter);
         if(!eventBus)
             throw Error(`EventBus adapter '${this.config.eventBusAdapter.module}' is invalid.`);
         await eventBus.init();
-        this._eventHandler = new EventHandler(this, eventBus, this.#store);
+        this._eventHandler = new EventHandler(this._eventStore, eventBus, this.#store);
         await this._eventHandler.init();
-    }
-
-    async _initEventStore()
-    {
-        if(!(this._eventStore = Adapter.create(this.config.eventStoreAdapter)))
-            throw Error(`EventStore adapter '${this.config.eventStoreAdapter.module}' is invalid.`);
-        await this._eventStore.init();
     }
 
     _processAggregates()
@@ -234,10 +234,10 @@ class Blackrik
     {
         await this._initStore();
 
-        console.log('Initialize EventHandler');
-        await this._initEventHandler();
         console.log('Initialize EventStore');
         await this._initEventStore();
+        console.log('Initialize EventHandler');
+        await this._initEventHandler();
 
         console.log('Process Aggregates');
         this._processAggregates();

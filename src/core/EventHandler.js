@@ -7,9 +7,9 @@ const ListenerMap = require('../utils/ListenerMap');
 
 class EventHandler
 {
-    constructor(blackrik, eventBus, store)
+    constructor(eventStore, eventBus, store)
     {
-        this.blackrik = blackrik;
+        this.eventStore = eventStore;
         this.eventBus = eventBus;
         this.store = store;
 
@@ -41,7 +41,7 @@ class EventHandler
         //TODO create snapshot if too many events are stored
         return Event.from({
             ...event,
-            position: await this.blackrik._eventStore.save(event)
+            position: await this.eventStore.save(event)
         });
     }
 
@@ -89,7 +89,7 @@ class EventHandler
             let next = null;
             do
             {
-                const {events, cursor} = await this.blackrik._eventStore.load({
+                const {events, cursor} = await this.eventStore.load({
                     types,
                     limit: EVENT_LIMIT_REPLAY,
                     cursor: next
