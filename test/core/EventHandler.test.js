@@ -146,41 +146,43 @@ test('EventHandler handles errors on publishing', async () => {
     expect(filledEvent).toBe(false);
 });
 
-test('EventHandler handles replays correctly', async () => { 
-    const callback = jest.fn(() => {});
+describe('EventHandler handles replays', () => {
+    test('with events', async () => { 
+        const callback = jest.fn(() => {});
 
-    const events = [];
-    const eventCount = EVENT_LIMIT_REPLAY * 2 - 1;
-    for(let i = 0; i < eventCount; i++)
-        events.push(createEvent());
-    const eventType = events[0].type;
+        const events = [];
+        const eventCount = EVENT_LIMIT_REPLAY * 2 - 1;
+        for(let i = 0; i < eventCount; i++)
+            events.push(createEvent());
+        const eventType = events[0].type;
 
-    await eventHandler.subscribe(aggregate, eventType, callback);
-    await eventHandler.start();
-    const filledEvents = await Promise.all(events.map(event => eventHandler.publish(aggregate, event)));
-    eventStore.events = filledEvents; // otherwise the EventStoreMock would have incomplete events
+        await eventHandler.subscribe(aggregate, eventType, callback);
+        await eventHandler.start();
+        const filledEvents = await Promise.all(events.map(event => eventHandler.publish(aggregate, event)));
+        eventStore.events = filledEvents; // otherwise the EventStoreMock would have incomplete events
 
-    await eventHandler.replayEvents([
-        [aggregate, [eventType]]
-    ]);
+        await eventHandler.replayEvents([
+            [aggregate, [eventType]]
+        ]);
 
-    expect(callback).toHaveBeenCalledTimes(eventCount * 2);
-    for(let i = 0; i < eventCount; i++)
-        expect(callback).toHaveBeenNthCalledWith(i+1, filledEvents[i]);
-    for(let i = 0; i < eventCount; i++)
-        expect(callback).toHaveBeenNthCalledWith(eventCount+i+1, {...filledEvents[i], isReplay: true});
-});
+        expect(callback).toHaveBeenCalledTimes(eventCount * 2);
+        for(let i = 0; i < eventCount; i++)
+            expect(callback).toHaveBeenNthCalledWith(i+1, filledEvents[i]);
+        for(let i = 0; i < eventCount; i++)
+            expect(callback).toHaveBeenNthCalledWith(eventCount+i+1, {...filledEvents[i], isReplay: true});
+    });
 
-test('EventHandler handles replay without events', async () => {
-    const callback = jest.fn(() => {});
-    const eventType = createEvent().type;
+    test('without events', async () => {
+        const callback = jest.fn(() => {});
+        const eventType = createEvent().type;
 
-    await eventHandler.subscribe(aggregate, eventType, callback);
-    await eventHandler.start();
+        await eventHandler.subscribe(aggregate, eventType, callback);
+        await eventHandler.start();
 
-    await eventHandler.replayEvents([
-        [aggregate, [eventType]]
-    ]);
+        await eventHandler.replayEvents([
+            [aggregate, [eventType]]
+        ]);
 
-    expect(callback).toHaveBeenCalledTimes(0);
+        expect(callback).toHaveBeenCalledTimes(0);
+    });
 });
