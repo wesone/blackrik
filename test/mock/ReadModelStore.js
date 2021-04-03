@@ -67,7 +67,9 @@ class ReadModelStore
 
         //TODO implement conditions if needed
 
-        const entries = [...this.tables[table].data];
+        const entries = !conditions
+            ? [...this.tables[table].data]
+            : [];
         
         if(options.sort)
             entries.sort((a, b) => {
