@@ -99,51 +99,53 @@ beforeEach(async () => {
     await eventHandler.init();
 });
 
-test('EventHandler takes callbacks and executes them', async () => {
-    const callback = jest.fn(() => {});
-    const callback2 = jest.fn(() => {});
+describe('EventHandler', () => {
+    test('takes callbacks and executes them', async () => {
+        const callback = jest.fn(() => {});
+        const callback2 = jest.fn(() => {});
 
-    const event = createEvent();
+        const event = createEvent();
 
-    await eventHandler.subscribe(aggregate, event.type, callback);
-    await eventHandler.subscribe(aggregate, event.type, callback2);
-    await eventHandler.start();
-    const filledEvent = await eventHandler.publish(aggregate, event);
+        await eventHandler.subscribe(aggregate, event.type, callback);
+        await eventHandler.subscribe(aggregate, event.type, callback2);
+        await eventHandler.start();
+        const filledEvent = await eventHandler.publish(aggregate, event);
 
-    expect(filledEvent).toBeInstanceOf(Object);
-    expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenNthCalledWith(1, filledEvent);
-    expect(callback2).toHaveBeenCalledTimes(1);
-    expect(callback2).toHaveBeenNthCalledWith(1, filledEvent);
-});
-
-test('EventHandler persists events', async () => {    
-    const events = [
-        createEvent(),
-        createEvent()
-    ];
-
-    await eventHandler.start();
-    const filledEvents = await Promise.all(events.map(event => eventHandler.publish(aggregate, event)));
-
-    expect(eventStore.save).toHaveBeenCalledTimes(events.length);
-    filledEvents.forEach((event, i) => {
-        if(i > 0)
-            expect(event.position).toBeGreaterThan(filledEvents[i-1].position);
+        expect(filledEvent).toBeInstanceOf(Object);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveBeenNthCalledWith(1, filledEvent);
+        expect(callback2).toHaveBeenCalledTimes(1);
+        expect(callback2).toHaveBeenNthCalledWith(1, filledEvent);
     });
-});
 
-test('EventHandler handles errors on publishing', async () => { 
-    eventStore = new EventStoreMock(true);
-    eventHandler = new EventHandler(eventStore, eventBus, {});
-    await eventHandler.init();
-    
-    const event = createEvent();
+    test('persists events', async () => {    
+        const events = [
+            createEvent(),
+            createEvent()
+        ];
 
-    await eventHandler.start();
-    const filledEvent = await eventHandler.publish(aggregate, event);
+        await eventHandler.start();
+        const filledEvents = await Promise.all(events.map(event => eventHandler.publish(aggregate, event)));
 
-    expect(filledEvent).toBe(false);
+        expect(eventStore.save).toHaveBeenCalledTimes(events.length);
+        filledEvents.forEach((event, i) => {
+            if(i > 0)
+                expect(event.position).toBeGreaterThan(filledEvents[i-1].position);
+        });
+    });
+
+    test('handles errors on publishing', async () => { 
+        eventStore = new EventStoreMock(true);
+        eventHandler = new EventHandler(eventStore, eventBus, {});
+        await eventHandler.init();
+        
+        const event = createEvent();
+
+        await eventHandler.start();
+        const filledEvent = await eventHandler.publish(aggregate, event);
+
+        expect(filledEvent).toBe(false);
+    });
 });
 
 describe('EventHandler handles replays', () => {

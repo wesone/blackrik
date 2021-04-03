@@ -2,7 +2,19 @@ const Server = require('../../src/core/Server');
 const request = require('axios');
 const WebSocket = require('ws');
 
-test('Optional config', () => {
+jest.setTimeout(4000);
+const port = 4242;
+const url = `http://localhost:${port}`;
+const createServer = (config = {port}) => new Server(config);
+
+beforeAll(() => {
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+});
+afterAll(() => {
+    console.log.mockRestore();
+});
+
+test('Config is optional', () => {
     expect(() => new Server()).not.toThrow();
 });
 
@@ -11,19 +23,25 @@ test('Unnecessary call to stop()', () => {
     expect(server.stop()).resolves.not.toThrow();
 });
 
+test('Default middlewares secure Express', async () => {
+    const getSampleResponse = async config => {
+        const server = createServer(config);
+        const path = '/test';
+        server.route(path).get((req, res) => {
+            res.json({route: req.route});
+        });
+
+        await server.start();
+        const response = await request.get(`${url}${path}`);
+        await server.stop();
+        return response;
+    };
+    
+    expect((await getSampleResponse({port, skipDefaultMiddlewares: true})).headers['x-powered-by']).toBe('Express');
+    expect((await getSampleResponse({port, skipDefaultMiddlewares: false})).headers['x-powered-by']).toBeUndefined();
+});
+
 describe('Server handles', () => {
-    jest.setTimeout(10000);
-    const port = 4242;
-    const url = `http://localhost:${port}`;
-    const createServer = (config = {port}) => new Server(config);
-
-    beforeAll(() => {
-        jest.spyOn(console, 'log').mockImplementation(() => {});
-    });
-    afterAll(() => {
-        console.log.mockRestore();
-    });
-
     test('custom routes', async () => {
         const server = createServer();
         const path = '/test';
@@ -88,23 +106,5 @@ describe('Server handles', () => {
             'sphaera',
             'WSNE'
         ]); 
-    });
-
-    test('default middlewares secure Express', async () => {
-        const getSampleResponse = async config => {
-            const server = createServer(config);
-            const path = '/test';
-            server.route(path).get((req, res) => {
-                res.json({route: req.route});
-            });
-
-            await server.start();
-            const response = await request.get(`${url}${path}`);
-            await server.stop();
-            return response;
-        };
-        
-        expect((await getSampleResponse({port, skipDefaultMiddlewares: true})).headers['x-powered-by']).toBe('Express');
-        expect((await getSampleResponse({port, skipDefaultMiddlewares: false})).headers['x-powered-by']).toBeUndefined();
     });
 });

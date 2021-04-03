@@ -19,8 +19,14 @@ describe('QueryHandler handles', () => {
         }
     }
 
+    let blackrik;
+    let queryHandler;
+    beforeEach(() => {
+        blackrik = new BlackrikMock();
+        queryHandler = new QueryHandler(blackrik);
+    });
+
     test('unknown readModel', async () => {
-        const queryHandler = new QueryHandler(new BlackrikMock());
         const req = {
             params: {
                 readModel: 'invalidReadmodel',
@@ -31,7 +37,6 @@ describe('QueryHandler handles', () => {
     });
 
     test('unknown resovler', async () => {
-        const queryHandler = new QueryHandler(new BlackrikMock());
         const req = {
             params: {
                 readModel: 'testReadModel',
@@ -42,8 +47,6 @@ describe('QueryHandler handles', () => {
     });
 
     test('correct execution', async () => {
-        const blackrik = new BlackrikMock();
-        const queryHandler = new QueryHandler(blackrik);
         const query = {test: 42};
         const req = {
             params: {

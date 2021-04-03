@@ -1,35 +1,6 @@
 const ReadModelStore = require('../../src/core/ReadModelStore');
 const {READMODEL_INIT_FUNCTION} = require('../../src/core/Constants');
-
-class StoreMock
-{
-    constructor()
-    {
-        this.tables = {};
-
-        this.insert = jest.fn(this._insert);
-        this.update = jest.fn(this._update);
-        this.delete = jest.fn(this._delete);
-        this.find = jest.fn(this._find);
-    }
-
-    async defineTable(table, scheme)
-    {
-        const schemeRepresentation = JSON.stringify(scheme);
-        if(this.tables[table] === schemeRepresentation)
-            return false;
-        this.tables[table] = schemeRepresentation;
-        return true;
-    }
-
-    async _insert(){}
-
-    async _update(){}
-
-    async _delete(){}
-
-    async _find(){}
-}
+const Store = require('../mock/ReadModelStore');
 
 const getEvent = (replay = false) => ({
     aggregateId: '0648b417-80c7-42ca-a027-9efe08bc00c4',
@@ -41,9 +12,13 @@ const getEvent = (replay = false) => ({
     isReplay: replay
 });
 
+let store;
+beforeEach(() => {
+    store = new Store();
+});
+
 describe('ReadModelStore init function', () => {
     test('gets called', async () => {
-        const store = new StoreMock();
         const init = jest.fn(async () => {});
         const rms = new ReadModelStore(store, {
             [READMODEL_INIT_FUNCTION]: init
@@ -55,102 +30,100 @@ describe('ReadModelStore init function', () => {
     });
 
     test('is optional', () => {
-        const store = new StoreMock();
         const rms = new ReadModelStore(store, {});
         expect(rms.init()).resolves.not.toThrow();
     });
 });
 
-test('ReadModelStore respects config', async () => {
-    const store = new StoreMock();
-    const config = {test: 42};
-    const init = jest.fn(async () => config);
-    const rms = new ReadModelStore(store, {
-        [READMODEL_INIT_FUNCTION]: init
+describe('ReadModelStore', () => {
+    test('respects config', async () => {
+        const config = {test: 42};
+        const init = jest.fn(async () => config);
+        const rms = new ReadModelStore(store, {
+            [READMODEL_INIT_FUNCTION]: init
+        });
+        await rms.init();
+
+        expect(rms.config).toStrictEqual(config);
     });
-    await rms.init();
 
-    expect(rms.config).toStrictEqual(config);
-});
-
-test('ReadModelStore executes store functions', async () => {
-    const NEW_TABLE_NAME = 'newTable';
-    const EXISTING_TABLE_NAME = 'existingTable';
-    const TABLE_SCHEME = {field: 'String'};
-    const store = new StoreMock();
-    await store.defineTable(EXISTING_TABLE_NAME, TABLE_SCHEME);
-
-    const init = jest.fn(async store => {
-        await store.defineTable(NEW_TABLE_NAME, TABLE_SCHEME);
+    test('executes store functions', async () => {
+        const NEW_TABLE_NAME = 'newTable';
+        const EXISTING_TABLE_NAME = 'existingTable';
+        const TABLE_SCHEME = {field: 'String'};
         await store.defineTable(EXISTING_TABLE_NAME, TABLE_SCHEME);
-    });
-    const eventHandler = jest.fn(async (store/* , event */) => {
-        await store.insert(NEW_TABLE_NAME);
-        await store.insert(EXISTING_TABLE_NAME);
+
+        const init = jest.fn(async store => {
+            await store.defineTable(NEW_TABLE_NAME, TABLE_SCHEME);
+            await store.defineTable(EXISTING_TABLE_NAME, TABLE_SCHEME);
+        });
+        const eventHandler = jest.fn(async (store/* , event */) => {
+            await store.insert(NEW_TABLE_NAME);
+            await store.insert(EXISTING_TABLE_NAME);
+        });
+
+        const event = getEvent();
+        const rms = new ReadModelStore(store, {
+            [READMODEL_INIT_FUNCTION]: init,
+            [event.type]: eventHandler
+        });
+        await rms.init();
+        const storeProxy = rms.createProxy(event);
+        await eventHandler(storeProxy, event);
+        
+        expect(eventHandler).toHaveBeenCalledTimes(1);
+        expect(eventHandler).toHaveBeenNthCalledWith(1, storeProxy, event);
+        
+        expect(store.insert).toHaveBeenCalledTimes(2);
+        expect(store.insert).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
+        expect(store.insert).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, event.position);
     });
 
-    const event = getEvent();
-    const rms = new ReadModelStore(store, {
-        [READMODEL_INIT_FUNCTION]: init,
-        [event.type]: eventHandler
-    });
-    await rms.init();
-    const storeProxy = rms.createProxy(event);
-    await eventHandler(storeProxy, event);
-    
-    expect(eventHandler).toHaveBeenCalledTimes(1);
-    expect(eventHandler).toHaveBeenNthCalledWith(1, storeProxy, event);
-    
-    expect(store.insert).toHaveBeenCalledTimes(2);
-    expect(store.insert).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
-    expect(store.insert).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, event.position);
-});
-
-test('ReadModelStore prevents executing state changing store functions for replayed events on existing tables', async () => {
-    const NEW_TABLE_NAME = 'newTable';
-    const EXISTING_TABLE_NAME = 'existingTable';
-    const TABLE_SCHEME = {field: 'String'};
-    const store = new StoreMock();
-    await store.defineTable(EXISTING_TABLE_NAME, TABLE_SCHEME);
-
-    const init = jest.fn(async store => {
-        await store.defineTable(NEW_TABLE_NAME, TABLE_SCHEME);
+    test('prevents executing state changing store functions for replayed events on existing tables', async () => {
+        const NEW_TABLE_NAME = 'newTable';
+        const EXISTING_TABLE_NAME = 'existingTable';
+        const TABLE_SCHEME = {field: 'String'};
         await store.defineTable(EXISTING_TABLE_NAME, TABLE_SCHEME);
-    });
-    const eventHandler = jest.fn(async (store/* , event */) => {
-        await store.insert(NEW_TABLE_NAME);
-        await store.update(NEW_TABLE_NAME);
-        await store.delete(NEW_TABLE_NAME);
-        await store.find(NEW_TABLE_NAME);
 
-        await store.insert(EXISTING_TABLE_NAME);
-        await store.update(EXISTING_TABLE_NAME);
-        await store.delete(EXISTING_TABLE_NAME);
-        await store.find(EXISTING_TABLE_NAME);
-    });
+        const init = jest.fn(async store => {
+            await store.defineTable(NEW_TABLE_NAME, TABLE_SCHEME);
+            await store.defineTable(EXISTING_TABLE_NAME, TABLE_SCHEME);
+        });
+        const eventHandler = jest.fn(async (store/* , event */) => {
+            await store.insert(NEW_TABLE_NAME);
+            await store.update(NEW_TABLE_NAME);
+            await store.delete(NEW_TABLE_NAME);
+            await store.find(NEW_TABLE_NAME);
 
-    const event = getEvent(true);
-    const rms = new ReadModelStore(store, {
-        [READMODEL_INIT_FUNCTION]: init,
-        [event.type]: eventHandler
+            await store.insert(EXISTING_TABLE_NAME);
+            await store.update(EXISTING_TABLE_NAME);
+            await store.delete(EXISTING_TABLE_NAME);
+            await store.find(EXISTING_TABLE_NAME);
+        });
+
+        const event = getEvent(true);
+        const rms = new ReadModelStore(store, {
+            [READMODEL_INIT_FUNCTION]: init,
+            [event.type]: eventHandler
+        });
+        await rms.init();
+        const storeProxy = rms.createProxy(event);
+        await eventHandler(storeProxy, event);
+        
+        expect(eventHandler).toHaveBeenCalledTimes(1);
+        expect(eventHandler).toHaveBeenNthCalledWith(1, storeProxy, event);
+        
+        expect(store.insert).toHaveBeenCalledTimes(1);
+        expect(store.insert).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
+        
+        expect(store.update).toHaveBeenCalledTimes(1);
+        expect(store.update).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
+        
+        expect(store.delete).toHaveBeenCalledTimes(1);
+        expect(store.delete).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
+        
+        expect(store.find).toHaveBeenCalledTimes(2);
+        expect(store.find).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
+        expect(store.find).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, event.position);
     });
-    await rms.init();
-    const storeProxy = rms.createProxy(event);
-    await eventHandler(storeProxy, event);
-    
-    expect(eventHandler).toHaveBeenCalledTimes(1);
-    expect(eventHandler).toHaveBeenNthCalledWith(1, storeProxy, event);
-    
-    expect(store.insert).toHaveBeenCalledTimes(1);
-    expect(store.insert).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
-    
-    expect(store.update).toHaveBeenCalledTimes(1);
-    expect(store.update).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
-    
-    expect(store.delete).toHaveBeenCalledTimes(1);
-    expect(store.delete).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
-    
-    expect(store.find).toHaveBeenCalledTimes(2);
-    expect(store.find).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
-    expect(store.find).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, event.position);
 });
