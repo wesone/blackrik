@@ -1,4 +1,5 @@
 const {COMMAND_SCHEDULER_TABLE_NAME: TABLE_NAME} = require('./Constants');
+const {v4: uuid} = require('uuid');
 
 class CommandScheduler
 {
@@ -13,33 +14,6 @@ class CommandScheduler
         this.#jobs = new Set();
     }
 
-    async init()
-    {
-        await this.#store.defineTable(TABLE_NAME, {
-            id: {
-                type: 'Number',
-                primaryKey: true,
-                autoIncrement: true
-            },
-            timestamp: {
-                type: 'Number'
-            },
-            command: {
-                type: 'JSON'
-            },
-            causationEvent: {
-                type: 'JSON'
-            }
-        });
-        await Promise.all(
-            (await this.#store.find(TABLE_NAME, null, {
-                sort: [{
-                    timestamp: 1
-                }]
-            })).map(({id, timestamp, command, causationEvent}) => this._schedule(id, timestamp, command, causationEvent))
-        );
-    }
-
     _getDelay(timestamp)
     {
         return timestamp - Date.now();
@@ -50,11 +24,36 @@ class CommandScheduler
         const delay = Math.max(this._getDelay(timestamp), 0);
         const timer = setTimeout(async () => {
             this.#jobs.delete(timer);
-            if((await this.#store.delete(TABLE_NAME, {id})).affected)
+            if(await this.#store.delete(TABLE_NAME, {id}))
                 await this.#exec(command, causationEvent);
         }, delay);
         this.#jobs.add(timer);
         return true;
+    }
+
+    async _loadScheduledCommands()
+    {
+        await Promise.all(
+            (await this.#store.find(TABLE_NAME, null, {
+                sort: [
+                    ['timestamp', 'asc']
+                ]
+            })).map(({id, timestamp, command, causationEvent}) => this._schedule(id, timestamp, command, causationEvent))
+        );
+    }
+
+    async init()
+    {
+        await this.#store.defineTable(TABLE_NAME, {
+            id: {
+                type: 'Number',
+                primaryKey: true
+            },
+            timestamp: 'Number',
+            command: 'JSON',
+            causationEvent: 'JSON'
+        });
+        this._loadScheduledCommands();
     }
 
     async process(timestamp, command, causationEvent)
@@ -69,8 +68,15 @@ class CommandScheduler
         if(this._getDelay(timestamp) <= 0)
             return this.#exec(command, causationEvent);
 
-        const {id} = await this.#store.insert(TABLE_NAME, {timestamp, command, causationEvent});
+        const id = uuid();
+        await this.#store.insert(TABLE_NAME, {id, timestamp, command, causationEvent});
         return this._schedule(id, timestamp, command, causationEvent);
+    }
+
+    stop()
+    {
+        this.#jobs.forEach(timer => clearTimeout(timer));
+        this.#jobs.clear();
     }
 }
 

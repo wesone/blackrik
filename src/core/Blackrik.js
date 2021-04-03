@@ -182,7 +182,7 @@ class Blackrik
         this._commandHandler = new CommandHandler(this);
         this._queryHandler = new QueryHandler(this);
 
-        this._commandScheduler = new CommandScheduler(this, this.#store);
+        this._commandScheduler = new CommandScheduler(this.executeCommand, this.#store);
         await this._commandScheduler.init();
     }
 
