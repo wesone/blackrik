@@ -1,4 +1,4 @@
-import CommandHandler from '../../src/core/CommandHandler';
+const CommandHandler = require('../../src/core/CommandHandler');
 
 test('CommandHandler test', () => {
     expect(null).toEqual(null);
