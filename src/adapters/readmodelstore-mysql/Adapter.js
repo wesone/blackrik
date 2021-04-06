@@ -24,7 +24,12 @@ class Adapter extends ReadModelStoreAdapterInterface
             this.debugSql = true;
             delete args.debugSql;
         }
-        if(!args.database || typeof args.database !== 'string')
+        if(args.useDatabase)
+        {
+            this.useDatabase = args.useDatabase;
+            delete args.useDatabase;
+        }
+        if(!this.useDatabase && (!args.database || typeof args.database !== 'string'))
         {
             throw new Error('Readmodelstore needs a database name.');
         }
@@ -46,6 +51,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         if(!this.connection)
         {
             await this.connect();
+            await this.useDB();
         }
     }
 
@@ -61,6 +67,18 @@ class Adapter extends ReadModelStoreAdapterInterface
             await this.connection.end();
             this.connection = null;
         }
+    }
+        
+    async useDB()
+    {
+        if(!this.useDatabase)
+        {
+            return;
+        }
+        await this.exec(`CREATE DATABASE IF NOT EXISTS ${quoteIdentifier(this.useDatabase)}`, []);
+        await this.connection.query(`USE ${quoteIdentifier(this.useDatabase)}`);
+        this.args.database = this.useDatabase;
+        delete this.useDatabase;
     }
 
     async exec(sql, parameters)
