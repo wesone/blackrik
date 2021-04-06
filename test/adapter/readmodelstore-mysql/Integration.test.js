@@ -4,15 +4,14 @@ const tableName = 'TestTable';
 
 let adapter;
 
-beforeAll(async () => {
+beforeAll(() => {
     adapter = new Adapter({ 
         //debugSql: true,
         host: 'localhost',
         user: 'root',
         password: '1234',
-        database: 'AdapterTest'
+        useDatabase: 'TestTable'
     });
-    await adapter.exec(`CREATE DATABASE IF NOT EXISTS ${adapter.args.database}`, []);
 });
 
 afterAll(async () => {
