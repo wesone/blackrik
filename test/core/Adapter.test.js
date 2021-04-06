@@ -1,6 +1,4 @@
 const Adapter = require('../../src/core/Adapter');
-const adapterPath = __dirname + '/../mock/Adapter';
-const adapterPathInvalid = __dirname + '/../mock/AdapterInvalid';
 
 test('Create adapter without config', () => {
     const adapter = Adapter.create();
@@ -37,7 +35,7 @@ describe('Create adapter with config', () => {
 
     test('but the module does not expose a function', () => {
         const adapter = Adapter.create({
-            module: adapterPathInvalid,
+            module: __dirname + '/../mock/Adapter/Invalid',
             args
         });
         expect(adapter).toBeNull();
@@ -45,7 +43,7 @@ describe('Create adapter with config', () => {
 
     test('and a valid module that exposes a function', () => {
         const adapter = Adapter.create({
-            module: adapterPath,
+            module: __dirname + '/../mock/Adapter/Valid',
             args
         });
         expect(adapter).toBe(args);
