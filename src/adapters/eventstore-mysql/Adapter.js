@@ -38,7 +38,7 @@ const databaseSchema = {
             Field: 'type',
             Type: 'varchar(32)',
             Null: 'NO',
-            Key: '',
+            Key: 'MUL',
             Default: null,
             Extra: ''
         },
@@ -46,7 +46,7 @@ const databaseSchema = {
             Field: 'timestamp',
             Type: 'bigint',
             Null: 'NO',
-            Key: '',
+            Key: 'MUL',
             Default: null,
             Extra: ''
         },
@@ -54,7 +54,7 @@ const databaseSchema = {
             Field: 'correlationId',
             Type: 'varchar(36)',
             Null: 'NO',
-            Key: '',
+            Key: 'MUL',
             Default: null,
             Extra: ''
         },
@@ -62,7 +62,7 @@ const databaseSchema = {
             Field: 'causationId',
             Type: 'varchar(36)',
             Null: 'YES',
-            Key: '',
+            Key: 'MUL',
             Default: null,
             Extra: ''
         },
@@ -101,7 +101,7 @@ class Adapter extends EventStoreAdapterInterface
             throw Error('EventStore-MySQL needs a config.');
         if(!this.config.host || !this.config.host.length)
             throw Error('EventStore-MySQL needs a host.');
-        if(!this.config.port)
+        if(!this.config.port || !this.config.host.port)
             this.config.port = 3306;
         if(!this.config.database || !this.config.database.length)
             throw Error('EventStore-MySQL needs a database name.');
@@ -120,7 +120,6 @@ class Adapter extends EventStoreAdapterInterface
         // see https://github.com/sidorares/node-mysql2/issues/1239
         //========MySQL 8.0.22 (and higher) fix========
         const originalExecute = this.db.execute.bind(this.db);
-        /* istanbul ignore next */
         this.db.execute = function(...args){
             const [query, substitutions, ...rest] = args;
             for(const key in substitutions) // array or object
@@ -153,7 +152,6 @@ class Adapter extends EventStoreAdapterInterface
             where.push(`aggregateId IN (${filter.aggregateIds.map(() => '?').join(',')})`);
         }
 
-        /* istanbul ignore else */
         if(filter.types)
         {
             values.push(...filter.types);
@@ -189,7 +187,6 @@ class Adapter extends EventStoreAdapterInterface
         {
             values.push(filter.limit);
             limit.push('LIMIT ?');
-            /* istanbul ignore else */
             if(filter.cursor !== undefined)
             {
                 values.push(filter.limit * filter.cursor);
@@ -224,7 +221,7 @@ class Adapter extends EventStoreAdapterInterface
         if(exists[0][0]['count(*)'])
         {
             const table = await this.db.execute('DESCRIBE events', []);
-            if(!await this.verifySchema(table, databaseSchema))
+            if(!await this.verifySchema(table[0], databaseSchema))
                 throw Error('Existing table schema is not valid.');
         }
         else
@@ -233,14 +230,17 @@ class Adapter extends EventStoreAdapterInterface
         }
     }
 
-    async createDatabase()
+    async createDatabase(db)
     {
-        const db = await mysql.createConnection({
-            host: this.config.host,
-            port: this.config.port,
-            user: this.config.user,
-            password: this.config.password,
-        });
+        if(!db) // For testing purposes
+        {
+            db = await mysql.createConnection({
+                host: this.config.host,
+                port: this.config.port,
+                user: this.config.user,
+                password: this.config.password,
+            });
+        }
         await db.execute(`CREATE DATABASE IF NOT EXISTS ${this.config.database}`, []);
         await db.end();
     }
@@ -249,18 +249,17 @@ class Adapter extends EventStoreAdapterInterface
     {
         return new Promise(resolve => {
             let valid = false;
-            const dataValues = data[0];
             Object.values(databaseSchema.fields).forEach(field => {
-                for(let i = 0; i < dataValues.length; i++)
+                for(let i = 0; i < data.length; i++)
                 {
-                    if(dataValues[i].Field === field.Field)
+                    if(data[i].Field === field.Field)
                     {
                         if(
-                            dataValues[i].Type === field.Type &&
-                            dataValues[i].Null === field.Null &&
-                            dataValues[i].Key === field.Key &&
-                            dataValues[i].Default === field.Default &&
-                            dataValues[i].Extra === field.Extra
+                            data[i].Type === field.Type &&
+                            data[i].Null === field.Null &&
+                            data[i].Key === field.Key &&
+                            data[i].Default === field.Default &&
+                            data[i].Extra === field.Extra
                         )
                         {
                             valid = true;
