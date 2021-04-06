@@ -4,7 +4,7 @@ const tableName = 'TestTable';
 
 let adapter;
 
-beforeAll(() => {
+beforeAll(async () => {
     adapter = new Adapter({ 
         //debugSql: true,
         host: 'localhost',
@@ -12,9 +12,11 @@ beforeAll(() => {
         password: '1234',
         database: 'AdapterTest'
     });
+    await adapter.exec(`CREATE DATABASE IF NOT EXISTS ${adapter.args.database}`, []);
 });
 
-afterAll(() => {
+afterAll(async () => {
+    await adapter.exec(`DROP DATABASE IF EXISTS ${adapter.args.database}`, []);
     return adapter.disconnect();
 });
 
