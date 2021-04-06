@@ -148,14 +148,11 @@ class Blackrik
                                     {
                                         if(prop !== fn)
                                             continue;
-
                                         return function(...args){
-                                            const params = [];
-                                            if(args.length >= argCount)
-                                            { 
-                                                args.every((arg, idx) => idx < argCount ? params.push(arg) : false);
-                                                params.push(event);
-                                            }
+                                            const params = [
+                                                ...args.slice(0, argCount),
+                                                event
+                                            ];
                                             return this[fn](...params);
                                         }.bind(blackrik);
                                     }
