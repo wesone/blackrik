@@ -38,7 +38,7 @@ const databaseSchema = {
             Field: 'type',
             Type: 'varchar(32)',
             Null: 'NO',
-            Key: 'MUL',
+            Key: '',
             Default: null,
             Extra: ''
         },
@@ -46,7 +46,7 @@ const databaseSchema = {
             Field: 'timestamp',
             Type: 'bigint',
             Null: 'NO',
-            Key: 'MUL',
+            Key: '',
             Default: null,
             Extra: ''
         },
@@ -54,7 +54,7 @@ const databaseSchema = {
             Field: 'correlationId',
             Type: 'varchar(36)',
             Null: 'NO',
-            Key: 'MUL',
+            Key: '',
             Default: null,
             Extra: ''
         },
@@ -62,7 +62,7 @@ const databaseSchema = {
             Field: 'causationId',
             Type: 'varchar(36)',
             Null: 'YES',
-            Key: 'MUL',
+            Key: '',
             Default: null,
             Extra: ''
         },
@@ -249,7 +249,7 @@ class Adapter extends EventStoreAdapterInterface
     {
         return new Promise(resolve => {
             let valid = false;
-            const dataValues = Object.values(data.fields);
+            const dataValues = data[0];
             Object.values(databaseSchema.fields).forEach(field => {
                 for(let i = 0; i < dataValues.length; i++)
                 {
