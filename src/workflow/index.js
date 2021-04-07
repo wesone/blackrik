@@ -1,18 +1,32 @@
+const { SAGA_WORKFLOW_TABLE_NAME } = require('../core/Constants');
 class Workflow {
     constructor(config){
         this.config = {...config};
         // validate config
-        this.state = {
-            id: this.config.id ?? 'uuid',
+        this.initState = {
+            name: this.config.name ?? 'workflow',
             version: this.config.version ?? 1,
             value: this.config.initial,
             context: {...this.config.context},
+            idHandler: this.config.idHandler ?? (event => event.aggregateId),
             changed: false,
             currentEvent: {},
             history: [],
             done: false,
             rollback: null,
+            updatedAt: null,
         };
+        this.state = null;
+    }
+
+    getId(event)
+    {
+        return `${this.config.name}__${this.config.idHandler(event)}`;
+    }
+
+    initializeState()
+    {
+        return {...this.initState};
     }
 
     getCurrentStep()
@@ -31,7 +45,7 @@ class Workflow {
         let eventName = event;
         if(typeof event === 'object')
         {
-            eventName = event.name;
+            eventName = event.type;
         }
         return step.on?.[Object.keys(step.on).find(key => key === eventName)];
     }
@@ -67,33 +81,109 @@ class Workflow {
     async transition(event)
     {
         const transition = this.getNextTransition(event);
+        console.log('transition', transition);
         if(!transition)
             return this.state;
 
         this.state.value = transition;
+        this.state.history.push({
+            event: {...this.state.currentEvent}, 
+            context: {...this.state.context}, 
+            updatedAt: this.state.updatedAt
+        });
         this.state.currentEvent = event;
+        this.state.changed = true;
+        this.state.updatedAt = new Date();
         // execute transition target actions
         await this.executeActions();
-        // save state and context
-        // TODO: history
 
         return this.state;
     }
 
-    saveState()
+    async insertState(state, id)
     {
-
+        if(!this.store)
+        {
+            throw new Error('No store set');
+        }
+        if(!state)
+        {
+            throw new Error('State needed');
+        }
+        const currentDate = new Date();
+        await this.store.insert(SAGA_WORKFLOW_TABLE_NAME,{
+            id,
+            state,
+            done: state.done,
+            failed: !!state.rollback,
+            createdAt: currentDate,
+            updatedAt: currentDate
+        });
     }
 
-    loadState(id)
+    async saveState()
     {
+        if(!this.store)
+        {
+            throw new Error('No store set');
+        }
+        if(!this.state)
+        {
+            throw new Error('No state loaded');
+        }
+        if(!this.state.changed)
+        {
+            return;
+        }
+        await this.store.update(SAGA_WORKFLOW_TABLE_NAME,
+            {
+                id: this.getId(this.state.currentEvent),
+            },{
+                state: this.state,
+                done: this.state.done,
+                failed: !!this.state.rollback,
+                updatedAt: this.state.updatedAt
+            }
+        );
+    }
 
+    async loadState(event)
+    {
+        if(!this.store)
+        {
+            throw new Error('No store set');
+        }
+        let state = this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.getId(event)});
+        if(!state)
+        {
+            state = this.initializeState();
+            await this.insertState(state,  this.getId(event));
+        }
+        this.setState(state);
+        return this.state;
+    }
+
+    setState(state)
+    {
+        this.state = state;
+        this.state.changed = false;
     }
 
     async setupStore(store)
     {
         this.store = store;
-        // setup store
+
+        await this.store.defineTable(SAGA_WORKFLOW_TABLE_NAME, {
+            id: {
+                type: 'String',
+                primaryKey: true,
+            },
+            state: 'JSON',
+            done: 'Boolean',
+            failed: 'Boolean',
+            createdAt: 'Date',
+            updatedAt: 'Date',
+        });
     }
 
     setSideEffects(sideEffects)
@@ -103,19 +193,23 @@ class Workflow {
 
     genBlackrikHandlers()
     {
-        const events =  {};
+        const eventHandlers =  {};
         Object.keys(this.config.steps).forEach(stepKey => {
             const stepEvents = Object.keys(this.config.steps[stepKey].on);
             stepEvents.forEach(name => {
-                events[name] = async ( _,  event, sideEffects) => {
+                if(name !== name.toUpperCase())
+                {
+                    return; // internal event
+                }
+                eventHandlers[name] = async ( _,  event, sideEffects) => {
                     this.setSideEffects(sideEffects);
-                    await this.loadState(1234);
+                    await this.loadState(event);
                     await this.transition(event);
                     await this.saveState();
                 };
             });
         });
-
+        return eventHandlers;
     }
 
     connect()
@@ -125,7 +219,7 @@ class Workflow {
                 init: async store => {
                     await this.setupStore(store);
                     return {
-                        noopSideEffectsOnReplay: true
+                        noopSideEffectsOnReplay: false
                     };
                 },
                 ...this.genBlackrikHandlers(), 
@@ -149,10 +243,11 @@ function red(workflow)
 }   
 
 const lightMachine = new Workflow({
-    id: 'light',
+    name: 'light',
     version: 1,
     initial: 'green',
     context: { redLights: 0 },
+    idHandler: event => event.aggregateId,
     steps: {
         green: {
             on: {
@@ -175,24 +270,26 @@ const lightMachine = new Workflow({
         }
     }
 });
+console.log(lightMachine.connect());
+lightMachine.setState(lightMachine.initializeState());
 (async () => {
-    let state = await lightMachine.transition('TIMER');
+    let state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
-    state = await lightMachine.transition('TIMER');
+    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
-    state = await lightMachine.transition('TIMER');
+    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
-    state = await lightMachine.transition('TIMER');
+    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
-    state = await lightMachine.transition('TIMER');
+    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
-    state = await lightMachine.transition('TIMER');
+    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
-    state = await lightMachine.transition('TIMER');
+    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
-    state = await lightMachine.transition('TIMER');
+    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
-    state = await lightMachine.transition('TIMER');
+    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
     console.log(state);
 })();
 
