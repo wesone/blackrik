@@ -26,8 +26,8 @@ module.exports = {
     adapter: 'default',
     readModelStoreAdapters: {
         default: {
+            module: Blackrik.ADAPTERS.READMODELSTORE.MySQL,
             args: {
-                debugSql: true,
                 host: 'localhost',
                 database: 'readmodelstore',
                 user: 'root',
@@ -36,6 +36,7 @@ module.exports = {
         }
     },
     eventStoreAdapter: {
+        module: Blackrik.ADAPTERS.EVENTSTORE.MySQL,
         args: {
             host: 'localhost',
             database: 'eventstore',
@@ -44,6 +45,7 @@ module.exports = {
         }
     },
     eventBusAdapter: {
+        module: Blackrik.ADAPTERS.EVENTBUS.Kafka,
         args: {
             brokers: ['localhost:9092']
         }
@@ -56,19 +58,29 @@ module.exports = {
             skipDefaultMiddlewares: false
         },
         middlewares: [
-            (req, res, next) => next(),
-            [
-                '/middleware/test',
-                (req, res, next) => next(),
-                (req, res, next) => next()
+            // a middleware for all routes
+            (req, res, next) => (req.test = 21) && next(),
+            // a middleware for /test only
+            [ 
+                '/test',
+                (req, res, next) => (req.test = 42) && next()
             ]
         ],
         routes: [
             {
                 method: 'GET',
                 path: '/test',
-                callback: (/* req, res */) => {
-                    console.log('CALLED /TEST');
+                callback: (req, res) => {
+                    console.log('CALLED /test; req.test is', req.test);
+                    res.json({middlewareValue: req.test});
+                }
+            },
+            {
+                method: 'GET',
+                path: '/test2',
+                callback: (req, res) => {
+                    console.log('CALLED /test2; req.test is', req.test);
+                    res.json({middlewareValue: req.test});
                 }
             }
         ]

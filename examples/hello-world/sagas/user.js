@@ -1,29 +1,37 @@
 const {USER_CREATED} = require('../events/users');
 
+const tableName = 'RegisteredUsers';
+
 module.exports = {
     handlers: {
         init: async store => {
+            await store.defineTable(tableName, {
+                email: {
+                    type: 'String',
+                    primaryKey: true,
+                }
+            });
             return {
                 noopSideEffectsOnReplay: true
             };
         },
-        [USER_CREATED]: async (store, event, sideEffects) => {
-            console.log('Saga executed', event.id);
-            sideEffects.test();
-            await sideEffects.executeCommand({
-            // await sideEffects.scheduleCommand(event.timestamp + 1000*10, {
-                aggregateName: 'user',
-                aggregateId: event.aggregateId,
-                type: 'update',
-                payload: {
-                    'name': `${event.payload.name} Lastname`
-                }
-            });
+        [USER_CREATED]: async (store, {aggregateId, payload: {email, name}}, sideEffects) => {
+            if(await store.findOne(tableName, {email}))
+                return await sideEffects.executeCommand({
+                    aggregateName: 'user',
+                    aggregateId,
+                    type: 'reject',
+                    payload: {
+                        reason: 'email address already taken'
+                    }
+                });
+            await store.insert(tableName, {email});
+            await sideEffects.sendRegistrationMail(email, name);
         }
     },
     sideEffects: {
-        test: () => {
-            console.log('Executed Sideeffect');
+        sendRegistrationMail: async (email, name) => {
+            console.log(`Sending an email to "${name} <${email}>"...`);
         }
     }
 };

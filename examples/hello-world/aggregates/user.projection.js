@@ -1,6 +1,7 @@
 const {
     USER_CREATED,
     USER_UPDATED,
+    USER_REJECTED
 } = require('../events/users');
 
 module.exports = {
@@ -13,5 +14,9 @@ module.exports = {
     [USER_UPDATED]: (state, {payload}) => ({
         ...state,
         ...payload
+    }),
+    [USER_REJECTED]: state => ({
+        ...state,
+        removed: true
     })
 };
