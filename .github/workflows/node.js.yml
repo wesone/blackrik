@@ -37,4 +37,4 @@ jobs:
     - run: npm test
     - uses: luk-schweizer/jest-code-coverage-badge-action@v1.0.1
       with:
-      kvaas-key-url: 'https://api.keyvalue.xyz/dedce4db/coverage'
+        kvaas-key-url: 'https://api.keyvalue.xyz/dedce4db/coverage'
