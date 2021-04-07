@@ -9,6 +9,7 @@ module.exports = {
     coverageReporters: ['text','html'],
     coverageDirectory: '<rootDir>/coverage/',
     coveragePathIgnorePatterns: [
+        'test',
         'examples',
         'src/resources/YupExtensions'
     ]

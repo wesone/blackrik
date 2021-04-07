@@ -221,7 +221,7 @@ class Adapter extends EventStoreAdapterInterface
         if(exists[0][0]['count(*)'])
         {
             const table = await this.db.execute('DESCRIBE events', []);
-            if(!await this.verifySchema(table, databaseSchema))
+            if(!await this.verifySchema(table[0], databaseSchema))
                 throw Error('Existing table schema is not valid.');
         }
         else
@@ -230,14 +230,17 @@ class Adapter extends EventStoreAdapterInterface
         }
     }
 
-    async createDatabase()
+    async createDatabase(db)
     {
-        const db = await mysql.createConnection({
-            host: this.config.host,
-            port: this.config.port,
-            user: this.config.user,
-            password: this.config.password,
-        });
+        if(!db) // For testing purposes
+        {
+            db = await mysql.createConnection({
+                host: this.config.host,
+                port: this.config.port,
+                user: this.config.user,
+                password: this.config.password,
+            });
+        }
         await db.execute(`CREATE DATABASE IF NOT EXISTS ${this.config.database}`, []);
         await db.end();
     }
@@ -246,18 +249,17 @@ class Adapter extends EventStoreAdapterInterface
     {
         return new Promise(resolve => {
             let valid = false;
-            const dataValues = Object.values(data.fields);
             Object.values(databaseSchema.fields).forEach(field => {
-                for(let i = 0; i < dataValues.length; i++)
+                for(let i = 0; i < data.length; i++)
                 {
-                    if(dataValues[i].Field === field.Field)
+                    if(data[i].Field === field.Field)
                     {
                         if(
-                            dataValues[i].Type === field.Type &&
-                            dataValues[i].Null === field.Null &&
-                            dataValues[i].Key === field.Key &&
-                            dataValues[i].Default === field.Default &&
-                            dataValues[i].Extra === field.Extra
+                            data[i].Type === field.Type &&
+                            data[i].Null === field.Null &&
+                            data[i].Key === field.Key &&
+                            data[i].Default === field.Default &&
+                            data[i].Extra === field.Extra
                         )
                         {
                             valid = true;

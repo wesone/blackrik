@@ -10,11 +10,12 @@ beforeAll(() => {
         host: 'localhost',
         user: 'root',
         password: '1234',
-        database: 'AdapterTest'
+        useDatabase: 'TestTable'
     });
 });
 
-afterAll(() => {
+afterAll(async () => {
+    await adapter.exec(`DROP DATABASE IF EXISTS ${adapter.args.database}`, []);
     return adapter.disconnect();
 });
 

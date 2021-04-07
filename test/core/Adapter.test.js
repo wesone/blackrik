@@ -1,28 +1,51 @@
-import Adapter from '../../src/core/Adapter';
-  
-describe('Testing Adapter.create', () => {
-    const testMsg = 'create(args) has been called';
-    const modulePath = `${__dirname}/AdapterMock`;
+const Adapter = require('../../src/core/Adapter');
 
-    test('Create Adapter - success', () => {
-        const config = {
-            module: modulePath,
-            args: testMsg
-        };
-        const adapter = Adapter.create(config);
-        expect(adapter).toEqual(testMsg);
+test('Create adapter without config', () => {
+    const adapter = Adapter.create();
+    expect(adapter).toBeNull();
+});
+
+describe('Create adapter with config', () => {
+    beforeAll(() => {
+        jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    afterAll(() => {
+        console.error.mockRestore();
+    });
+    afterEach(() => {
+        console.error.mockClear();
     });
 
-    test('Create Adapter without config', () => {
-        expect(Adapter.create(undefined)).toEqual(null);
+    const args = 42;
+
+    test('but without module', () => {
+        const adapter = Adapter.create({
+            args
+        });
+        expect(adapter).toBeNull();
     });
 
-    test('Create Adapter without args', () => {
-        const config = {
-            module: modulePath,
-            args: null,
-        };
-        const adapter = Adapter.create(config);
-        expect(adapter).toEqual(null);
+    test('but with invalid module', () => {
+        const adapter = Adapter.create({
+            module: '$invalid$',
+            args
+        });
+        expect(adapter).toBeNull();
+    });
+
+    test('but the module does not expose a function', () => {
+        const adapter = Adapter.create({
+            module: __dirname + '/../mock/Adapter/Invalid',
+            args
+        });
+        expect(adapter).toBeNull();
+    });
+
+    test('and a valid module that exposes a function', () => {
+        const adapter = Adapter.create({
+            module: __dirname + '/../mock/Adapter/Valid',
+            args
+        });
+        expect(adapter).toBe(args);
     });
 });

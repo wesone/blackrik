@@ -5,10 +5,18 @@ class Adapter
         if(!config)
             return null;
         const {module, args} = config;
-        const create = require(module);
-        if(typeof create !== 'function')
+        try
+        {
+            const create = require(module);
+            if(typeof create !== 'function')
+                return null;
+            return create(args);
+        }
+        catch(e)
+        {
+            console.error('Could not create adapter.', e);
             return null;
-        return create(args);
+        }
     }
 }
 
