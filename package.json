@@ -11,6 +11,33 @@
     "type": "git",
     "url": "https://github.com/wesone/blackrik.git"
   },
+  "keywords": [ 
+    "cqrs",
+    "command",
+    "query",
+    "responsibility",
+    "segregation",
+    "eventsourcing",
+    "event-sourcing",
+    "es",
+    "event",
+    "sourcing",
+    "ddd",
+    "domain",
+    "driven",
+    "design",
+    "aggregate",
+    "aggregates",
+    "readmodel",
+    "readmodels",
+    "eventstore",
+    "eventbus",
+    "api",
+    "microservices",
+    "framework",
+    "nodejs",
+    "express"
+  ],
   "author": "wesone",
   "contributors": [
     "snizzl"
