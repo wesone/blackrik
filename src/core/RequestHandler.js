@@ -16,7 +16,7 @@ class RequestHandler
         try
         {
             const response = await this.#handler(req);
-            if(!response)
+            if(response === undefined)
                 return res.sendStatus(200).end();
             res.json(response).end();
         }

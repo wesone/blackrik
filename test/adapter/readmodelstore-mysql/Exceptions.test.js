@@ -107,7 +107,7 @@ test('test select exceptions', async () => {
     })).toThrow(new Error('Sort object cannot be empty. Needs: {field: order}'));
     expect(() => selectBuilder(tableName, {
         sort: [{asd: 'asd'}]
-    })).toThrow(new Error('direction of sort has to be 1 for ASC or -1 for DESC'));
+    })).toThrow();
 
     expect(() => selectBuilder(tableName, {
         limit: 'one'
