@@ -579,7 +579,7 @@ describe('Test createTable', () => {
                 {
                     functionCallDescribeEvents++;
                     const copy = JSON.parse(JSON.stringify(table));
-                    copy.fields = 'not a viable field';
+                    copy[0][0].Field = 'not a viable field';
                     return copy;
                 }
                 
@@ -653,38 +653,38 @@ describe('Test verifySchema', () => {
     test('Verify schema - no "Field" field', async () => {
         const testObj = new Adapter(testInstance);
         const copy = JSON.parse(JSON.stringify(table));
-        copy[0].Field = 'not a viable field';
-        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
+        delete copy[0][0].Field;
+        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Type" field', async () => {
         const testObj = new Adapter(testInstance);
         const copy = JSON.parse(JSON.stringify(table));
-        copy[0].Type = 'not a viable field';
-        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
+        delete copy[0][0].Type;
+        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Null" field', async () => {
         const testObj = new Adapter(testInstance);
         const copy = JSON.parse(JSON.stringify(table));
-        copy[0].Null = 'not a viable field';
-        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
+        delete copy[0][0].Null;
+        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Key" field', async () => {
         const testObj = new Adapter(testInstance);
         const copy = JSON.parse(JSON.stringify(table));
-        copy[0].Key = 'not a viable field';
-        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
+        delete copy[0][0].Key;
+        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Default" field', async () => {
         const testObj = new Adapter(testInstance);
         const copy = JSON.parse(JSON.stringify(table));
-        copy[0].Default = 'not a viable field';
-        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
+        delete copy[0][0].Default;
+        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Extra" field', async () => {
         const testObj = new Adapter(testInstance);
         const copy = JSON.parse(JSON.stringify(table));
-        copy[0].Extra = 'not a viable field';
-        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
+        delete copy[0][0].Extra;
+        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
 });
 
