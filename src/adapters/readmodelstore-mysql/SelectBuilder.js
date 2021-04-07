@@ -52,7 +52,7 @@ function selectBuilder(tableName, queryOptions)
                 {
                     throw new Error('Sort array needs 2 elements. [field, order]');
                 }
-                sortObject = {[sortObject[0]] : sortObject[1]};
+                sortObject = {[sortObject[0]]: sortObject[1]};
             }
             const keys = Object.keys(sortObject);
             if(!keys || keys.length === 0)
@@ -60,12 +60,26 @@ function selectBuilder(tableName, queryOptions)
                 throw new Error('Sort object cannot be empty. Needs: {field: order}');
             }
             const partSort = keys.map(field => {
-                const direction = sortObject[field];
-                if(direction !== 1 && direction !== -1)
+                const direction = isNaN(sortObject[field])
+                    ? sortObject[field].toUpperCase()
+                    : sortObject[field];
+                if(
+                    direction !== 'ASC' &&
+                    direction !== 'DESC' &&
+                    direction !== 1 &&
+                    direction !== -1
+                )
                 {
-                    throw new Error('direction of sort has to be 1 for ASC or -1 for DESC');
+                    throw new Error('Order needs to be \'ASC\' (or 1) or \'DESC\' (or -1)');
                 }
-                return [quoteIdentifier(field), direction === 1 ? 'ASC' : 'DESC'].join(' ');
+                return [
+                    quoteIdentifier(field),
+                    direction === 1
+                        ? 'ASC'
+                        : direction === -1
+                            ? 'DESC'
+                            : direction
+                ].join(' ');
             });
             sort = sort.concat(partSort);
         }
