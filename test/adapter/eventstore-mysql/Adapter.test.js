@@ -25,7 +25,81 @@ jest.mock('mysql2/promise', () => {
 });
 
 const testInstance = instance.eventStoreAdapter.args;
-const schema = {
+const table = [[
+    {
+        Field: 'id',
+        Type: 'varchar(36)',
+        Null: 'NO',
+        Key: 'PRI',
+        Default: null,
+        Extra: ''
+    },
+    {
+        Field: 'position',
+        Type: 'bigint',
+        Null: 'NO',
+        Key: 'UNI',
+        Default: null,
+        Extra: 'auto_increment'
+    },
+    {
+        Field: 'aggregateId',
+        Type: 'varchar(36)',
+        Null: 'NO',
+        Key: 'MUL',
+        Default: null,
+        Extra: ''
+    },
+    {
+        Field: 'aggregateVersion',
+        Type: 'int',
+        Null: 'NO',
+        Key: '',
+        Default: null,
+        Extra: ''
+    },
+    {
+        Field: 'type',
+        Type: 'varchar(32)',
+        Null: 'NO',
+        Key: 'MUL',
+        Default: null,
+        Extra: ''
+    },
+    {
+        Field: 'timestamp',
+        Type: 'bigint',
+        Null: 'NO',
+        Key: 'MUL',
+        Default: null,
+        Extra: ''
+    },
+    {
+        Field: 'correlationId',
+        Type: 'varchar(36)',
+        Null: 'NO',
+        Key: 'MUL',
+        Default: null,
+        Extra: ''
+    },
+    {
+        Field: 'causationId',
+        Type: 'varchar(36)',
+        Null: 'YES',
+        Key: 'MUL',
+        Default: null,
+        Extra: ''
+    },
+    {
+        Field: 'payload',
+        Type: 'text',
+        Null: 'NO',
+        Key: '',
+        Default: null,
+        Extra: ''
+    }
+]];
+const databaseSchema = {
     fields: {
         id: {
             Field: 'id',
@@ -474,7 +548,7 @@ describe('Test createTable', () => {
                 if(arg1 === 'DESCRIBE events')
                 {
                     functionCallDescribeEvents++;
-                    return schema;
+                    return table;
                 }
                 
                 functionCallCreateTableEvents++;
@@ -504,7 +578,7 @@ describe('Test createTable', () => {
                 if(arg1 === 'DESCRIBE events')
                 {
                     functionCallDescribeEvents++;
-                    const copy = JSON.parse(JSON.stringify(schema));
+                    const copy = JSON.parse(JSON.stringify(table));
                     copy.fields = 'not a viable field';
                     return copy;
                 }
@@ -574,43 +648,43 @@ describe('Test createDatabase', () => {
 describe('Test verifySchema', () => {
     test('Verify schema successfully', async () => {
         const testObj = new Adapter(testInstance);
-        expect(await testObj.verifySchema(schema, schema)).toBe(true);
+        expect(await testObj.verifySchema(table[0], databaseSchema)).toBe(true);
     });
-    test('Verify schema - field not found', async () => {
+    test('Verify schema - no "Field" field', async () => {
         const testObj = new Adapter(testInstance);
-        const copy = JSON.parse(JSON.stringify(schema));
-        copy.fields = 'not a viable field';
-        expect(await testObj.verifySchema(copy, schema)).toBe(false);
+        const copy = JSON.parse(JSON.stringify(table));
+        copy[0].Field = 'not a viable field';
+        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Type" field', async () => {
         const testObj = new Adapter(testInstance);
-        const copy = JSON.parse(JSON.stringify(schema));
-        copy.fields.id.Field = 'not a viable field';
-        expect(await testObj.verifySchema(copy, schema)).toBe(false);
+        const copy = JSON.parse(JSON.stringify(table));
+        copy[0].Type = 'not a viable field';
+        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Null" field', async () => {
         const testObj = new Adapter(testInstance);
-        const copy = JSON.parse(JSON.stringify(schema));
-        copy.fields.id.Null = 'not a viable field';
-        expect(await testObj.verifySchema(copy, schema)).toBe(false);
+        const copy = JSON.parse(JSON.stringify(table));
+        copy[0].Null = 'not a viable field';
+        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Key" field', async () => {
         const testObj = new Adapter(testInstance);
-        const copy = JSON.parse(JSON.stringify(schema));
-        copy.fields.id.Key = 'not a viable field';
-        expect(await testObj.verifySchema(copy, schema)).toBe(false);
+        const copy = JSON.parse(JSON.stringify(table));
+        copy[0].Key = 'not a viable field';
+        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Default" field', async () => {
         const testObj = new Adapter(testInstance);
-        const copy = JSON.parse(JSON.stringify(schema));
-        copy.fields.id.Default = 'not a viable field';
-        expect(await testObj.verifySchema(copy, schema)).toBe(false);
+        const copy = JSON.parse(JSON.stringify(table));
+        copy[0].Default = 'not a viable field';
+        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Extra" field', async () => {
         const testObj = new Adapter(testInstance);
-        const copy = JSON.parse(JSON.stringify(schema));
-        copy.fields.id.Extra = 'not a viable field';
-        expect(await testObj.verifySchema(copy, schema)).toBe(false);
+        const copy = JSON.parse(JSON.stringify(table));
+        copy[0].Extra = 'not a viable field';
+        expect(await testObj.verifySchema(copy, databaseSchema)).toBe(false);
     });
 });
 
@@ -618,14 +692,14 @@ describe('Test buildFieldListFromSchema', () => {
     test('Correct build of fieldlist from scheme', () => {
         const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text not null , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
         const testObj = new Adapter(testInstance);
-        const result = testObj.buildFieldListFromSchema(schema);
+        const result = testObj.buildFieldListFromSchema(databaseSchema);
         expect(result).toBe(expected);
     });
     test('Correct build of fieldlist from scheme with default values', () => {
-        schema.fields.causationId.Default = 'NULL';
+        databaseSchema.fields.causationId.Default = 'NULL';
         const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36) default NULL,payload text not null , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
         const testObj = new Adapter(testInstance);
-        const result = testObj.buildFieldListFromSchema(schema);
+        const result = testObj.buildFieldListFromSchema(databaseSchema);
         expect(result).toBe(expected);
     });
 });
