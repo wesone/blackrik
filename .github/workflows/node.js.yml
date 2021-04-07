@@ -26,7 +26,7 @@ jobs:
     - uses: mirromutth/mysql-action@v1.1
       with:
         mysql version: '8.0' # Optional, default value is "latest". The version of the MySQL
-        mysql database: 'some_test' # Optional, default value is "test". The specified database which will be create
+        mysql database: 'AdapterTest' # Optional, default value is "test". The specified database which will be create
         mysql root password: '1234' # Required if "mysql user" is empty, default is empty. The root superuser password
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
