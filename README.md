@@ -1,3 +1,4 @@
+![](https://img.shields.io/endpoint?url=https://api.keyvalue.xyz/dedce4db/coverage)
 # Blackrik
 
 ## What is Blackrik?
