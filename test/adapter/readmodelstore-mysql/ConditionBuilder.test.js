@@ -92,3 +92,10 @@ test('Build condition with logic operator on top level', () => {
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);
 });
+
+test('Build condition with undefined value', () => {
+    
+    const condition = {a: undefined};
+    const expectedError = new Error('Field a has invalid "undefined" value');
+    expect(() => conditionBuilder(condition)).toThrow(expectedError);
+});
