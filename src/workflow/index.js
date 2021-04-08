@@ -41,7 +41,7 @@ class Workflow {
 
     getNextTransition(event)
     {
-        if(this.state.done)
+        if(this.state.done || this.state.rollback !== null)
         {
             return null;
         }
@@ -59,22 +59,33 @@ class Workflow {
     {
         const step = this.getCurrentStep();
         let nextEvent = null;
-        let rollback = null;
-        await step?.actions?.reduce(async (memo, action) => {
-            await memo;
-            await action?.({context: this.state.context, 
-                currentEvent: this.state.currentEvent, 
-                history: this.state.history,
-                transition: event => nextEvent = event,
-                rollback: error => rollback = error,
-                sideEffects: this.sideEffects ?? {},
-                store: this.store ?? null
-            });
-            if(rollback)
+        try
+        {
+            await step?.actions?.reduce(async (memo, action) => {
+                await memo;
+                await action?.({context: this.state.context, 
+                    currentEvent: this.state.currentEvent, 
+                    history: this.state.history,
+                    transition: event => nextEvent = event,
+                    rollback: (error = new Error('Rollback')) => {
+                        error.rollback = true;
+                        throw error;
+                    },
+                    sideEffects: this.sideEffects ?? {},
+                    store: this.store ?? null
+                });
+                
+            }, undefined);
+        }
+        catch(error)
+        {
+            if(error.rollback)
             {
-                return this.state; // TODO
+                return await this.doRollback();
             }
-        }, undefined);
+            return error;
+        }
+        
         
         if(nextEvent)
         {
@@ -83,18 +94,63 @@ class Workflow {
 
     }
 
+    async doRollback()
+    {
+        console.log('Rollback', this.state.history.length);
+        if(this.state.rollback === null)
+        {
+            this.state.rollback = this.state.history.length;
+        }
+        for(; this.state.rollback > -1; this.state.rollback --)
+        {
+            this.state.changed = true;
+            const historyEntry = this.state.history[this.state.rollback];
+            const {action, event} = this.getRollback(this.state.rollback, historyEntry);
+            console.log('rollback for event:', event, this.state.rollback);
+            await this.executeRollbackAction(action, event);
+        }
+    }
+
+    getRollback(value, historyEntry)
+    {
+        if(value === this.state.history.length)
+        {
+            return {action: this.config.steps[this.state.value]?.rollbackAction, event: this.state.currentEvent};
+        }
+        return {action: this.config.steps[historyEntry.step]?.rollbackAction, event: historyEntry?.event};
+    }
+
+    async executeRollbackAction(action, event)
+    {
+        console.log('context before:', this.state.context);
+        await action?.({context: this.state.context, 
+            currentEvent: this.state.currentEvent, 
+            originalEvent: event,
+            history: this.state.history,
+            sideEffects: this.sideEffects ?? {},
+            store: this.store ?? null
+        });
+        console.log('context after:', this.state.context);
+    }
+
     async transition(event)
     {
+        if(this.state.rollback !== null && this.state.rollback >= 0)
+        {
+            await this.doRollback();
+            return this.state;
+        }
         const transition = this.getNextTransition(event);
         console.log('transition', transition);
         if(!transition)
             return this.state;
-        this.state.value = transition;
         this.state.history.push({
+            step: this.state.value,
             event: {...this.state.currentEvent}, 
             context: {...this.state.context}, 
             updatedAt: this.state.updatedAt
         });
+        this.state.value = transition;
         this.state.currentEvent = event;
         this.state.changed = true;
         this.state.updatedAt = new Date();
@@ -151,7 +207,7 @@ class Workflow {
             },{
                 state: this.state,
                 done: this.state.done,
-                failed: !!this.state.rollback,
+                failed: this.state.rollback !== null,
                 updatedAt: this.state.updatedAt
             }
         );
@@ -215,8 +271,14 @@ class Workflow {
                 eventHandlers[name] = async ( _,  event, sideEffects) => {
                     this.setSideEffects(sideEffects);
                     await this.loadState(event);
-                    await this.transition(event);
-                    await this.saveState();
+                    try 
+                    {
+                        await this.transition(event);
+                    }
+                    finally 
+                    {
+                        await this.saveState();
+                    }
                 };
             });
         });
@@ -245,10 +307,11 @@ class Workflow {
 function red(workflow)
 {
     workflow.context.redLights ++;
-    console.log(`Red again, for ${workflow.context.redLights} times.`);
+    console.log(`Red again, for ${workflow.context.redLights} times.`, workflow.currentEvent.i);
     if(workflow.context.redLights === 6)
     {
-        return workflow.transition('done');
+        //return workflow.transition('done');
+        return workflow.rollback();
     }
     if(workflow.context.redLights % 3 === 0)
     {
@@ -271,19 +334,24 @@ const lightMachine = new Workflow({
             }
         },
         green: {
+            rollbackAction: (_, error) => console.log('rollback green'),
             on: {
                 TIMER: 'yellow'
             }
         },
         yellow: {
-            actions: [() => console.log('I am yellow')],
+            actions: [workflow => console.log('I am yellow', workflow.currentEvent.i)],
+            rollbackAction: (_, error) => console.log('rollback yellow'),
             on: {
                 TIMER: 'red',
             }
         },
         red: {
             actions: [red],
-            rollbackActions: [],
+            rollbackAction: (workflow, error) => {
+                console.log('rollback red');
+                workflow.context.redLights --;
+            },
             on: {
                 TIMER: 'green',
                 red_again: 'red',
@@ -298,9 +366,9 @@ console.log(lightMachine.connect());
     let state = await lightMachine.initializeState();
     for(let i = 0; i < 20; i++)
     {
-        state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
+        state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123', i});
     }
-    console.log(state);
+    console.log(JSON.stringify(state, null, 2));
 })();
 
 /*
