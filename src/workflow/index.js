@@ -24,9 +24,10 @@ class Workflow {
         return `${this.config.name}__${this.config.idHandler(event)}`;
     }
 
-    initializeState()
+    async initializeState()
     {
-        return {...this.initState};
+        this.setState({...this.initState});
+        await this.executeActions();
     }
 
     getCurrentStep()
@@ -40,6 +41,10 @@ class Workflow {
 
     getNextTransition(event)
     {
+        if(this.state.done)
+        {
+            return null;
+        }
         // TODO: check lastPosition
         const step = this.getCurrentStep();
         let eventName = event;
@@ -84,7 +89,6 @@ class Workflow {
         console.log('transition', transition);
         if(!transition)
             return this.state;
-
         this.state.value = transition;
         this.state.history.push({
             event: {...this.state.currentEvent}, 
@@ -94,6 +98,12 @@ class Workflow {
         this.state.currentEvent = event;
         this.state.changed = true;
         this.state.updatedAt = new Date();
+
+        if(transition === 'done')
+        {
+            this.state.done = true;
+            return this.state;
+        }
         // execute transition target actions
         await this.executeActions();
 
@@ -153,11 +163,12 @@ class Workflow {
         {
             throw new Error('No store set');
         }
-        let state = this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.getId(event)});
+        const state = this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.getId(event)});
         if(!state)
         {
-            state = this.initializeState();
-            await this.insertState(state,  this.getId(event));
+            await this.initializeState();
+            await this.insertState(this.state,  this.getId(event));
+            return this.state;
         }
         this.setState(state);
         return this.state;
@@ -235,6 +246,10 @@ function red(workflow)
 {
     workflow.context.redLights ++;
     console.log(`Red again, for ${workflow.context.redLights} times.`);
+    if(workflow.context.redLights === 6)
+    {
+        return workflow.transition('done');
+    }
     if(workflow.context.redLights % 3 === 0)
     {
         console.log('Hah, double red!');
@@ -245,10 +260,16 @@ function red(workflow)
 const lightMachine = new Workflow({
     name: 'light',
     version: 1,
-    initial: 'green',
+    initial: 'init',
     context: { redLights: 0 },
     idHandler: event => event.aggregateId,
     steps: {
+        init:{
+            actions: [() => console.log('I am initialized!')],
+            on: {
+                TIMER: 'green'
+            }
+        },
         green: {
             on: {
                 TIMER: 'yellow'
@@ -265,31 +286,20 @@ const lightMachine = new Workflow({
             rollbackActions: [],
             on: {
                 TIMER: 'green',
-                red_again: 'red'
+                red_again: 'red',
+                done: 'done'
             },
         }
     }
 });
 console.log(lightMachine.connect());
-lightMachine.setState(lightMachine.initializeState());
+
 (async () => {
-    let state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
-    console.log(state);
-    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
-    console.log(state);
-    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
-    console.log(state);
-    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
-    console.log(state);
-    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
-    console.log(state);
-    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
-    console.log(state);
-    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
-    console.log(state);
-    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
-    console.log(state);
-    state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
+    let state = await lightMachine.initializeState();
+    for(let i = 0; i < 20; i++)
+    {
+        state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123'});
+    }
     console.log(state);
 })();
 
