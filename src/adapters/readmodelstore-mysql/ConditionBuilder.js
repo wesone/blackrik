@@ -64,7 +64,15 @@ function _tokenizer(condition, field)
             })
         }];
     }
-    if(typeof condition === 'string' || typeof condition === 'number' || condition instanceof Date || condition === null)
+    if(condition === undefined)
+    {
+        throw new Error(`Field ${field} has invalid "undefined" value`);
+    }
+    if(typeof condition === 'string' || 
+        typeof condition === 'number' || 
+        condition instanceof Date || 
+        condition === null
+    )
     {
         return [{
             ...allOperators['$eq'],
