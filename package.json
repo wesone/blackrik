@@ -1,6 +1,6 @@
 {
   "name": "blackrik",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CQRS and Event-Sourcing Framework",
   "main": "src/index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "type": "git",
     "url": "https://github.com/wesone/blackrik.git"
   },
-  "keywords": [ 
+  "keywords": [
     "cqrs",
     "command",
     "query",
