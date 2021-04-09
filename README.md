@@ -37,6 +37,7 @@ const blackrik = new Blackrik(config);
 blackrik.start()
     .then(() => console.log('Blackrik started...'));
 ```
+Check out the [examples](https://github.com/wesone/blackrik/tree/master/examples) to learn how everything works together.
 
 ## Documentation
 Read the [documentation](https://github.com/wesone/blackrik/wiki).  
