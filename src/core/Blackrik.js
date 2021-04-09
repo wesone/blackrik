@@ -37,6 +37,10 @@ class Blackrik
     {
         this.#instance = instance;
         this.config = instance.config;
+
+        this.executeCommand = this.executeCommand.bind(this);
+        this.scheduleCommand = this.scheduleCommand.bind(this);
+        this.executeQuery = this.executeQuery.bind(this);
     }
 
     _createReadModelStore(adapterName)
