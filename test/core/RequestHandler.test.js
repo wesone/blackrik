@@ -26,7 +26,7 @@ describe('RequestHandler', () => {
     class Res
     {
         closed = false;
-        code;
+        status;
         data;
 
         _checkConnection()
@@ -52,18 +52,18 @@ describe('RequestHandler', () => {
             return this.send(JSON.stringify(data));
         }
 
-        status(code)
+        status(status)
         {
             this._checkConnection();
-            this.code = code;
+            this.status = status;
             return this;
         }
         
-        sendStatus(code)
+        sendStatus(status)
         {
-            if(code === 500) // no need to mock other codes here
+            if(status === 500) // no need to mock other status codes here
                 this.send('Internal Error');
-            this.status(code).end();
+            this.status(status).end();
             return this;
         }
     }
@@ -109,7 +109,7 @@ describe('RequestHandler', () => {
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);
 
-        expect(res.code).toBe(error.code);
+        expect(res.status).toBe(error.status);
         expect(res.data).toBe(error.message);
     });
 
@@ -120,7 +120,7 @@ describe('RequestHandler', () => {
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);
 
-        expect(res.code).toBe(500);
+        expect(res.status).toBe(500);
         expect(res.data).not.toBe(errorMessage);
     });
 
@@ -130,7 +130,7 @@ describe('RequestHandler', () => {
             constructor()
             {
                 this.msg = 'Error message';
-                this.code = 418;
+                this.status = 418;
             }
 
             toString()
@@ -144,7 +144,7 @@ describe('RequestHandler', () => {
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);
 
-        expect(res.code).toBe(error.code);
+        expect(res.status).toBe(error.status);
         expect(res.data).toBe(error.msg);
     });
 });
