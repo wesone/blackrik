@@ -1,14 +1,13 @@
 const { SAGA_WORKFLOW_TABLE_NAME } = require('../core/Constants');
 class Workflow {
     constructor(config){
-        this.config = {...config};
+        this.config = {...config, idHandler: config.idHandler ?? (event => event.aggregateId)};
         // validate config
         this.initState = {
             name: this.config.name ?? 'workflow',
             version: this.config.version ?? 1,
             value: this.config.initial,
             context: {...this.config.context},
-            idHandler: this.config.idHandler ?? (event => event.aggregateId),
             changed: false,
             currentEvent: {},
             history: [],
@@ -219,7 +218,7 @@ class Workflow {
         {
             throw new Error('No store set');
         }
-        const state = this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.getId(event)});
+        const state = await this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.getId(event)});
         if(!state)
         {
             await this.initializeState();
@@ -239,7 +238,6 @@ class Workflow {
     async setupStore(store)
     {
         this.store = store;
-
         await this.store.defineTable(SAGA_WORKFLOW_TABLE_NAME, {
             id: {
                 type: 'String',
@@ -304,86 +302,4 @@ class Workflow {
 
 }
 
-function red(workflow)
-{
-    workflow.context.redLights ++;
-    console.log(`Red again, for ${workflow.context.redLights} times.`, workflow.currentEvent.i);
-    if(workflow.context.redLights === 6)
-    {
-        //return workflow.transition('done');
-        return workflow.rollback();
-    }
-    if(workflow.context.redLights % 3 === 0)
-    {
-        console.log('Hah, double red!');
-        workflow.transition('red_again');
-    }
-}   
-
-const lightMachine = new Workflow({
-    name: 'light',
-    version: 1,
-    initial: 'init',
-    context: { redLights: 0 },
-    idHandler: event => event.aggregateId,
-    steps: {
-        init:{
-            actions: [() => console.log('I am initialized!')],
-            on: {
-                TIMER: 'green'
-            }
-        },
-        green: {
-            rollbackAction: (_, error) => console.log('rollback green'),
-            on: {
-                TIMER: 'yellow'
-            }
-        },
-        yellow: {
-            actions: [workflow => console.log('I am yellow', workflow.currentEvent.i)],
-            rollbackAction: (_, error) => console.log('rollback yellow'),
-            on: {
-                TIMER: 'red',
-            }
-        },
-        red: {
-            actions: [red],
-            rollbackAction: (workflow, error) => {
-                console.log('rollback red');
-                workflow.context.redLights --;
-            },
-            on: {
-                TIMER: 'green',
-                red_again: 'red',
-                done: 'done'
-            },
-        }
-    }
-});
-console.log(lightMachine.connect());
-
-(async () => {
-    let state = await lightMachine.initializeState();
-    for(let i = 0; i < 20; i++)
-    {
-        state = await lightMachine.transition({type: 'TIMER', aggregateId: 'asd123', i});
-    }
-    console.log(JSON.stringify(state, null, 2));
-})();
-
-/*
-state = {
-    id: 'light',
-    version: 1,
-    value: 'step1',
-    context: {},
-    changed: true,
-    currentEvent: {},
-    previousEvents: [],
-    done: false,
-    rollback: {
-        step: 'adasd',
-        index: 5,
-    }
-};
-*/
+module.exports = Workflow;
