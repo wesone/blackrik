@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2021-04-09
+### Changed
+- MySQL read model store adapter now returns plain objects instead of BinaryRow objects
+
+### Fixed
+- Bug where it was possible that the public Blackrik functions (executeCommand, executeQuery, ...) lose their scope
+
 ## [1.0.2] - 2021-04-08
 ### Added
 - Keywords to package.json
@@ -20,3 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.1] - 2021-04-07
 ### Added
 - Initial release
+
+[Unreleased]: https://github.com/wesone/blackrik/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/wesone/blackrik/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/wesone/blackrik/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/wesone/blackrik/compare/v1.0.0...v1.0.1
