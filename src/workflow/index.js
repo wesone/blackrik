@@ -2,13 +2,13 @@ const { SAGA_WORKFLOW_TABLE_NAME } = require('../core/Constants');
 const { serializeError } = require('./SerializeError');
 class Workflow {
     constructor(config){
+        this.validateConfig(config);
         this.config = {...config, idHandler: config.idHandler ?? (event => event.aggregateId)};
-        // validate config
         this.initState = {
-            name: this.config.name ?? 'workflow',
+            name: this.config.name,
             version: this.config.version ?? 1,
             value: this.config.initial,
-            context: {...this.config.context},
+            context: {...(this.config.context ?? {})},
             changed: false,
             currentEvent: {},
             history: [],
@@ -17,6 +17,16 @@ class Workflow {
             updatedAt: null,
         };
         this.state = null;
+    }
+
+    validateConfig(config)
+    {
+        if(typeof config.name !== 'string')
+            throw new Error('Workflow needs a name');
+        if(typeof config.steps !== 'object' || Object.keys(config.steps).length === 0)
+            throw new Error('Workflow needs at least one step');
+        if(typeof config.initial !== 'string')
+            throw new Error('inital ist not set');
     }
 
     setId(event)
