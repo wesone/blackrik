@@ -1,4 +1,5 @@
 const { SAGA_WORKFLOW_TABLE_NAME } = require('../core/Constants');
+const { serializeError } = require('./SerializeError');
 class Workflow {
     constructor(config){
         this.config = {...config, idHandler: config.idHandler ?? (event => event.aggregateId)};
@@ -18,9 +19,9 @@ class Workflow {
         this.state = null;
     }
 
-    getId(event)
+    setId(event)
     {
-        return `${this.config.name}__${this.config.idHandler(event)}`;
+        this.id = `${this.config.name}__${this.config.idHandler(event)}`;
     }
 
     async initializeState()
@@ -80,7 +81,7 @@ class Workflow {
         {
             if(error.rollback)
             {
-                return await this.doRollback();
+                return await this.doRollback(error);
             }
             return error;
         }
@@ -93,19 +94,18 @@ class Workflow {
 
     }
 
-    async doRollback()
+    async doRollback(error)
     {
-        console.log('Rollback', this.state.history.length);
         if(this.state.rollback === null)
         {
             this.state.rollback = this.state.history.length;
+            this.state.error = serializeError(error);
         }
         for(; this.state.rollback > -1; this.state.rollback --)
         {
             this.state.changed = true;
             const historyEntry = this.state.history[this.state.rollback];
             const {action, event} = this.getRollback(this.state.rollback, historyEntry);
-            console.log('rollback for event:', event, this.state.rollback);
             await this.executeRollbackAction(action, event);
         }
     }
@@ -121,7 +121,6 @@ class Workflow {
 
     async executeRollbackAction(action, event)
     {
-        console.log('context before:', this.state.context);
         await action?.({context: this.state.context, 
             currentEvent: this.state.currentEvent, 
             originalEvent: event,
@@ -129,7 +128,6 @@ class Workflow {
             sideEffects: this.sideEffects ?? {},
             store: this.store ?? null
         });
-        console.log('context after:', this.state.context);
     }
 
     async transition(event)
@@ -140,7 +138,6 @@ class Workflow {
             return this.state;
         }
         const transition = this.getNextTransition(event);
-        console.log('transition', transition);
         if(!transition)
             return this.state;
         this.state.history.push({
@@ -192,7 +189,7 @@ class Workflow {
         {
             throw new Error('No store set');
         }
-        if(!this.state)
+        if(!this.state || !this.id)
         {
             throw new Error('No state loaded');
         }
@@ -202,7 +199,7 @@ class Workflow {
         }
         await this.store.update(SAGA_WORKFLOW_TABLE_NAME,
             {
-                id: this.getId(this.state.currentEvent),
+                id: this.id,
             },{
                 state: this.state,
                 done: this.state.done,
@@ -218,14 +215,15 @@ class Workflow {
         {
             throw new Error('No store set');
         }
-        const state = await this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.getId(event)});
-        if(!state)
+        this.setId(event);
+        const stateRow = await this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.id});
+        if(!stateRow)
         {
             await this.initializeState();
-            await this.insertState(this.state,  this.getId(event));
+            await this.insertState(this.state,  this.id);
             return this.state;
         }
-        this.setState(state);
+        this.setState(stateRow.state);
         return this.state;
     }
 
