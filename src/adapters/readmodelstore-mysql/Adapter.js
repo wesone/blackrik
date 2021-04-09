@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 const ReadModelStoreAdapterInterface = require('../ReadModelStoreAdapterInterface');
 const { conditionBuilder } = require('./ConditionBuilder');
-const { quoteIdentifier, convertValue, getPositionCheckCondition } = require('./utils');
+const { quoteIdentifier, convertValue, convertBinaryRows, getPositionCheckCondition } = require('./utils');
 const { createTableBuilder } = require('./CreateTableBuilder');
 const { insertIntoBuilder } = require('./InsertIntoBuilder');
 const { updateBuilder } = require('./UpdateBuilder');
@@ -219,7 +219,7 @@ class Adapter extends ReadModelStoreAdapterInterface
             }
         }
         
-        return results?.[0]?.[0] ?? [];
+        return convertBinaryRows(results?.[0]?.[0]) ?? [];
     }
 
     async findOne(tableName, conditions, queryOptions = {}){
