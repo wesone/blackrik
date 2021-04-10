@@ -189,13 +189,42 @@ class Blackrik
 
     _registerInternalMiddlewares()
     {
-        this.#server.use((...[req, , next]) => (req.blackrik = Object.freeze(this.#instance)) && next());
+        const instance = Object.freeze(this.#instance);
+        this.#server.use((...[req, , next]) => (req.blackrik = instance) && next());
     }
 
     _registerMiddlewares()
     {
         const {middlewares} = this.config.server;
-        middlewares.forEach(middleware => this.#server.use(...(Array.isArray(middleware) ? middleware : [middleware])));
+        // middlewares.forEach(middleware => this.#server.use(...(Array.isArray(middleware) ? middleware : [middleware]))); // Express 5 (or higher)
+        // Express < 5
+        middlewares.forEach(middleware => {
+            if(Array.isArray(middleware))
+            {
+                const [path, ...callbacks] = middleware;
+                middleware = [path, ...callbacks.map(callback => RequestHandler.catch(callback))];
+            }
+            else 
+                middleware = [RequestHandler.catch(middleware)];
+            this.#server.use(...middleware)
+        });
+    }
+
+    _registerErrorHandlingMiddlewares()
+    {
+        // http://expressjs.com/en/guide/error-handling.html
+        // Asynchronous route handlers, middleware must call next(err) otherwise its an unhandled error
+        // Starting with Express 5 route handlers and middleware that return a Promise will call next(value) automatically when they reject or throw an error
+
+        //TODO use this when Express 5 is production ready
+        // this.#server.use((e, req, res, next) => {
+        //     if(!e.status)
+        //     {
+        //         console.error(e);
+        //         return res.sendStatus(500).end(); // do not expose critical errors
+        //     }
+        //     return res.status(e.status).send(e.message || e).end();
+        // });
     }
 
     _processMiddlewares()
@@ -221,7 +250,8 @@ class Blackrik
             if(!path.startsWith('/'))
                 path = '/' + path;
 
-            this.#server.route(path)[method](callback);
+            // this.#server.route(path)[method](callback);
+            this.#server.route(path)[method](RequestHandler.catch(callback));
         });
     }
 
@@ -260,6 +290,7 @@ class Blackrik
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();
         this._processAPI();
+        this._registerErrorHandlingMiddlewares();
         await this.#server.start();
 
         return this;
