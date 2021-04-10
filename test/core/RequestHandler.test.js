@@ -26,7 +26,7 @@ describe('RequestHandler', () => {
     class Res
     {
         closed = false;
-        status;
+        statusCode;
         data;
 
         _checkConnection()
@@ -55,7 +55,7 @@ describe('RequestHandler', () => {
         status(status)
         {
             this._checkConnection();
-            this.status = status;
+            this.statusCode = status;
             return this;
         }
         
@@ -85,10 +85,11 @@ describe('RequestHandler', () => {
         const handler = jest.fn(() => {});
 
         const req = createReq();
-        await (new RequestHandler(handler))(req, createRes());
+        const res = createRes();
+        await (new RequestHandler(handler))(req, res);
 
         expect(handler).toHaveBeenCalledTimes(1);
-        expect(handler).toHaveBeenNthCalledWith(1, req);
+        expect(handler).toHaveBeenNthCalledWith(1, req, res);
     });
 
     test('processes returned handler value correctly', async () => {
@@ -109,7 +110,7 @@ describe('RequestHandler', () => {
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);
 
-        expect(res.status).toBe(error.status);
+        expect(res.statusCode).toBe(error.status);
         expect(res.data).toBe(error.message);
     });
 
@@ -120,7 +121,7 @@ describe('RequestHandler', () => {
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);
 
-        expect(res.status).toBe(500);
+        expect(res.statusCode).toBe(500);
         expect(res.data).not.toBe(errorMessage);
     });
 
@@ -144,7 +145,7 @@ describe('RequestHandler', () => {
         const res = createRes();
         await (new RequestHandler(handler))(createReq(), res);
 
-        expect(res.status).toBe(error.status);
+        expect(res.statusCode).toBe(error.status);
         expect(res.data).toBe(error.msg);
     });
 });
