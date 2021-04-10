@@ -14,7 +14,7 @@ module.exports = {
         // },
         'sourceType': 'module'
     },
-    'ignorePatterns': ['dist/**'],
+    'ignorePatterns': ['dist/**', 'examples/**'],
     'plugins': [
         'brace-rules',
         // 'react'
