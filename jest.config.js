@@ -6,7 +6,7 @@ module.exports = {
         '^.+\\.js$': 'babel-jest',
     },
     collectCoverage: true,
-    coverageReporters: ['text','html', 'clover'],
+    coverageReporters: ['text','html', 'lcov'],
     coverageDirectory: '<rootDir>/coverage/',
     coveragePathIgnorePatterns: [
         'test',
