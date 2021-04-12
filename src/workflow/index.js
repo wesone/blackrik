@@ -85,8 +85,8 @@ class Workflow {
                         error.rollback = true;
                         throw error;
                     },
-                    sideEffects: this.sideEffects ?? {},
-                    store: this.store ?? null
+                    sideEffects: this.sideEffects,
+                    store: this.store
                 });
                 
             }, undefined);
@@ -135,8 +135,8 @@ class Workflow {
             currentEvent: this.state.currentEvent, 
             originalEvent: event,
             history: this.state.history,
-            sideEffects: this.sideEffects ?? {},
-            store: this.store ?? null
+            sideEffects: this.sideEffects,
+            store: this.store
         });
     }
 

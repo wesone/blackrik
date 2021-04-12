@@ -74,9 +74,9 @@ test('test workflow', async () => {
     await sagaConfig.handlers.init(store);
     await sagaConfig.handlers.TIMER(null, {type: 'TIMER', aggregateId: 'asd123'}, {});
 
-    for(let i = 0; i < 20; i++)
+    for(let i = 1; i < 20; i++)
     {
-        await sagaConfig.handlers.TIMER(null, {type: 'TIMER', aggregateId: 'asd123'}, {});
+        await sagaConfig.handlers.TIMER(null, {type: 'TIMER', aggregateId: 'asd123', position: i}, {});
     }
 
     expect(store.data).toMatchObject({
@@ -108,7 +108,7 @@ test('test workflow rollback', async () => {
     {
         if(workflow.context.redLights === 6)
         {
-            return workflow.rollback(new Error('Test error'));
+            return workflow.rollback();
         }
     }   
     const config = {...testConfig};
@@ -118,10 +118,13 @@ test('test workflow rollback', async () => {
     const store = new MockStore();
     await sagaConfig.handlers.init(store);
     await sagaConfig.handlers.TIMER(null, {type: 'TIMER', aggregateId: 'asd123'}, {});
-    for(let i = 0; i < 20; i++)
-    {
-        await sagaConfig.handlers.TIMER(null, {type: 'TIMER', aggregateId: 'asd123', i}, {});
-    }
+    await expect(async () => {
+        for(let i = 0; i < 20; i++)
+        {
+            await sagaConfig.handlers.TIMER(null, {type: 'TIMER', aggregateId: 'asd123', i}, {});
+        }
+    }).rejects.toThrow();
+    
     expect(store.data).toMatchObject({
         'light__asd123': {
             'state': {
@@ -131,7 +134,7 @@ test('test workflow rollback', async () => {
                 'context': {
                     'redLights': 0
                 },
-                'changed': false,
+                'changed': true,
                 'currentEvent': {
                     'aggregateId': 'asd123',
                     'type': 'TIMER',
@@ -139,7 +142,7 @@ test('test workflow rollback', async () => {
                 'history': expect.anything(),
                 'done': false,
                 'rollback': -1,
-                'error': expect.objectContaining({message: 'Test error'}),
+                'error': expect.objectContaining({message: 'Rollback'}),
             },
             'done': false,
             'failed': true
@@ -147,4 +150,29 @@ test('test workflow rollback', async () => {
     });
 
     expect(store.data['light__asd123'].state.history).toHaveLength(18);
+});
+
+test('workflow errors', async () => {
+    expect(() => new Workflow({})).toThrow(new Error('Workflow needs a name'));
+    expect(() => new Workflow({name: 'test'})).toThrow(new Error('Workflow needs at least one step'));
+    expect(() => new Workflow({name: 'test', steps: {test: {}}})).toThrow(new Error('inital ist not set'));
+
+    const workflow = new Workflow({name: 'test2', steps: {test: {on: {test2: 'test2'}}, test2: {on: {test: 'test'}}}, initial: 'test'});
+    expect(() => workflow.insertState()).rejects.toThrow('No store set');
+    expect(() => workflow.saveState()).rejects.toThrow('No store set');
+    expect(() => workflow.loadState()).rejects.toThrow('No store set');
+
+    workflow.setupStore(new MockStore());
+    expect(() => workflow.insertState()).rejects.toThrow('State needed');
+    expect(() => workflow.saveState()).rejects.toThrow('No state loaded');
+
+    workflow.setState({...workflow.initializeState(), value: 'fail', lastPosition: 1, rollback: null});
+    expect(() => workflow.getCurrentStep()).toThrow(new Error('No step found for current Statemachine value'));
+
+    expect(workflow.getNextTransition({type: 'test2', position: 1})).toEqual(null);
+
+    workflow.setState({...workflow.initializeState(), value: 'fail', lastPosition: 1, rollback: 1, history: [{},{},{}]});
+    const result = await workflow.transition({type: 'test2', position: 1});
+    expect(result).toMatchObject({'rollback': -1});
+
 });
