@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Changed
 - Renamed errors property `code` to `status` to let Express handle status codes from thrown errors
+- Error handling for saving events to the event store
 
 ### Added
 - Wrapped route handlers and middleware to catch and handle errors as errors in async functions are only handled by Express 5 or higher (which is not production ready yet)
+
+### Fixed
+- MySQL event store adapter no longer rejects events without payload
 
 ## [1.0.3] - 2021-04-09
 ### Changed
