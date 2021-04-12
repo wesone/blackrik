@@ -15,6 +15,7 @@ class Workflow {
             done: false,
             rollback: null,
             updatedAt: null,
+            lastPosition: null,
         };
         this.state = null;
     }
@@ -55,7 +56,10 @@ class Workflow {
         {
             return null;
         }
-        // TODO: check lastPosition
+        if(event.position && this.state.lastPosition && event.position >= this.state.lastPosition)
+        {
+            return null;
+        }
         const step = this.getCurrentStep();
         let eventName = event;
         if(typeof event === 'object')
@@ -156,6 +160,10 @@ class Workflow {
         this.state.currentEvent = event;
         this.state.changed = true;
         this.state.updatedAt = new Date();
+        if(event.position)
+        {
+            this.state.lastPosition = event.position;
+        }
 
         if(transition === 'done')
         {
