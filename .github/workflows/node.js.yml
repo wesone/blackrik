@@ -5,9 +5,9 @@ name: build
 
 on:
   push:
-    branches: [ feature/workflow ]
+    branches: [master ]
   pull_request:
-    branches: [ feature/workflow ]
+    branches: [ master ]
 
 jobs:
   test:
