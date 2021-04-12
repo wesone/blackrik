@@ -87,6 +87,8 @@ function createTableBuilder(tableName, fieldDefinitions)
         throw new Error('No Fields defined');
     }
 
+    fieldNames.sort(fieldName => fieldDefinitions[fieldName].primaryKey ? -1 : 1);
+
     const state = {};
     const fieldTokens = fieldNames.map((name, index) => {
         const {

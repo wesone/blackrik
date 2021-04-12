@@ -78,9 +78,17 @@ function getPositionCheckCondition(tableName, position)
     return [condition, position];
 }
 
+function convertBinaryRows(rows)
+{
+    if(!rows || !Array.isArray(rows))
+        return rows;
+    return rows.map(row => ({...row}));
+}
+
 module.exports =  {
     validateIdentifier,
     quoteIdentifier,
     convertValue,
     getPositionCheckCondition,
+    convertBinaryRows,
 };

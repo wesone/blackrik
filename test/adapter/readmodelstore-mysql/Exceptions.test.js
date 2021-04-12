@@ -40,12 +40,6 @@ test('test fieldAttribute exceptions', async () => {
 
     expect(() => createTableBuilder(tableName, {asd: {type: 'Number', defaultValue: 1234}, fail: {}})).toThrow(new Error('No type given for field: fail'));
 
-    expect(() => createTableBuilder(tableName, {asd: 'String', 
-        fail: {
-            type: 'String',
-            primaryKey: true,
-        }})).toThrow(new Error('PRIMARY_KEY has to be the first field'));
-
     expect(() => createTableBuilder(tableName, {
         asd: {
             type: 'String',

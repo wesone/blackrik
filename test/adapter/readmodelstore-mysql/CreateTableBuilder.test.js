@@ -37,3 +37,25 @@ test('Build creat table statement', () => {
     expect(sql).toEqual(expectedSQL);
     expect(hash).toEqual(expectedHash);
 });
+
+
+test('primary key order', () => {
+    const fieldDefinition = {
+        test: 'String',
+        testDate: 'String',
+        testInt: 'String',
+        testInc: 'String',
+        id: {
+            type: 'uuid',
+            primaryKey: true,
+        },
+        testDefault:'String',
+        testShorthand: 'Date',
+    };
+   
+    const expectedSQL = 'CREATE TABLE `TestTable` (`id` CHAR(36) PRIMARY KEY, `test` VARCHAR(512), `testDate` VARCHAR(512), `testInt` VARCHAR(512), `testInc` VARCHAR(512), `testDefault` VARCHAR(512), `testShorthand` TIMESTAMP) COMMENT="1:0edfe898ac2c1a770dc16a60a24ff7e9c26644f1b59e48d341b605535349bfe57e4ce47df80eabdd57f0e1e9589f786d6928fb80d68cd8888b6c8e88e732c238"';
+    const expectedHash = '1:0edfe898ac2c1a770dc16a60a24ff7e9c26644f1b59e48d341b605535349bfe57e4ce47df80eabdd57f0e1e9589f786d6928fb80d68cd8888b6c8e88e732c238';
+    const {sql, hash} = createTableBuilder(tableName, fieldDefinition);
+    expect(sql).toEqual(expectedSQL);
+    expect(hash).toEqual(expectedHash);
+});
