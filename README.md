@@ -2,9 +2,10 @@
 
 [![Node.js CI](https://github.com/wesone/blackrik/actions/workflows/node.js.yml/badge.svg)](https://github.com/wesone/blackrik/actions/workflows/node.js.yml)
 [![Coverage Status](https://coveralls.io/repos/github/wesone/blackrik/badge.svg?branch=feature/workflow)](https://coveralls.io/github/wesone/blackrik?branch=feature/workflow)
-[![npm version](https://badge.fury.io/js/blackrik.svg)](https://badge.fury.io/js/blackrik)
-![npm](https://img.shields.io/npm/dm/blackrik)
-![GitHub](https://img.shields.io/github/license/wesone/blackrik)
+[![LGTM Grade](https://img.shields.io/lgtm/grade/javascript/github/wesone/blackrik?label=code%20quality)](https://lgtm.com/projects/g/wesone/blackrik)
+[![npm version](https://badge.fury.io/js/blackrik.svg)](https://www.npmjs.com/package/blackrik)
+[![npm](https://img.shields.io/npm/dm/blackrik)](https://www.npmjs.com/package/blackrik)
+[![GitHub](https://img.shields.io/github/license/wesone/blackrik)](https://github.com/wesone/blackrik/blob/master/LICENSE.md)
 ## What is Blackrik?
 Blackrik is a CQRS and Event-Sourcing Framework for Node.js.
 
