@@ -74,8 +74,8 @@ class Workflow {
             await step?.actions?.reduce(async (memo, action) => {
                 await memo;
                 await action?.({context: this.state.context, 
-                    currentEvent: this.state.currentEvent, 
-                    history: this.state.history,
+                    currentEvent: {...this.state.currentEvent}, 
+                    history: [...this.state.history],
                     transition: event => nextEvent = event,
                     rollback: (error = new Error('Rollback')) => {
                         error.rollback = true;
@@ -89,13 +89,9 @@ class Workflow {
         }
         catch(error)
         {
-            if(error.rollback)
-            {
-                return await this.doRollback(error);
-            }
-            return error;
+            await this.doRollback(error);
+            throw error;
         }
-        
         
         if(nextEvent)
         {
