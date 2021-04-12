@@ -56,7 +56,7 @@ class Workflow {
         {
             return null;
         }
-        if(event.position && this.state.lastPosition && event.position >= this.state.lastPosition)
+        if(event.position && this.state.lastPosition && event.position <= this.state.lastPosition)
         {
             return null;
         }
