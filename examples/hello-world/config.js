@@ -21,6 +21,11 @@ module.exports = {
             name: 'user',
             source: require('./sagas/user'),
             adapter: 'default'
+        },
+        {
+            name: 'user',
+            source: require('./sagas/userEmailChange'),
+            adapter: 'default'
         }
     ],
     adapter: 'default',
