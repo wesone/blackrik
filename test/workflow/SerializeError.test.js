@@ -1,4 +1,4 @@
-const {serializeError, deserializeError} = require('../../src/workflow/SerializeError');
+const {serializeError, deserializeError} = require('../../src/core/workflow/SerializeError');
 
 const error = new Error('Test');
 error.test = {test2: 'Error', error, fn: () => {}, buf: Buffer.alloc(1)};

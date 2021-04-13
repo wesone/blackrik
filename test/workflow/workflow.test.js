@@ -1,4 +1,4 @@
-import Workflow from '../../src/workflow';
+import Workflow from '../../src/core/workflow';
 
 class MockStore {
     constructor()
@@ -80,7 +80,7 @@ test('test workflow', async () => {
     }
 
     expect(store.data).toMatchObject({
-        'light__asd123': {
+        'asd123': {
             'state': {
                 'name': 'light',
                 'version': 1,
@@ -99,7 +99,7 @@ test('test workflow', async () => {
         }
     });
 
-    expect(store.data['light__asd123'].state.history).toHaveLength(19);
+    expect(store.data['asd123'].state.history).toHaveLength(19);
 
 });
 
@@ -126,7 +126,7 @@ test('test workflow rollback', async () => {
     }).rejects.toThrow();
     
     expect(store.data).toMatchObject({
-        'light__asd123': {
+        'asd123': {
             'state': {
                 'name': 'light',
                 'version': 1,
@@ -149,7 +149,7 @@ test('test workflow rollback', async () => {
         }
     });
 
-    expect(store.data['light__asd123'].state.history).toHaveLength(18);
+    expect(store.data['asd123'].state.history).toHaveLength(18);
 });
 
 test('workflow errors', async () => {
