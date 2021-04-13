@@ -1,7 +1,10 @@
-const { SAGA_WORKFLOW_TABLE_NAME } = require('../core/Constants');
-const { serializeError } = require('./SerializeError');
-class Workflow {
-    constructor(config){
+const {SAGA_WORKFLOW_TABLE_NAME} = require('../Constants');
+const {serializeError} = require('./SerializeError');
+
+class Workflow
+{
+    constructor(config)
+    {
         this.validateConfig(config);
         this.config = {...config, idHandler: config.idHandler ?? (event => event.aggregateId)};
         this.initState = {

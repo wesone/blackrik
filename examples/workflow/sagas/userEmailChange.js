@@ -1,4 +1,3 @@
-const Workflow = require('../../../src/workflow');
 const {USER_CREATED, USER_UPDATED, USER_REJECTED, USER_MAIL_CHANGE_REVERTED} = require('../events/users');
 
 function saveEmailAddress(workflow)
@@ -41,8 +40,7 @@ async function restoreEmailAddress(workflow)
     
 }
 
-
-const mailChangeWorkflow = new Workflow({
+module.exports = {
     name: 'UserEmailChange',
     version: 1,
     initial: 'init',
@@ -61,7 +59,7 @@ const mailChangeWorkflow = new Workflow({
             }
         },
         change: {
-            actions: [updateMail,sendConfirmationMail],
+            actions: [updateMail, sendConfirmationMail],
             on: {
                 [USER_UPDATED]: 'change',
                 [USER_MAIL_CHANGE_REVERTED]: 'restore',
@@ -76,7 +74,4 @@ const mailChangeWorkflow = new Workflow({
             }
         },
     }
-});
-
-module.exports = mailChangeWorkflow.connect();
-
+};
