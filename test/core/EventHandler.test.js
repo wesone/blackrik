@@ -83,6 +83,16 @@ class EventBusMock
     }
 }
 
+beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+});
+afterAll(() => {
+    console.error.mockRestore();
+});
+afterEach(() => {
+    console.error.mockClear();
+});
+
 let eventStore;
 let eventBus;
 let eventHandler;
