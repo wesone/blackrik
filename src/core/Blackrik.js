@@ -11,6 +11,8 @@ const CommandHandler = require('./CommandHandler');
 const QueryHandler = require('./QueryHandler');
 const CommandScheduler = require('./CommandScheduler');
 
+const Workflow = require('./Workflow');
+
 const httpMethods = require('../resources/httpMethods');
 
 class Blackrik
@@ -132,7 +134,11 @@ class Blackrik
         const blackrik = this;
         return Promise.all(
             this.config.sagas.map(
-                ({name, source: {handlers, sideEffects}, adapter}) =>
+                ({name, source, adapter}) => {
+                    const {handlers, sideEffects} = source.initial === undefined
+                        ? source
+                        : new Workflow(source).connect();
+
                     this._registerSubscribers(
                         name,
                         handlers,
@@ -165,7 +171,8 @@ class Blackrik
                                 }
                             })
                         )
-                    )
+                    );
+                }
             )
         );
     }

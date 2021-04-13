@@ -48,7 +48,7 @@ test('test fieldAttribute exceptions', async () => {
         fail: {
             type: 'String',
             primaryKey: true,
-        }})).toThrow(new Error('PRIMARY_KEY has to be the first field'));  
+        }})).toThrow(new Error('Primary Key is already defined.'));  
 
     expect(() => createTableBuilder(tableName, {
         fail: {
