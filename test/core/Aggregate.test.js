@@ -176,7 +176,6 @@ describe('Testing load', () => {
             state: { name: '42' },
             latestEvent: { type: 'USER_UPDATED', payload: { name: '42' } }
         };
-        console.log('das ist jetzt die eventlist:', testEvents);
         expect(copyEvents.length).toBe(copyEventsLength - 1);
         expect(spyInit).toHaveBeenCalled();
         expect(result).toEqual(expected);
