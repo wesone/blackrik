@@ -41,6 +41,10 @@ function convertValue(value, arrayToJSON = true)
     {
         return null;
     }
+    if(typeof value === 'boolean')
+    {
+        value = value ? 1 : 0;
+    }
     if(typeof value === 'object' && !Array.isArray(value))
     {
         return JSON.stringify(value);

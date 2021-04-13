@@ -99,3 +99,14 @@ test('Build condition with undefined value', () => {
     const expectedError = new Error('Field a has invalid "undefined" value');
     expect(() => conditionBuilder(condition)).toThrow(expectedError);
 });
+
+test('Build condition with boolean value', () => {
+    
+    const condition = {id: 2, done: false, done2: true};
+    const expectedSQL = '`id` = ? AND `done` = ? AND `done2` = ?';
+    const expectedParameters = ['2','0', '1'];
+    const {sql, parameters} = conditionBuilder(condition);
+    expect(sql).toEqual(expectedSQL);
+    expect(parameters).toEqual(expectedParameters);
+});
+

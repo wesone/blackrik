@@ -70,7 +70,8 @@ function _tokenizer(condition, field)
     }
     if(typeof condition === 'string' || 
         typeof condition === 'number' || 
-        condition instanceof Date || 
+        typeof condition === 'boolean' ||
+        condition instanceof Date ||
         condition === null
     )
     {
