@@ -1,42 +1,12 @@
 const CommandHandler = require('../../src/core/CommandHandler');
+const BlackrikMock = require('../mock/Blackrik');
 
-const aggregateName = 'test';
+const aggregateName = 'testAggregate';
 const aggregateId = '42';
-const type = 'noeventcommand';
-const typeWithEvent = 'eventcommand';
+const type = 'command';
+const typeWithEvent = 'commandWithEvent';
 
 const exampleEvent = {test: 42};
-
-class BlackrikMock
-{
-    eventShouldOverlap = false;
-    isFirstAggregateEvent = false;
-
-    _aggregates = {
-        [aggregateName]: {
-            commands: {
-                [type]: (/* command, state, context */) => {},
-                [typeWithEvent]: (/* command, state, context */) => ({})
-            },
-            load: (/* eventStore, aggregateId */) => ({
-                state: {},
-                latestEvent: this.isFirstAggregateEvent
-                    ? null
-                    : {aggregateVersion: 1}
-            })
-        }
-    };
-    _eventHandler = {
-        publish: jest.fn((aggregateName, {causationId}) => 
-            this.eventShouldOverlap
-                ? false
-                : causationId
-                    ? {...exampleEvent, causationId}
-                    : exampleEvent
-        )
-    };
-    _eventStore = {};
-}
 
 describe('CommandHandler detects', () => {
     const blackrik = new BlackrikMock();
@@ -65,7 +35,7 @@ describe('CommandHandler detects', () => {
 let blackrik;
 let commandHandler;
 beforeEach(() => {
-    blackrik = new BlackrikMock();
+    blackrik = new BlackrikMock(exampleEvent);
     commandHandler = new CommandHandler(blackrik);
 });
 

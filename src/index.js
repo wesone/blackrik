@@ -26,6 +26,7 @@ class Blackrik
                 clientId: 'blackrik-application'
             }
         },
+        contextProvider: () => ({}),
         server: {
             config: {
                 port: 3000,

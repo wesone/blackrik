@@ -1,24 +1,7 @@
 const QueryHandler = require('../../src/core/QueryHandler');
+const BlackrikMock = require('../mock/Blackrik');
 
 describe('QueryHandler handles', () => {
-    class BlackrikMock
-    {
-        constructor()
-        {
-            this._resolvers = {
-                testReadModel: {
-                    handlers: {
-                        testResolver: jest.fn(() => {})
-                    },
-                    adapter: 'default'
-                }
-            };
-            this._stores = {
-                default: {test: 21}
-            };
-        }
-    }
-
     let blackrik;
     let queryHandler;
     beforeEach(() => {
@@ -63,10 +46,12 @@ describe('QueryHandler handles', () => {
         };
         expect(queryHandler.handle(req)).resolves.not.toThrow();
         expect(queryHandler.handle(req2)).resolves.not.toThrow();
+        expect(queryHandler.process(req.params.readModel, req.params.resolver)).resolves.not.toThrow();
 
         const resolver = blackrik._resolvers.testReadModel.handlers.testResolver;
-        expect(resolver).toHaveBeenCalledTimes(2);
-        expect(resolver).toHaveBeenNthCalledWith(1, blackrik._stores.default, query);
-        expect(resolver).toHaveBeenNthCalledWith(2, blackrik._stores.default, {});
+        expect(resolver).toHaveBeenCalledTimes(3);
+        expect(resolver).toHaveBeenNthCalledWith(1, blackrik._stores.default, query, blackrik.buildContext());
+        expect(resolver).toHaveBeenNthCalledWith(2, blackrik._stores.default, {}, blackrik.buildContext());
+        expect(resolver).toHaveBeenNthCalledWith(3, blackrik._stores.default, {}, {});
     });
 });

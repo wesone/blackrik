@@ -261,6 +261,13 @@ class Blackrik
         this._registerAPI();
     }
 
+    buildContext(req = null)
+    {
+        return {
+            ...(this.config?.contextProvider(req) ?? {})
+        };
+    }
+
     async start()
     {
         await this._initStore();
@@ -298,7 +305,7 @@ class Blackrik
 
     async executeCommand(command, causationEvent = null)
     {
-        const context = {blackrik: this.#instance};
+        const context = this.buildContext();
         if(causationEvent)
             context.causationEvent = causationEvent;
         return !!await this._commandHandler.process(
@@ -321,7 +328,8 @@ class Blackrik
         return await this._queryHandler.process(
             readModel,
             resolver,
-            query
+            query,
+            this.buildContext()
         );
     }
 }

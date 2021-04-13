@@ -49,6 +49,7 @@ module.exports = yup.object({
         module: yup.string().required(),
         args: yup.object()
     }),
+    contextProvider: yup.function(),
     server: yup.object({
         config: yup.object({
             port: yup.number().positive().integer(),

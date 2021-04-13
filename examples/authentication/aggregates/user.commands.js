@@ -33,8 +33,11 @@ module.exports = {
             }
         };
     },
-    update: async (command, state/* , context */) => {
+    update: async (command, state, context) => {
         if(!state.registered || state.removed)
+            throw new ForbiddenError();
+
+        if(context.user !== 'system' && command.aggregateId !== context.user.id)
             throw new ForbiddenError();
 
         const {name, password} = command.payload;
@@ -54,10 +57,11 @@ module.exports = {
             payload
         };
     },
-    reject: async (command/* , state, context */) => {
-        return {
-            type: USER_REJECTED,
-            payload: command.payload
-        };
+    reject: async (command, state, context) => {
+        if(context.user === 'system')
+            return {
+                type: USER_REJECTED,
+                payload: command.payload
+            };
     }
 };

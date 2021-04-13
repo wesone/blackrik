@@ -35,13 +35,6 @@ class CommandHandler
         return Object.prototype.hasOwnProperty.call(this.#blackrik._aggregates, aggregateName);
     }
 
-    buildContext(req)
-    {
-        return {
-            blackrik: req.blackrik
-        };
-    }
-
     async processEvent(aggregateName, event, causationEvent = null)
     {
         if(causationEvent)
@@ -55,7 +48,7 @@ class CommandHandler
 
     async handle(req)
     {
-        return this.process(req.body, this.buildContext(req));
+        return this.process(req.body, this.#blackrik.buildContext(req));
     }
 
     async process(args, context = {})

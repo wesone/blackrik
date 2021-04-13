@@ -52,6 +52,7 @@ module.exports = {
         // module: Blackrik.ADAPTERS.EVENTBUS.Local,
         // args: {}
     },
+    contextProvider: require('./auth/context'),
     server: {
         middlewares: [
             require('./auth/middleware')
