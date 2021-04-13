@@ -106,7 +106,11 @@ function _addIndex(indexDef, state, fieldDefinitions)
     
 function _getIndexTokens(state)
 {
-    return Object.values(state.indexes);
+    return Object.values(state.indexes).sort((tokenA,tokenB) => {
+        const a = tokenA.startsWith('PRIMARY') ? 3 : (tokenA.startsWith('UNIQUE') ? 2 : 1);
+        const b = tokenB.startsWith('PRIMARY') ? 3 : (tokenB.startsWith('UNIQUE') ? 2 : 1);
+        return b - a;
+    });
 }
 
 function _calculateHash(fieldTokens)

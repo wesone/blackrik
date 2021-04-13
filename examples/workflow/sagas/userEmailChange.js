@@ -30,7 +30,7 @@ async function restoreEmailAddress(workflow)
 {
     await workflow.sideEffects.executeCommand({
         aggregateName: 'user',
-        aggregateId: workflow.currentEvents.aggregateId,
+        aggregateId: workflow.currentEvent.aggregateId,
         type: 'update',
         payload: {
             email: workflow.context.oldEmail

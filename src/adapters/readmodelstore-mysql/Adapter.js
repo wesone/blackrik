@@ -127,7 +127,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         return tableCheckTypes.unchanged;
     }
 
-    async defineTable(tableName, scheme/*, options = {triggerReplay: true}*/){
+    async defineTable(tableName, scheme, indexes){
         const options = {triggerReplay: true};
 
         if(scheme._lastPosition)
@@ -142,7 +142,7 @@ class Adapter extends ReadModelStoreAdapterInterface
             }
         };
 
-        const {sql, hash} = createTableBuilder(tableName, schemeWithMetaData);
+        const {sql, hash} = createTableBuilder(tableName, schemeWithMetaData, indexes);
         
         const checkResult = await this.checkTable(tableName, hash);
 

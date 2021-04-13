@@ -140,11 +140,11 @@ test('test workflow rollback', async () => {
                     'type': 'TIMER',
                 },
                 'history': expect.anything(),
-                'done': false,
+                'done': true,
                 'rollback': -1,
                 'error': expect.objectContaining({message: 'Rollback'}),
             },
-            'done': false,
+            'done': true,
             'failed': true
         }
     });
