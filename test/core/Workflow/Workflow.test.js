@@ -1,4 +1,4 @@
-const Workflow = require('../../../src/core/Workflow');
+const Workflow = require('../../../src/core/workflow');
 
 class MockStore {
     constructor()

@@ -11,7 +11,7 @@ const CommandHandler = require('./CommandHandler');
 const QueryHandler = require('./QueryHandler');
 const CommandScheduler = require('./CommandScheduler');
 
-const Workflow = require('./Workflow');
+const Workflow = require('./workflow');
 
 const httpMethods = require('../resources/httpMethods');
 
