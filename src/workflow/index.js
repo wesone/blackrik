@@ -32,7 +32,7 @@ class Workflow {
 
     setId(event)
     {
-        this.id = `${this.config.name}__${this.config.idHandler(event)}`;
+        this.id = this.config.idHandler(event);
     }
 
     async initializeState()
@@ -118,6 +118,7 @@ class Workflow {
             const {action, event} = this.getRollback(this.state.rollback, historyEntry);
             await this.executeRollbackAction(action, event);
         }
+        this.state.done = true;
     }
 
     getRollback(value, historyEntry)
@@ -176,7 +177,7 @@ class Workflow {
         return this.state;
     }
 
-    async insertState(state, id)
+    async insertState(state, id, event)
     {
         if(!this.store)
         {
@@ -189,6 +190,8 @@ class Workflow {
         const currentDate = new Date();
         await this.store.insert(SAGA_WORKFLOW_TABLE_NAME,{
             id,
+            name: this.config.name,
+            createdPosition: event.position ?? 0,
             state,
             done: state.done,
             failed: !!state.rollback,
@@ -230,11 +233,11 @@ class Workflow {
             throw new Error('No store set');
         }
         this.setId(event);
-        const stateRow = await this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.id});
+        const stateRow = await this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.id, name: this.config.name, done: false});
         if(!stateRow)
         {
             await this.initializeState();
-            await this.insertState(this.state,  this.id);
+            await this.insertState(this.state,  this.id, event);
             return this.state;
         }
         this.setState(stateRow.state);
@@ -251,16 +254,17 @@ class Workflow {
     {
         this.store = store;
         await this.store.defineTable(SAGA_WORKFLOW_TABLE_NAME, {
-            id: {
-                type: 'String',
-                primaryKey: true,
-            },
+            name: 'uuid',
+            id: 'uuid',
+            createdPosition: 'Number',
             state: 'JSON',
             done: 'Boolean',
             failed: 'Boolean',
             createdAt: 'Date',
             updatedAt: 'Date',
-        });
+        },[
+            {fields: ['name', 'id', 'createdPosition'], primaryKey: true}
+        ]);
     }
 
     setSideEffects(sideEffects)
