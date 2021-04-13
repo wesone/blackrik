@@ -13,6 +13,18 @@ const httpMethods = require('./httpMethods');
 const {ROUTE_COMMAND, ROUTE_QUERY} = require('../core/Constants');
 const reservedRoutes = [ROUTE_COMMAND, ROUTE_QUERY]; // this would allow /query/:rm/:res :(
 
+const sagaSource = yup.object({
+    handlers: yup.object().required(),
+    sideEffects: yup.object().required()
+});
+const sagaSourceWorkflow = yup.object({
+    name: yup.string().required(),
+    version: yup.number(),
+    initial: yup.string().required(),
+    context: yup.object(),
+    steps: yup.object().required()
+});
+
 module.exports = yup.object({
     aggregates: yup.array(
         yup.object({
@@ -32,10 +44,13 @@ module.exports = yup.object({
     sagas: yup.array(
         yup.object({
             name: yup.string().required(),
-            source: yup.object({
-                handlers: yup.object().required(),
-                sideEffects: yup.object().required()
-            }),
+            source: yup.mixed().test(
+                'shape',
+                'invalid',
+                data => 
+                    sagaSource.isValidSync(data) ||
+                    sagaSourceWorkflow.isValidSync(data)
+            ),
             adapter: yup.string()
         })
     ),
