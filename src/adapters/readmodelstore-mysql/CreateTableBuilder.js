@@ -13,19 +13,8 @@ const types = {
     'uuid': 'CHAR(36)'
 };
 
-function _validateTypeAttributes(typeDef, attributes, state, fieldIndex)
+function _validateTypeAttributes(typeDef, attributes)
 {
-    if(attributes.primaryKey)
-    {
-        if(fieldIndex !== 0)
-        {
-            throw new Error('PRIMARY_KEY has to be the first field');
-        }
-        if(attributes.allowNull)
-        {
-            throw new Error('PRIMARY_KEY must be defined as NOT NULL');
-        }
-    }
     if(attributes.defaultValue)
     {
         if(typeDef === 'TEXT' || typeDef === 'BLOB')
@@ -35,14 +24,25 @@ function _validateTypeAttributes(typeDef, attributes, state, fieldIndex)
     }
 }
 
-function _translateType(type, attributes, state, fieldIndex)
+function _validateFieldIndex(attributes, isPrimaryKey)
+{
+    if(isPrimaryKey)
+    {
+        if(attributes.allowNull)
+        {
+            throw new Error('PRIMARY_KEY must be defined as NOT NULL');
+        }
+    }
+}
+
+function _translateType(field, type, attributes, state, fieldIndex, fieldDefinitions)
 {
     let typeDef = types[type];
     if(!typeDef)
     {
         throw new Error('Unknown type ' + type);
     }
-    _validateTypeAttributes(typeDef, attributes, state, fieldIndex);
+    _validateTypeAttributes(typeDef, attributes);
     
     // TODO: support type length. e.g VARCHAR(10), BIGINT(5,3), ...
 
@@ -56,14 +56,57 @@ function _translateType(type, attributes, state, fieldIndex)
         typeDef = [typeDef, 'DEFAULT', defaultValue].join(' ');
     }
     if(attributes.unique)
-        typeDef = [typeDef, 'UNIQUE'].join(' ');
+        _addIndex({fields: [field], unique: true}, state, fieldDefinitions);
     if(attributes.primaryKey)
-    {
-        state.hasPrimaryKey = true;
-        typeDef = [typeDef, 'PRIMARY KEY'].join(' ');
-    }
-        
+        _addIndex({fields: [field], primaryKey: true}, state, fieldDefinitions);
     return typeDef;
+}
+
+function _translateIndexType(indexDef, name)
+{
+    if(indexDef.primaryKey)
+        return 'PRIMARY KEY';
+    return [indexDef.unique ? 'UNIQUE KEY': 'KEY', quoteIdentifier(name)].join(' ');
+}
+
+function _addIndex(indexDef, state, fieldDefinitions)
+{
+    if(indexDef.primaryKey && state.indexes.PRIMARY)
+    {
+        throw new Error('Primary Key is already defined.');
+    }
+    if(Object.keys(state.indexes).length >= 16)
+    {
+        throw new Error('Tried to add more then 16 indexes');
+    }
+    if(!indexDef.fields || !Array.isArray(indexDef.fields) || indexDef.fields.length === 0)
+    {
+        throw new Error('Index need fields');
+    }
+    indexDef.fields.forEach(field => {
+        const definition = fieldDefinitions[field];
+        if(!definition)
+        {
+            throw new Error(`Unknown field '${field}' for index`);
+        }
+        _validateFieldIndex(definition, indexDef.primaryKey);
+    });
+    let name = indexDef.name;
+    if(indexDef.primaryKey)
+    {
+        name = 'PRIMARY';
+    }
+    else if(!indexDef.name)
+    {
+        name = ['index',Object.keys(state.indexes).length].join('_');
+    }
+    const keyParts = indexDef.fields.map(quoteIdentifier).join(', ');
+    state.indexes[name] = [_translateIndexType(indexDef, name), '(', keyParts, ')'].join(' ');
+}
+    
+function _getIndexTokens(state)
+{
+    return Object.values(state.indexes);
 }
 
 function _calculateHash(fieldTokens)
@@ -73,8 +116,18 @@ function _calculateHash(fieldTokens)
     return [schemaVersion,hash.digest('hex')].join(':');
 }
 
-function createTableBuilder(tableName, fieldDefinitions)
+function createTableBuilder(tableName, fieldDefinitions, indexes)
 {
+
+    /*
+
+const indexes = [
+        {fields: ['id', 'test'], primaryKey: true},
+        {fields: ['id', 'test', 'testDate'], unique: true},
+        {fields: ['testInt', 'testInc'], name: 'myIndex'},
+    ];
+    */
+
     if(typeof fieldDefinitions !== 'object')
     {
         throw new Error('fieldDefinitions has to be an object');
@@ -89,7 +142,9 @@ function createTableBuilder(tableName, fieldDefinitions)
 
     fieldNames.sort(fieldName => fieldDefinitions[fieldName].primaryKey ? -1 : 1);
 
-    const state = {};
+    const state = {
+        indexes: {},
+    };
     const fieldTokens = fieldNames.map((name, index) => {
         const {
             type, 
@@ -106,14 +161,20 @@ function createTableBuilder(tableName, fieldDefinitions)
         }
         
         const identifier = quoteIdentifier(name); 
-        return [identifier, _translateType(type, {
+        return [identifier, _translateType(name, type, {
             allowNull, 
             defaultValue, 
             unique, 
             primaryKey, 
             autoIncrement
-        }, state, index)].join(' ');
+        }, state, index, fieldDefinitions)].join(' ');
     });
+
+    if(indexes && Array.isArray(indexes))
+    {
+        indexes.forEach(indexDef => _addIndex(indexDef, state, fieldDefinitions));
+    }
+    fieldTokens.push(..._getIndexTokens(state));
 
     const definitions = fieldTokens.join(', ');
     const hash = _calculateHash(fieldTokens);
