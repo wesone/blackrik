@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.1.0] - 2021-04-14
 ### Changed
 - Renamed errors property `code` to `status` to let Express handle status codes from thrown errors
 - Error handling for saving events to the event store
@@ -15,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Wrapped route handlers and middleware to catch and handle errors as errors in async functions are only handled by Express 5 or higher (which is not production ready yet)
 - A way to set the context for commands and queries with the config property `contextProvider`
+- Workflows for Sagas to use them as a state machine (this is optional)
 
 ## [1.0.3] - 2021-04-09
 ### Changed
@@ -38,7 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/wesone/blackrik/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/wesone/blackrik/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/wesone/blackrik/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/wesone/blackrik/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/wesone/blackrik/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/wesone/blackrik/compare/v1.0.0...v1.0.1
