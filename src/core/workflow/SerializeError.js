@@ -23,11 +23,8 @@ class NonError extends Error {
             configurable: true,
             writable: true
         });
-
-        if(Error.captureStackTrace)
-        {
-            Error.captureStackTrace(this, NonError);
-        }
+       
+        Error.captureStackTrace(this, NonError);
     }
 
     static _prepareSuperMessage(message){
