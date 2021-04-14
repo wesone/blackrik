@@ -86,6 +86,33 @@ test('indexes', () => {
     expect(hash).toEqual(expectedHash);
 });
 
+test('indexes order', () => {
+    const fieldDefinition = {
+        test: 'String',
+        testDate: 'String',
+        testInt: 'String',
+        testInc: 'String',
+        id: {
+            type: 'uuid',
+        },
+        testDefault:'String',
+        testShorthand: 'Date',
+    };
+
+    const indexes = [
+        {fields: ['id', 'test', 'testDate'], unique: true},
+        {fields: ['id', 'test'], primaryKey: true},
+        {fields: ['testInt', 'testInc'], name: 'myIndex'},
+        {fields: ['testDefault', 'testShorthand'], unique: true},
+    ];
+   
+    const expectedSQL = 'CREATE TABLE `TestTable` (`test` VARCHAR(512), `testDate` VARCHAR(512), `testInt` VARCHAR(512), `testInc` VARCHAR(512), `id` CHAR(36), `testDefault` VARCHAR(512), `testShorthand` TIMESTAMP, PRIMARY KEY ( `id`, `test` ), UNIQUE KEY `index_0` ( `id`, `test`, `testDate` ), UNIQUE KEY `index_3` ( `testDefault`, `testShorthand` ), KEY `myIndex` ( `testInt`, `testInc` )) COMMENT="1:9d4df0dfc453e2d862325cdab8ebb358853b2359c0702ec9664dc9d9c048502cda73564e56e3eac15a5271caf337b584a00c87044bdb7824dd04b036346e53e6"';
+    const expectedHash = '1:9d4df0dfc453e2d862325cdab8ebb358853b2359c0702ec9664dc9d9c048502cda73564e56e3eac15a5271caf337b584a00c87044bdb7824dd04b036346e53e6';
+    const {sql, hash} = createTableBuilder(tableName, fieldDefinition, indexes);
+    expect(sql).toEqual(expectedSQL);
+    expect(hash).toEqual(expectedHash);
+});
+
 test('indexes exceptions', () => {
     const fieldDefinition = {
         test1: 'Boolean',
