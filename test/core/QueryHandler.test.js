@@ -50,8 +50,8 @@ describe('QueryHandler handles', () => {
 
         const resolver = blackrik._resolvers.testReadModel.handlers.testResolver;
         expect(resolver).toHaveBeenCalledTimes(3);
-        expect(resolver).toHaveBeenNthCalledWith(1, blackrik._stores.default, query, blackrik.buildContext());
-        expect(resolver).toHaveBeenNthCalledWith(2, blackrik._stores.default, {}, blackrik.buildContext());
+        expect(resolver).toHaveBeenNthCalledWith(1, blackrik._stores.default, query, blackrik.buildContext({}));
+        expect(resolver).toHaveBeenNthCalledWith(2, blackrik._stores.default, {}, blackrik.buildContext({}));
         expect(resolver).toHaveBeenNthCalledWith(3, blackrik._stores.default, {}, {});
     });
 });

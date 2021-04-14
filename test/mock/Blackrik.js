@@ -37,7 +37,7 @@ class Blackrik
                 throw Error('Overlap');
             return causationId
                 ? {...this.exampleEvent, causationId}
-                : this.exampleEvent
+                : this.exampleEvent;
         })
     };
 
@@ -50,7 +50,9 @@ class Blackrik
 
     buildContext(req = null)
     {
-        return {context: 42};
+        return {
+            value: req ? 42 : 21
+        };
     }
 }
 

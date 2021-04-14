@@ -213,7 +213,7 @@ class Blackrik
             }
             else 
                 middleware = [RequestHandler.catch(middleware)];
-            this.#server.use(...middleware)
+            this.#server.use(...middleware);
         });
     }
 
