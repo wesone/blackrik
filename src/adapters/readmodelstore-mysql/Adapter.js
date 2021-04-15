@@ -102,7 +102,7 @@ class Adapter extends ReadModelStoreAdapterInterface
     async checkTable(tableName, hash)
     {
         const result = await this.findOne('information_schema.TABLES', {
-            TABLE_SCHEMA: this.args.database,
+            TABLE_SCHEMA: this.useDatabase ?? this.args.database,
             TABLE_NAME: tableName,
         },
         {
@@ -155,7 +155,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         {
             try
             {
-                await this.exec(createTableBuilder(tableName + '_new', schemeWithMetaData)['sql']);
+                await this.exec(createTableBuilder(tableName + '_new', schemeWithMetaData, indexes)['sql']);
                 await this.exec(['RENAME TABLE', quoteIdentifier(tableName), 'TO', quoteIdentifier(tableName + '_old'),',',
                     quoteIdentifier(tableName + '_new'), 'TO', quoteIdentifier(tableName)].join(' '));
                 await this.dropTable(tableName + '_old');
