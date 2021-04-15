@@ -5,6 +5,15 @@
 [![node-current](https://img.shields.io/node/v/blackrik)](https://nodejs.org)
 [![GitHub](https://img.shields.io/github/license/wesone/blackrik)](https://github.com/wesone/blackrik/blob/master/LICENSE.md)
 
+## Contents
+* [What is Blackrik?](#what-is-blackrik)
+* [Getting Started](#getting-started)
+    * [Installation](#installation)
+    * [Usage](#usage)
+* [Documentation](#documentation)
+* [How to contribute](#how-to-contribute)
+* [License](#license)
+
 ## What is Blackrik?
 Blackrik is a CQRS and Event-Sourcing Framework for Node.js.
 
