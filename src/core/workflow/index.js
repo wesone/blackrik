@@ -19,6 +19,7 @@ class Workflow
             rollback: null,
             updatedAt: null,
             lastPosition: null,
+            createdPosition: null,
         };
         this.state = null;
     }
@@ -191,6 +192,7 @@ class Workflow
             throw new Error('State needed');
         }
         const currentDate = new Date();
+        console.log('insert', id, event.position);
         await this.store.insert(SAGA_WORKFLOW_TABLE_NAME,{
             id,
             name: this.config.name,
@@ -199,7 +201,8 @@ class Workflow
             done: state.done,
             failed: !!state.rollback,
             createdAt: currentDate,
-            updatedAt: currentDate
+            updatedAt: currentDate,
+            currentPosition: event.position ?? 0
         });
     }
 
@@ -220,11 +223,14 @@ class Workflow
         await this.store.update(SAGA_WORKFLOW_TABLE_NAME,
             {
                 id: this.id,
+                name: this.config.name,
+                createdPosition: this.state.createdPosition,
             },{
                 state: this.state,
                 done: this.state.done,
                 failed: this.state.rollback !== null,
-                updatedAt: this.state.updatedAt
+                updatedAt: this.state.updatedAt,
+                currentPosition: this.state.currentEvent.position ?? this.state.lastPosition ?? 0
             }
         );
     }
@@ -236,13 +242,22 @@ class Workflow
             throw new Error('No store set');
         }
         this.setId(event);
-        const stateRow = await this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {id: this.id, name: this.config.name, done: false});
+        const stateRow = await this.store.findOne(SAGA_WORKFLOW_TABLE_NAME, {
+            id: this.id, 
+            name: this.config.name, 
+            $or: [
+                {done: false},
+                {createdPosition: {$lte: event.position ?? Number.MAX_SAFE_INTEGER}, currentPosition: {$gte: event.position ?? -1}},
+            ]
+        });
         if(!stateRow)
         {
             await this.initializeState();
+            this.state.createdPosition = event.position ?? 0;
             await this.insertState(this.state,  this.id, event);
             return this.state;
         }
+        
         this.setState(stateRow.state);
         return this.state;
     }
@@ -260,6 +275,7 @@ class Workflow
             name: 'uuid',
             id: 'uuid',
             createdPosition: 'Number',
+            currentPosition: 'Number',
             state: 'JSON',
             done: 'Boolean',
             failed: 'Boolean',
