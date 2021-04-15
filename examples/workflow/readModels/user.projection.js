@@ -33,7 +33,7 @@ module.exports = {
         await store.update(tableName, {
             id: event.aggregateId
         }, {
-            name: event.payload.name,
+            email: event.payload.email,
             updatedAt: new Date(event.timestamp)
         });
     },
