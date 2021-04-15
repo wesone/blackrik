@@ -4,7 +4,7 @@ import { createTableBuilder } from '../../../src/adapters/readmodelstore-mysql/C
 import { insertIntoBuilder } from '../../../src/adapters/readmodelstore-mysql/InsertIntoBuilder';
 import { selectBuilder } from '../../../src/adapters/readmodelstore-mysql/SelectBuilder';
 import { updateBuilder } from '../../../src/adapters/readmodelstore-mysql/UpdateBuilder';
-import { quoteIdentifier } from '../../../src/adapters/readmodelstore-mysql/utils';
+import { quoteIdentifier, convertBinaryRows } from '../../../src/adapters/readmodelstore-mysql/utils';
 const tableName = 'TestTable';
 
 
@@ -123,4 +123,9 @@ test('test identifier exceptions', async () => {
     expect(() => quoteIdentifier(1234)).toThrow(new Error('identifier "1234" has to be a string'));
     expect(() => quoteIdentifier('asdasdasdvasdasdasdvasdasdasdvasdasdasdvasdasdasdvasdasdasdv12345')).
         toThrow(new Error('identifier "asdasdasdvasdasdasdvasdasdasdvasdasdasdvasdasdasdvasdasdasdv12345" length has to be between 1 and 64 characters'));
+});
+
+test('convertBinaryRows fallback', () => {
+    expect(convertBinaryRows()).toBeUndefined();
+    expect(convertBinaryRows({test: 'test'})).toEqual({test: 'test'});
 });

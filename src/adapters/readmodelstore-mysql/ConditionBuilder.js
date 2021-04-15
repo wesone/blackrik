@@ -143,7 +143,7 @@ function _sqlBuilder(ast, field, parameters )
             {
                 if(token.o === '$eq' || token.o === '$is')
                     raw = 'IS NULL';
-                else if(token.o === '$ne' || token.o === '$isNot')
+                else
                     raw = 'IS NOT NULL';
             }
             else if(Array.isArray(value) && token.o === '$in')
@@ -161,7 +161,7 @@ function _sqlBuilder(ast, field, parameters )
                 res = [identifier, operator, parameterName].join(' ');
             }
         } 
-        else if(token.t === 'logical')
+        else /*if(token.t === 'logical')*/
         {
             if(!Array.isArray(token.value) || !token.value.length)
                 break;

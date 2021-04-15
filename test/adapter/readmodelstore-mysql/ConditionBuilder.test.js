@@ -110,3 +110,21 @@ test('Build condition with boolean value', () => {
     expect(parameters).toEqual(expectedParameters);
 });
 
+test('Build condition with empty value in logical condition', () => {
+    
+    const condition = {$or: []};
+    const expectedSQL = '';
+    const {sql} = conditionBuilder(condition);
+    expect(sql).toEqual(expectedSQL);
+});
+
+test('Build condition with single value in logical condition', () => {
+    
+    const condition = {$or: [{a: 1}]};
+    const expectedSQL = '`a` = ?';
+    const expectedParameters = ['1'];
+    const {sql, parameters} = conditionBuilder(condition);
+    expect(sql).toEqual(expectedSQL);
+    expect(parameters).toEqual(expectedParameters);
+});
+

@@ -37,10 +37,12 @@ test('sort queryOption', () => {
         sort: [
             {a: -1},
             ['b', 1],
+            ['c', 'ASC'],
+            ['d', 'DESC'],
         ]
     };
    
-    const expectedSQL = 'SELECT * FROM `TestTable` ORDER BY `a` DESC, `b` ASC';
+    const expectedSQL = 'SELECT * FROM `TestTable` ORDER BY `a` DESC, `b` ASC, `c` ASC, `d` DESC';
     const expectedParameters = [];
     const {sql, parameters} = selectBuilder(tableName, queryOptions);
     expect(sql).toEqual(expectedSQL);
