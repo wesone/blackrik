@@ -166,3 +166,27 @@ test('indexes exceptions', () => {
 
 
 });
+
+test('variable type length', () => {
+    const fieldDefinition = {
+        test: 'String(10)',
+        test2: 'String',
+        test3: { type: 'String(128)' },
+        test4: 'Boolean'
+    };
+   
+    const expectedSQL = 'CREATE TABLE `TestTable` (`test` VARCHAR(10), `test2` VARCHAR(512), `test3` VARCHAR(128), `test4` TINYINT(1)) COMMENT="1:0809cbbf11f3a4330fcc762edaa025736e85d5580613a8b8da0bba7caefbad6d41d689937d404412da0cd76729c6f46fc72150f8535880a01f07dff1fea6a0a4"';
+    const expectedHash = '1:0809cbbf11f3a4330fcc762edaa025736e85d5580613a8b8da0bba7caefbad6d41d689937d404412da0cd76729c6f46fc72150f8535880a01f07dff1fea6a0a4';
+    const {sql, hash} = createTableBuilder(tableName, fieldDefinition);
+    expect(sql).toEqual(expectedSQL);
+    expect(hash).toEqual(expectedHash);
+});
+
+test('variable type length error', () => {
+    const fieldDefinition = {
+        test: 'String(10)',
+        test2: 'Boolean(2)'
+    };
+
+    expect(() => createTableBuilder(tableName, fieldDefinition)).toThrow(new Error('Invalid type: "Boolean(2)". Type length only supported for "String"'));
+});

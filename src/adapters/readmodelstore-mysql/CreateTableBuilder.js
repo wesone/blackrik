@@ -13,8 +13,14 @@ const types = {
     'uuid': 'CHAR(36)'
 };
 
-function _validateTypeAttributes(typeDef, attributes)
+const TYPE_REGEX = /(?<type>\w+)(?:\((?<length>\d+)\))*/;
+
+function _validateTypeAttributes(typeDef, attributes, type, length)
 {
+    if(length && typeDef !== types['String'])
+    {
+        throw new Error(`Invalid type: "${type}". Type length only supported for "String"`);
+    }
     if(attributes.defaultValue)
     {
         if(typeDef === 'TEXT' || typeDef === 'BLOB')
@@ -37,14 +43,20 @@ function _validateFieldIndex(attributes, isPrimaryKey)
 
 function _translateType(field, type, attributes, state, fieldIndex, fieldDefinitions)
 {
-    let typeDef = types[type];
+    const match = TYPE_REGEX.exec(type);
+    let typeDef = types[match?.groups?.type];
+    const typeLength = match?.groups?.length;
+    
     if(!typeDef)
     {
         throw new Error('Unknown type ' + type);
     }
-    _validateTypeAttributes(typeDef, attributes);
+    _validateTypeAttributes(typeDef, attributes, type, typeLength);
     
-    // TODO: support type length. e.g VARCHAR(10), BIGINT(5,3), ...
+    if(typeLength && typeDef === types['String'])
+    {
+        typeDef = `VARCHAR(${typeLength})`;
+    }
 
     if(attributes.allowNull) 
         typeDef = [typeDef, 'NULL'].join(' ');
