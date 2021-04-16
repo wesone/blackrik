@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Worklows no longer creates a new state for every event in case of a replay
+- Bug where MySQL read model does not add indexes after a schema change
+
+### Added
+- Support for variable-length strings in MySQL read model schema
+- MySQL read model schema types are now case insenitive
+
 ## [1.1.0] - 2021-04-14
 ### Changed
 - Renamed errors property `code` to `status` to let Express handle status codes from thrown errors
