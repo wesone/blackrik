@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- Worklows no longer creates a new state for every event in case of a replay
+- Workloads no longer create a new state for every event in case of a replay
 - Bug where MySQL read model does not add indexes after a schema change
 
 ### Added
