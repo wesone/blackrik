@@ -4,12 +4,12 @@ const { quoteIdentifier } = require('./utils');
 const schemaVersion = 1;
 
 const types = {
-    'String': 'VARCHAR(512)',
-    'Text' : 'TEXT', 
-    'JSON' : 'JSON',
-    'Boolean': 'TINYINT(1)', 
-    'Number': 'DOUBLE',  
-    'Date': 'TIMESTAMP', 
+    'string': 'VARCHAR(512)',
+    'text' : 'TEXT', 
+    'json' : 'JSON',
+    'boolean': 'TINYINT(1)', 
+    'number': 'DOUBLE',  
+    'date': 'TIMESTAMP', 
     'uuid': 'CHAR(36)'
 };
 
@@ -17,9 +17,9 @@ const TYPE_REGEX = /(?<type>\w+)(?:\((?<length>\d+)\))*/;
 
 function _validateTypeAttributes(typeDef, attributes, type, length)
 {
-    if(length && typeDef !== types['String'])
+    if(length && typeDef !== types['string'])
     {
-        throw new Error(`Invalid type: "${type}". Type length only supported for "String"`);
+        throw new Error(`Invalid type: "${type}". Type length only supported for "string"`);
     }
     if(attributes.defaultValue)
     {
@@ -44,7 +44,7 @@ function _validateFieldIndex(attributes, isPrimaryKey)
 function _translateType(field, type, attributes, state, fieldIndex, fieldDefinitions)
 {
     const match = TYPE_REGEX.exec(type);
-    let typeDef = types[match?.groups?.type];
+    let typeDef = types[match?.groups?.type?.toLowerCase()];
     const typeLength = match?.groups?.length;
     
     if(!typeDef)
@@ -53,7 +53,7 @@ function _translateType(field, type, attributes, state, fieldIndex, fieldDefinit
     }
     _validateTypeAttributes(typeDef, attributes, type, typeLength);
     
-    if(typeLength && typeDef === types['String'])
+    if(typeLength && typeDef === types['string'])
     {
         typeDef = `VARCHAR(${typeLength})`;
     }
