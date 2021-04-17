@@ -1,4 +1,4 @@
-const CONSTANTS = require('./Constants');
+const {READMODEL_INIT_FUNCTION} = require('./Constants');
 
 class ReadModelStore
 {
@@ -40,8 +40,8 @@ class ReadModelStore
 
     async init()
     {
-        this.config = typeof this.#handlers[CONSTANTS.READMODEL_INIT_FUNCTION] === 'function'
-            ? await this.#handlers[CONSTANTS.READMODEL_INIT_FUNCTION](this._createInitProxy()) || {}
+        this.config = typeof this.#handlers[READMODEL_INIT_FUNCTION] === 'function'
+            ? await this.#handlers[READMODEL_INIT_FUNCTION](this._createInitProxy()) || {}
             : {};
         return this.#replayEvents;
     }
