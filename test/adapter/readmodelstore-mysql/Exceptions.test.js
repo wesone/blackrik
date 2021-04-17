@@ -17,7 +17,7 @@ test('no tableName', async () => {
 test('try to insert reserved fields', async () => {
     const adapter = new Adapter({database: 'AdapterTest'});
     const expectedError =  new Error('_lastPosition is a reserved field name.');
-    await expect(adapter.defineTable(tableName, {_lastPosition: 'String'})).rejects.toThrow(expectedError);
+    await expect(adapter.defineTable(tableName, {_lastPosition: 'string'})).rejects.toThrow(expectedError);
 });
 
 test('test transaction exceptions', async () => {

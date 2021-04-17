@@ -27,7 +27,7 @@ class EventHandler
     async init()
     {
         // if(await this.store.defineTable(TABLE_NAME, {
-        //     position: 'Number'
+        //     position: 'number'
         // }))
         //     await this.store.insert(TABLE_NAME, {position: -1});
     }

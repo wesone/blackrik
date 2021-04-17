@@ -274,13 +274,13 @@ class Workflow
         await this.store.defineTable(SAGA_WORKFLOW_TABLE_NAME, {
             name: 'uuid',
             id: 'uuid',
-            createdPosition: 'Number',
-            currentPosition: 'Number',
-            state: 'JSON',
-            done: 'Boolean',
-            failed: 'Boolean',
-            createdAt: 'Date',
-            updatedAt: 'Date',
+            createdPosition: 'number',
+            currentPosition: 'number',
+            state: 'json',
+            done: 'boolean',
+            failed: 'boolean',
+            createdAt: 'date',
+            updatedAt: 'date',
         },[
             {fields: ['name', 'id', 'createdPosition'], primaryKey: true}
         ]);

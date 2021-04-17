@@ -50,7 +50,7 @@ describe('ReadModelStore', () => {
     test('executes store functions', async () => {
         const NEW_TABLE_NAME = 'newTable';
         const EXISTING_TABLE_NAME = 'existingTable';
-        const TABLE_SCHEME = {field: 'String'};
+        const TABLE_SCHEME = {field: 'string'};
         await store.defineTable(EXISTING_TABLE_NAME, TABLE_SCHEME);
 
         const init = jest.fn(async store => {
@@ -82,7 +82,7 @@ describe('ReadModelStore', () => {
     test('prevents executing state changing store functions for replayed events on existing tables', async () => {
         const NEW_TABLE_NAME = 'newTable';
         const EXISTING_TABLE_NAME = 'existingTable';
-        const TABLE_SCHEME = {field: 'String'};
+        const TABLE_SCHEME = {field: 'string'};
         await store.defineTable(EXISTING_TABLE_NAME, TABLE_SCHEME);
 
         const init = jest.fn(async store => {

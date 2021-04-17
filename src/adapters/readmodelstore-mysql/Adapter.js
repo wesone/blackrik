@@ -137,7 +137,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
         const schemeWithMetaData = {...scheme, 
             _lastPosition: {
-                type: 'Number',
+                type: 'number',
                 unique: true
             }
         };

@@ -13,11 +13,11 @@ module.exports = {
                 type: 'uuid',
                 primaryKey: true,
             },
-            email: 'String',
-            name: 'String',
-            password: 'String',
-            createdAt: 'Date',
-            updatedAt: 'Date'
+            email: 'string',
+            name: 'string',
+            password: 'string',
+            createdAt: 'date',
+            updatedAt: 'date'
         });
     },
     [USER_REGISTERED]: async (store, event) => {
