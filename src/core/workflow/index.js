@@ -281,7 +281,7 @@ class Workflow
             failed: 'boolean',
             createdAt: 'date',
             updatedAt: 'date',
-        },[
+        }, [
             {fields: ['name', 'id', 'createdPosition'], primaryKey: true}
         ]);
     }
@@ -301,7 +301,7 @@ class Workflow
                 {
                     return; // internal event
                 }
-                eventHandlers[name] = async ( _,  event, sideEffects) => {
+                eventHandlers[name] = async (_,  event, sideEffects) => {
                     this.setSideEffects(sideEffects);
                     await this.loadState(event);
                     try 
