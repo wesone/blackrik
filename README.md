@@ -54,8 +54,8 @@ blackrik.start()
 Check out the [examples](https://github.com/wesone/blackrik/tree/master/examples) to learn how everything works together.
 
 ## Documentation
-Read the [documentation](https://github.com/wesone/blackrik/wiki).  
-See [config](https://github.com/wesone/blackrik/wiki/API-Reference#config) for details about the config.
+Read the [documentation](https://wesone.github.io/blackrik).  
+See [config](https://wesone.github.io/blackrik/#/Config) for details about the config.
 
 ## How to contribute
 Please check the [CONTRIBUTING.md](https://github.com/wesone/blackrik/blob/master/CONTRIBUTING.md) for details.
