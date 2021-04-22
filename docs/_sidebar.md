@@ -7,6 +7,7 @@
     * [Aggregates](Aggregates)
     * [ReadModels](ReadModels)
     * [Sagas](Sagas)
+    * [Workflows](Workflows)
     * [ReadModelStoreAdapter](ReadModelStoreAdapter)
     * [EventStoreAdapter](EventStoreAdapter)
     * [EventBusAdapter](EventBusAdapter)

@@ -1,4 +1,5 @@
 # Introduction
+A Saga can be a workflow.  
 Workflows are able to depict complex or long-running business logic that has their own state. They react to events, perform transitions from one step to another and execute actions.
 
 A workflow is a state machine whose [transitions](#Transitions) are caused by events. Whenever a workflow transitions, it is able to run actions. Conditions and loops can be created by defining multiple transitions with different target steps.
