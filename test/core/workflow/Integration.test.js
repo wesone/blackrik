@@ -60,7 +60,7 @@ test('test with MySQL DB', async () => {
     {
         if(workflow.context.redLights === 6)
         {
-            return workflow.transition('done');
+            return workflow.trigger('done');
         }
     }   
     const config = {...testConfig};
