@@ -1,10 +1,21 @@
 # Introduction
-A Saga can be a workflow.  
+A saga can be a workflow.  
 Workflows are able to depict complex or long-running business logic that has their own state. They react to events, perform transitions from one step to another and execute actions.
 
 A workflow is a state machine whose [transitions](#Transitions) are caused by events. Whenever a workflow transitions, it is able to run actions. Conditions and loops can be created by defining multiple transitions with different target steps.
 
 # Configuration
+A saga that utilizes workflows needs to export an object with the following properties:
+
+Property | Type | Attribute | Description
+:--- | :--- | :--- | :---
+name | string | | The name of the workflow. Must be unique
+version | number | optional | A version number to differentiate between workflow changes that result in incompatible states
+idHandler | function | optional | A function that gets the event and returns a [workflow identifier](#Workflow-identifier)
+initial | string | | Name of the initial step
+context | object | optional | Set an initial context to be used inside the [action callbacks](#action)
+steps | object | | An object that contains [steps](#step)
+
 Example:
 ```javascript
 module.exports = {
@@ -31,24 +42,14 @@ module.exports = {
 };
 ```
 
-## Config
-Property | Type | Attribute | Description
-:--- | :--- | :--- | :---
-name | string | | The name of the workflow. Must be unique
-version | number | optional | A version number to differentiate between workflow changes that result in incompatible states
-idHandler | function | optional | A function that gets the event and returns a [workflow identifier](#Workflow-identifier)
-initial | string | | Name of the initial step
-context | object | optional | Set an initial context to be used inside the [action callbacks](#action)
-steps | object | | An object that contains [steps](#Step)
-
-### Step
+## step
 Property | Type | Attribute | Description
 :--- | :--- | :--- | :---
 actions | array | optional | Array of [action functions](#action) to be executed on step entry
 on | object | optional | Define transitions from this step to another. Key/Value pairs with event type as key and the name of the target step (or `'done'`) as value
 rollbackAction | function | optional | A [rollback function](#rollbackAction) to run compensation actions 
 
-### action
+## action
 `async [action](workflow: object)`  
 The action function will be executed after a transition to the corresponding step. The function receives an object as the first parameter with the following properties:
 
@@ -59,10 +60,10 @@ event | object | The event that triggered this transition
 history | array | All processed events in ascending order
 sideEffects | object | Gives access to all framework side effects such as [executeCommand](Blackrik#executeCommand) and [scheduleCommand](Blackrik#scheduleCommand)
 store | object | The underlying store that is used to save the workflow state
-trigger | function | Can be used to manually start a transition to another step. The function takes an event object that can be accessed from the history array or a string that is the name of the event (which may be a custom defined event). The transition will be executed after all actions are completed
+trigger | function | Can be used to manually start a transition to another step. The function takes an event object that can be accessed from the history array or the event type as string (which may be a custom defined event). The transition will be executed after all actions are completed
 rollback | function | Triggers a rollback. All rollback actions will be executed and the workflow transitions to the `done` state. This will happen immediately
 
-### rollbackAction
+## rollbackAction
 `async [rollback](rollbackWorkflow: object)`  
 The rollbackAction function will be executed if an action executes the rollback function (`workflow.rollback()`).  
 The function receives an object as the first parameter that contains the same properties as the parameter of the [action function](#action) but without the properties `transition` and `rollback`.
