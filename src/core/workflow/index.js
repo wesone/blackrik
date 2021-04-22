@@ -82,9 +82,9 @@ class Workflow
             await step?.actions?.reduce(async (memo, action) => {
                 await memo;
                 await action?.({context: this.state.context, 
-                    currentEvent: {...this.state.currentEvent}, 
+                    event: {...this.state.currentEvent}, 
                     history: [...this.state.history],
-                    transition: event => nextEvent = event,
+                    trigger: event => nextEvent = event,
                     rollback: (error = new Error('Rollback')) => {
                         error.rollback = true;
                         throw error;

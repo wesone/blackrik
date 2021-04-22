@@ -2,7 +2,7 @@ const {USER_CREATED, USER_UPDATED, USER_REJECTED, USER_MAIL_CHANGE_REVERTED} = r
 
 function saveEmailAddress(workflow)
 {
-    workflow.context.oldEmail = workflow.currentEvent.payload.email;
+    workflow.context.oldEmail = workflow.event.payload.email;
 }
 
 function updateMail(workflow)
@@ -19,7 +19,7 @@ function updateMail(workflow)
 
 async function sendConfirmationMail(workflow)
 {
-    if(workflow.context.oldEmail === workflow.currentEvent.payload.email)
+    if(workflow.context.oldEmail === workflow.event.payload.email)
         return;
 
     workflow.context.changeCount ++;
@@ -30,7 +30,7 @@ async function restoreEmailAddress(workflow)
 {
     await workflow.sideEffects.executeCommand({
         aggregateName: 'user',
-        aggregateId: workflow.currentEvent.aggregateId,
+        aggregateId: workflow.event.aggregateId,
         type: 'update',
         payload: {
             email: workflow.context.oldEmail
