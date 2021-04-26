@@ -128,10 +128,39 @@ class Blackrik
             )
         );
     }
+    
+    _getSideEffectsProxy(sideEffects, event, config)
+    {
+        const blackrik = this;
+        return new Proxy(sideEffects, {
+            get: (target, prop, ...rest) => {
+                if(event.isReplay && config.noopSideEffectsOnReplay !== false)
+                {
+                    return () => {};
+                }
+                
+                for(const [fn, argCount] of Object.entries({
+                    'executeCommand': 1,
+                    'scheduleCommand': 2
+                }))
+                {
+                    if(prop !== fn)
+                        continue;
+                    return function(...args){
+                        const params = [
+                            ...args.slice(0, argCount),
+                            event
+                        ];
+                        return this[fn](...params);
+                    }.bind(blackrik);
+                }
+                return Reflect.get(target, prop, ...rest);
+            }
+        });
+    }
 
     async _processSagas()
     {
-        const blackrik = this;
         return Promise.all(
             this.config.sagas.map(
                 ({name, source, adapter}) => {
@@ -146,30 +175,7 @@ class Blackrik
                         async (handler, store, event, config) => await handler(
                             store,
                             event,
-                            new Proxy(sideEffects, {
-                                get: (target, prop, ...rest) => {
-                                    if(event.isReplay && config.noopSideEffectsOnReplay !== false)
-                                        return () => {};
-                                    
-                                    for(const [fn, argCount] of Object.entries({
-                                        'executeCommand': 1,
-                                        'scheduleCommand': 2
-                                    }))
-                                    {
-                                        if(prop !== fn)
-                                            continue;
-                                        return function(...args){
-                                            const params = [
-                                                ...args.slice(0, argCount),
-                                                event
-                                            ];
-                                            return this[fn](...params);
-                                        }.bind(blackrik);
-                                    }
-
-                                    return Reflect.get(target, prop, ...rest);
-                                }
-                            })
+                            this._getSideEffectsProxy(sideEffects, event, config)
                         )
                     );
                 }

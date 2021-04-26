@@ -93,7 +93,7 @@ const table = [[
     {
         Field: 'payload',
         Type: 'text',
-        Null: 'NO',
+        Null: 'YES',
         Key: '',
         Default: null,
         Extra: ''
@@ -168,7 +168,7 @@ const databaseSchema = {
         payload: {
             Field: 'payload',
             Type: 'text',
-            Null: 'NO',
+            Null: 'YES',
             Key: '',
             Default: null,
             Extra: ''
@@ -690,14 +690,14 @@ describe('Test verifySchema', () => {
 
 describe('Test buildFieldListFromSchema', () => {
     test('Correct build of fieldlist from scheme', () => {
-        const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text not null , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
+        const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
         const testObj = new Adapter(testInstance);
         const result = testObj.buildFieldListFromSchema(databaseSchema);
         expect(result).toBe(expected);
     });
     test('Correct build of fieldlist from scheme with default values', () => {
         databaseSchema.fields.causationId.Default = 'NULL';
-        const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36) default NULL,payload text not null , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
+        const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(32) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36) default NULL,payload text , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
         const testObj = new Adapter(testInstance);
         const result = testObj.buildFieldListFromSchema(databaseSchema);
         expect(result).toBe(expected);

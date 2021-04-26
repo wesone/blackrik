@@ -69,7 +69,7 @@ const databaseSchema = {
         payload: {
             Field: 'payload',
             Type: 'text',
-            Null: 'NO',
+            Null: 'YES',
             Key: '',
             Default: null,
             Extra: ''
