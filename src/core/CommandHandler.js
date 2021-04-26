@@ -48,7 +48,13 @@ class CommandHandler
 
     async handle(req)
     {
-        return this.process(req.body, this.#blackrik.buildContext(req));
+        const args = req.params
+            ? {
+                ...req.body,
+                ...req.params
+            }
+            : req.body;
+        return this.process(args, this.#blackrik.buildContext(req));
     }
 
     async process(args, context = {})

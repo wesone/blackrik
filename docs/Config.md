@@ -40,7 +40,7 @@ Property | Type | Attribute | Description
 An array of objects where each object represents an aggregate.  
 Each aggregate needs to have a unique `name`, [commands](Aggregates#Commands) and a [projection](Aggregates#Projection).  
 
-Example:
+### Examples
 ```javascript
 aggregates: [
     {
@@ -63,7 +63,7 @@ The projection and the resolvers depend on a store that is accessed through an a
 By default the adapter `'default'` will be used.  
 You can reference any adapter from the [readModelStoreAdapters](Config#readModelStoreAdapters) object.
 
-Example:
+### Examples
 ```javascript
 readModels: [
     {
@@ -87,7 +87,7 @@ Just like [read models](Config#ReadModels), sagas depend on a store that is acce
 By default the adapter `'default'` will be used.  
 You can reference any adapter from the [readModelStoreAdapters](Config#readModelStoreAdapters) object.
 
-Example:
+### Examples
 ```javascript
 sagas: [
     {
@@ -103,7 +103,7 @@ The framework needs a store for it's core stuff (e.g. to persist [scheduled comm
 The specified adapter needs to be the name of one of the stores from the [readModelStoreAdapters](#readModelStoreAdapters) object.  
 By default the adapter `'default'` will be used. 
 
-Example:
+### Examples
 ```javascript
 adapter: 'MyCustomAdapter'
 ```
@@ -117,7 +117,7 @@ The property `module` is a string that contains the full path to the adapter (or
 
 The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
 
-Example:
+### Examples
 ```javascript
 readModelStoreAdapters: {
     default: {
@@ -143,7 +143,7 @@ The property `module` is a string that contains the full path to the adapter (or
 
 The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
 
-Example:
+### Examples
 ```javascript
 eventStoreAdapter: {
     module: Blackrik.ADAPTERS.EVENTSTORE.MySQL
@@ -164,7 +164,7 @@ The property `module` is a string that contains the full path to the adapter (or
 
 The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
 
-Example:
+### Examples
 ```javascript
 eventBusAdapter: {
     module: Blackrik.ADAPTERS.EVENTBUS.Kafka
@@ -179,7 +179,7 @@ An optional function to create a custom context to use inside [commands](Aggrega
 The function receives the `req` object (just like [routes](#routes) and [middlewares](#middlewares)) which may be `null` if the command or query was not called by the HTTP API.  
 The function should return an object that holds infos or helper functions. Reserved properties (e.g. `causationEvent`) may be overridden.
 
-Example:
+### Examples
 ```javascript
 contextProvider: (req = null) => ({
     user: req?.user ?? 'system'
@@ -189,7 +189,7 @@ contextProvider: (req = null) => ({
 # server
 Blackrik utilizes [Express](https://expressjs.com/) as a server and you are able to affect the creation of the server by using the `server` property.
 
-Example:
+### Examples
 ```javascript
 server: {
     config: {

@@ -1,6 +1,6 @@
 # Introduction
 An aggregate represents a state of a single unit inside your system (e.g. user).  
-It consists of a name, [commands](Aggregates#Commands) and a [projection](Aggregates#Projection).
+It consists of a name, [commands](#Commands) and a [projection](#Projection).
 A specific instance of an aggregate (e.g. an actual user) is identified by `aggregateId`.
 
 # Commands
@@ -15,7 +15,7 @@ To reject a command (e.g. in case the validation of the payload failed) the call
 Name | Type | Attribute | Description
 :--- | :--- | :--- | :---
 command | object | | The [command](#Command) to be processed by the callback
-state | object | | The calculated state that is created with the help of the aggregate's projection and that is based on all events that belong to the aggregateId
+state | object | | The calculated state that is created with the help of the aggregate's [projection](#Projection) and that is based on all events that belong to the aggregateId
 context | object | | An object that contains [additional information or helper functions](#Context)
 
 ### Return
@@ -49,7 +49,7 @@ Property | Type | Attribute | Description
 type | string | | The type of event
 payload | object | optional<br>default: `null` | An optional payload that contains additional information for the event
 
-Example:
+## Examples
 ```javascript
 module.exports = {
     create: async (command, state, context) => {
@@ -90,7 +90,7 @@ To achieve this, the projection contains a function for each event type of the a
 The function will receive the previous state and the event and returns the new state.  
 A projection can also have a function called `init` that returns a starting state. Without an init-function the first state will be an empty object (`{}`).
 
-Example:
+## Examples
 ```javascript
 module.exports = {
     init: () => ({

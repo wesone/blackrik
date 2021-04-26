@@ -27,7 +27,7 @@ options | object | optional | Options to control the definition behavior. See: [
 ### Return
 `true` if the table was created which means that the table did not exist or the scheme was changed. Otherwise `false`.
 
-Example:
+### Examples
 ```javascript
 await store.defineTable(tableName, {
     id: {
@@ -73,7 +73,7 @@ queryOptions | object | optional | Additional options that affect the query. See
 ### Return
 `array` of objects
 
-Example:
+### Examples
 ```javascript
 await store.find('Users',
     {

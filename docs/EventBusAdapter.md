@@ -30,7 +30,7 @@ name | string | | The aggregate name of the event
 type | string | | The event type to listen for
 callback | function | | The callback to be executed. The callback will receive the event as the first parameter
 
-Example:
+### Examples
 ```javascript
 await eventBus.subscribe('User', 'USER_CREATED', event => {
     console.log('User was created', event);
@@ -50,7 +50,7 @@ event | object | | The event to publish
 ### Return
 `true` if the event was published, otherwise `false`
 
-Example:
+### Examples
 ```javascript
 const success = await eventBus.publish('User', {
     aggregateId: '219de538-9936-4362-b29f-c5f57768f342',

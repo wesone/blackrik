@@ -19,7 +19,7 @@ Name | Type | Attribute | Description
 store | object | | An instance of a [read model store adapter](ReadModelStoreAdapter)
 event | object | | The event
 
-Example:
+### Examples
 ```javascript
 module.exports = {
     init: async store => {
@@ -84,7 +84,7 @@ Property | Type | Attribute | Description
 :--- | :--- | :--- | :---
  |  |  | 
 
-Example:
+### Examples
 ```javascript
 module.exports = {
     get: async (store, args, context) => {
