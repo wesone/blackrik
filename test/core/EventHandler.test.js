@@ -3,7 +3,7 @@ const {EVENT_LIMIT_REPLAY} = require('../../src/core/Constants');
 
 class EventStoreMock
 {
-    constructor(throwOnSave = false)
+    constructor(throwOnSave = false, overlapOnSave = false)
     {
         this.events = [];
 
@@ -11,12 +11,15 @@ class EventStoreMock
         this.load = jest.fn(this._load);
 
         this.throwOnSave = throwOnSave;
+        this.overlapOnSave = overlapOnSave;
     }
 
     async _save(event)
     {
         if(this.throwOnSave)
             throw Error('Something went wrong');
+        if(this.overlapOnSave)
+            return false;
 
         const position = this.events.length + 1;
         this.events.push({
@@ -80,6 +83,16 @@ class EventBusMock
     }
 }
 
+beforeAll(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+});
+afterAll(() => {
+    console.error.mockRestore();
+});
+afterEach(() => {
+    console.error.mockClear();
+});
+
 let eventStore;
 let eventBus;
 let eventHandler;
@@ -138,13 +151,18 @@ describe('EventHandler', () => {
         eventStore = new EventStoreMock(true);
         eventHandler = new EventHandler(eventStore, eventBus, {});
         await eventHandler.init();
-        
-        const event = createEvent();
-
         await eventHandler.start();
-        const filledEvent = await eventHandler.publish(aggregate, event);
 
-        expect(filledEvent).toBe(false);
+        expect(eventHandler.publish(aggregate, createEvent())).rejects.toThrow();
+    });
+
+    test('handles rejected events', async () => { 
+        eventStore = new EventStoreMock(false, true);
+        eventHandler = new EventHandler(eventStore, eventBus, {});
+        await eventHandler.init();
+        await eventHandler.start();
+
+        expect(eventHandler.publish(aggregate, createEvent())).rejects.toThrow();
     });
 });
 

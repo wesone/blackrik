@@ -214,7 +214,7 @@ class Adapter extends ReadModelStoreAdapterInterface
             if(maxPosition < queryOptions.position)
             {
                 const error =  new Error('Data not yet availible');
-                error.code = 409;
+                error.status = 409;
                 throw error;
             }
         }

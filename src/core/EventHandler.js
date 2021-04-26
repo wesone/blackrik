@@ -4,6 +4,7 @@ const {
 } = require('./Constants');
 const Event = require('./Event');
 const ListenerMap = require('../utils/ListenerMap');
+const {ConflictError} = require('./Errors');
 
 class EventHandler
 {
@@ -39,10 +40,19 @@ class EventHandler
     async persistEvent(event)
     {
         //TODO create snapshot if too many events are stored
-        return Event.from({
-            ...event,
-            position: await this.eventStore.save(event)
-        });
+        try
+        {
+            const position = await this.eventStore.save(event);
+            if(position === false)
+                throw new ConflictError('Events overlapped');
+            return Event.from({...event, position});
+        }
+        catch(e)
+        {
+            if(!(e instanceof ConflictError))
+                console.error(e);
+            throw e;
+        }
     }
 
     async sendEvent(name, event)
@@ -74,8 +84,7 @@ class EventHandler
     async publish(name, event)
     {
         return this.persistEvent(event)
-            .then(event => this.sendEvent(name, event))
-            .catch(() => false);
+            .then(event => this.sendEvent(name, event));
     }
 
     async replayEvents(jobs)

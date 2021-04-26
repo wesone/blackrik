@@ -317,8 +317,6 @@ class Workflow
             sideEffects: {}
         };
     }
-
-
 }
 
 module.exports = Workflow;

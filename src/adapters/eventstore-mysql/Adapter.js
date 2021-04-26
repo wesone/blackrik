@@ -135,10 +135,19 @@ class Adapter extends EventStoreAdapterInterface
 
     async save(event)
     {
-        const result = await this.db.execute(
-            `INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.keys(event).map(() => '?').join(',')})`,
-            Object.values(event));
-        return result[0].insertId;
+        try
+        {
+            const result = await this.db.execute(
+                `INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.keys(event).map(() => '?').join(',')})`,
+                Object.values(event));
+            return result[0].insertId;
+        }
+        catch(e)
+        {
+            if(e.errno === 1062)
+                return false;
+            throw e;
+        }
     }
 
     async load(filter)

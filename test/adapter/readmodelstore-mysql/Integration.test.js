@@ -222,7 +222,7 @@ test('position check handling', async () => {
     expect(result).toEqual(expectedResult);
 
     const expectedError = new Error('Data not yet availible');
-    expectedError.code = 409;
+    expectedError.status = 409;
     await expect(adapter.find(tableName, null, {position: 3})).rejects.toThrow(expectedError);
 
     // Update with check

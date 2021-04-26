@@ -1,5 +1,5 @@
 const Event = require('./Event');
-const {BadRequestError, ConflictError} = require('./Errors');
+const {BadRequestError} = require('./Errors');
 
 class CommandHandler 
 {
@@ -35,13 +35,6 @@ class CommandHandler
         return Object.prototype.hasOwnProperty.call(this.#blackrik._aggregates, aggregateName);
     }
 
-    buildContext(req)
-    {
-        return {
-            blackrik: req.blackrik
-        };
-    }
-
     async processEvent(aggregateName, event, causationEvent = null)
     {
         if(causationEvent)
@@ -50,17 +43,12 @@ class CommandHandler
             event.correlationId = correlationId;
             event.causationId = id;
         }
-
-        event = await this.#blackrik._eventHandler.publish(aggregateName, new Event(event));
-        if(!event)
-            throw new ConflictError('Events overlapped');
-            
-        return event;
+        return await this.#blackrik._eventHandler.publish(aggregateName, new Event(event)); 
     }
 
     async handle(req)
     {
-        return this.process(req.body, this.buildContext(req));
+        return this.process(req.body, this.#blackrik.buildContext(req));
     }
 
     async process(args, context = {})

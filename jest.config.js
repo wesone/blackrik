@@ -11,6 +11,6 @@ module.exports = {
     coveragePathIgnorePatterns: [
         'test',
         'examples',
-        'src/resources/YupExtensions'
+        'src/resources'
     ]
 };
