@@ -27,7 +27,7 @@ class EventHandler
     async init()
     {
         // if(await this.store.defineTable(TABLE_NAME, {
-        //     position: 'Number'
+        //     position: 'number'
         // }))
         //     await this.store.insert(TABLE_NAME, {position: -1});
     }
@@ -106,8 +106,8 @@ class EventHandler
 
                 if(events.length)
                     // await Promise.all(events.map(event => this.sendEvent(name, {...event, isReplay: true}))); //TODO make sure events are send in the right order
-                    for(let i = 0; i < events.length; i++)
-                        await this.sendEvent(name, {...events[i], isReplay: true});
+                    for(const event of events)
+                        await this.sendEvent(name, {...event, isReplay: true});
                 next = cursor;
             } while(next); 
         }

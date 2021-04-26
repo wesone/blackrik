@@ -13,10 +13,10 @@ module.exports = {
                 type: 'uuid',
                 primaryKey: true,
             },
-            email: 'String',
-            name: 'String',
-            createdAt: 'Date',
-            updatedAt: 'Date'
+            email: 'string',
+            name: 'string',
+            createdAt: 'date',
+            updatedAt: 'date'
         });
     },
     [USER_CREATED]: async (store, event) => {
@@ -33,7 +33,7 @@ module.exports = {
         await store.update(tableName, {
             id: event.aggregateId
         }, {
-            name: event.payload.name,
+            email: event.payload.email,
             updatedAt: new Date(event.timestamp)
         });
     },

@@ -46,12 +46,12 @@ class CommandScheduler
     {
         await this.#store.defineTable(TABLE_NAME, {
             id: {
-                type: 'Number',
+                type: 'number',
                 primaryKey: true
             },
-            timestamp: 'Number',
-            command: 'JSON',
-            causationEvent: 'JSON'
+            timestamp: 'number',
+            command: 'json',
+            causationEvent: 'json'
         });
         this._loadScheduledCommands();
     }

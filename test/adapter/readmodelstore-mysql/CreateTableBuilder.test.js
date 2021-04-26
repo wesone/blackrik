@@ -10,22 +10,22 @@ test('Build creat table statement', () => {
             primaryKey: true,
         },
         test: {
-            type: 'String',
+            type: 'string',
             allowNull: true,
         },
         testDate: {
-            type: 'Date',
+            type: 'date',
         },
         testInt: {
-            type: 'Number',
+            type: 'number',
             unique: true,
         },
         testInc: {
-            type: 'Number',
+            type: 'number',
             unique: true,
         },
         testDefault: {
-            type: 'String',
+            type: 'string',
             defaultValue: 'Ein Test',
         },
         testShorthand: 'Date',
@@ -41,16 +41,16 @@ test('Build creat table statement', () => {
 
 test('primary key order', () => {
     const fieldDefinition = {
-        test: 'String',
-        testDate: 'String',
-        testInt: 'String',
-        testInc: 'String',
+        test: 'string',
+        testDate: 'string',
+        testInt: 'string',
+        testInc: 'string',
         id: {
             type: 'uuid',
             primaryKey: true,
         },
-        testDefault:'String',
-        testShorthand: 'Date',
+        testDefault:'string',
+        testShorthand: 'date',
     };
    
     const expectedSQL = 'CREATE TABLE `TestTable` (`id` CHAR(36), `test` VARCHAR(512), `testDate` VARCHAR(512), `testInt` VARCHAR(512), `testInc` VARCHAR(512), `testDefault` VARCHAR(512), `testShorthand` TIMESTAMP, PRIMARY KEY ( `id` )) COMMENT="1:76f66570ab69aa004e86e87d3d1ff665779c84f1e409f10452b61bc380c5088ae45e44b766aceee5dc920c2d5f7cb1f7eb1741c39bb935dcf020e673d5517fb1"';
@@ -62,15 +62,15 @@ test('primary key order', () => {
 
 test('indexes', () => {
     const fieldDefinition = {
-        test: 'String',
-        testDate: 'String',
-        testInt: 'String',
-        testInc: 'String',
+        test: 'string',
+        testDate: 'string',
+        testInt: 'string',
+        testInc: 'string',
         id: {
             type: 'uuid',
         },
-        testDefault:'String',
-        testShorthand: 'Date',
+        testDefault:'string',
+        testShorthand: 'date',
     };
 
     const indexes = [
@@ -88,15 +88,15 @@ test('indexes', () => {
 
 test('indexes order', () => {
     const fieldDefinition = {
-        test: 'String',
-        testDate: 'String',
-        testInt: 'String',
-        testInc: 'String',
+        test: 'string',
+        testDate: 'string',
+        testInt: 'string',
+        testInc: 'string',
         id: {
             type: 'uuid',
         },
-        testDefault:'String',
-        testShorthand: 'Date',
+        testDefault:'string',
+        testShorthand: 'date',
     };
 
     const indexes = [
@@ -115,26 +115,26 @@ test('indexes order', () => {
 
 test('indexes exceptions', () => {
     const fieldDefinition = {
-        test1: 'Boolean',
-        test2: 'Boolean',
-        test3: 'Boolean',
-        test4: 'Boolean',
-        test5: 'Boolean',
-        test6: 'Boolean',
-        test7: 'Boolean',
-        test8: 'Boolean',
-        test9: 'Boolean',
-        test10: 'Boolean',
-        test11: 'Boolean',
-        test12: 'Boolean',
-        test13: 'Boolean',
-        test14: 'Boolean',
-        test15: 'Boolean',
-        test16: 'Boolean',
-        test17: 'Boolean',
-        test18: 'Boolean',
-        test19: 'Boolean',
-        test20: 'Boolean',
+        test1: 'boolean',
+        test2: 'boolean',
+        test3: 'boolean',
+        test4: 'boolean',
+        test5: 'boolean',
+        test6: 'boolean',
+        test7: 'boolean',
+        test8: 'boolean',
+        test9: 'boolean',
+        test10: 'boolean',
+        test11: 'boolean',
+        test12: 'boolean',
+        test13: 'boolean',
+        test14: 'boolean',
+        test15: 'boolean',
+        test16: 'boolean',
+        test17: 'boolean',
+        test18: 'boolean',
+        test19: 'boolean',
+        test20: 'boolean',
     };
 
     const indexes = [
@@ -165,4 +165,28 @@ test('indexes exceptions', () => {
     expect(() => createTableBuilder(tableName, fieldDefinition, [{fields: ['fail']}])).toThrow(new Error('Unknown field \'fail\' for index'));
 
 
+});
+
+test('variable type length', () => {
+    const fieldDefinition = {
+        test: 'string(10)',
+        test2: 'string',
+        test3: { type: 'string(128)' },
+        test4: 'boolean'
+    };
+   
+    const expectedSQL = 'CREATE TABLE `TestTable` (`test` VARCHAR(10), `test2` VARCHAR(512), `test3` VARCHAR(128), `test4` TINYINT(1)) COMMENT="1:0809cbbf11f3a4330fcc762edaa025736e85d5580613a8b8da0bba7caefbad6d41d689937d404412da0cd76729c6f46fc72150f8535880a01f07dff1fea6a0a4"';
+    const expectedHash = '1:0809cbbf11f3a4330fcc762edaa025736e85d5580613a8b8da0bba7caefbad6d41d689937d404412da0cd76729c6f46fc72150f8535880a01f07dff1fea6a0a4';
+    const {sql, hash} = createTableBuilder(tableName, fieldDefinition);
+    expect(sql).toEqual(expectedSQL);
+    expect(hash).toEqual(expectedHash);
+});
+
+test('variable type length error', () => {
+    const fieldDefinition = {
+        test: 'string(10)',
+        test2: 'boolean(2)'
+    };
+
+    expect(() => createTableBuilder(tableName, fieldDefinition)).toThrow(new Error('Invalid type: "boolean(2)". Type length only supported for "string"'));
 });

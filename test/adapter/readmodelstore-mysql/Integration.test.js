@@ -27,14 +27,14 @@ test('test with MySQL DB', async () => {
 
     await adapter.defineTable(tableName, {
         id: {
-            type: 'Number',
+            type: 'number',
             primaryKey: true,
         },
         test: {
-            type: 'String',
+            type: 'string',
         },
         date: {
-            type: 'Date',
+            type: 'date',
         }
     });
 
@@ -71,24 +71,24 @@ test('table schema changes', async () => {
 
     const schema1 = {
         id: {
-            type: 'Number',
+            type: 'number',
             primaryKey: true,
         },
         test: {
-            type: 'String',
+            type: 'string',
         }
     };
 
     const schema2 = {
         id: {
-            type: 'Number',
+            type: 'number',
             primaryKey: true,
         },
         test: {
-            type: 'String',
+            type: 'string',
         },
         test2: {
-            type: 'Boolean'
+            type: 'boolean'
         }
     };
 
@@ -132,10 +132,10 @@ test('JSON handling', async () => {
 
     const schema = {
         id: {
-            type: 'Number'
+            type: 'number'
         },
         myJSON: {
-            type: 'JSON',
+            type: 'json',
         }
     };
 
@@ -173,10 +173,10 @@ test('position check handling', async () => {
 
     const schema = {
         id: {
-            type: 'Number'
+            type: 'number'
         },
         name: {
-            type: 'String',
+            type: 'string',
         }
     };
 

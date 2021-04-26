@@ -74,7 +74,7 @@ test('defineTable errors', async () => {
     };
 
     adapter.findOne = jest.fn().mockImplementation(() => ({TABLE_COMMENT: 'asd'}));
-    await expect(adapter.defineTable(tableName, {id: 'String'})).rejects.toThrow(expectedError);
+    await expect(adapter.defineTable(tableName, {id: 'string'})).rejects.toThrow(expectedError);
 
 });
 
@@ -95,7 +95,7 @@ test('defineTable already in progress', async () => {
     };
 
     adapter.findOne = jest.fn().mockImplementation(() => ({TABLE_COMMENT: '1:9d4df0dfc453e2d862325cdab8ebb358853b2359c0702ec9664dc9d9c048502cda73564e56e3eac15a5271caf337b584a00c87044bdb7824dd04b036346e53e6'}));
-    await expect(adapter.defineTable(tableName, {id: 'String'})).resolves.toEqual(false);
+    await expect(adapter.defineTable(tableName, {id: 'string'})).resolves.toEqual(false);
 });
 
 test('defineTable error with position', async () => {
@@ -114,7 +114,7 @@ test('defineTable error with position', async () => {
     };
 
     adapter.findOne = jest.fn().mockImplementation(() => ({TABLE_COMMENT: '1:9d4df0dfc453e2d862325cdab8ebb358853b2359c0702ec9664dc9d9c048502cda73564e56e3eac15a5271caf337b584a00c87044bdb7824dd04b036346e53e6'}));
-    await expect(adapter.defineTable(tableName, {id: 'String'})).rejects.toThrow(expectedError);
+    await expect(adapter.defineTable(tableName, {id: 'string'})).rejects.toThrow(expectedError);
 });
 
 test('delete error without position', async () => {

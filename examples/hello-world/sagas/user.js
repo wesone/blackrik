@@ -7,7 +7,7 @@ module.exports = {
         init: async store => {
             await store.defineTable(tableName, {
                 email: {
-                    type: 'String',
+                    type: 'string',
                     primaryKey: true,
                 }
             });
