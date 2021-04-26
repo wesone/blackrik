@@ -63,14 +63,26 @@ test('CommandHandler processes causation events', async () => {
     expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
 });
 
-test('CommandHandler processes HTTP requests', async () => {
-    const event = await commandHandler.handle({
-        blackrik: {},
-        body: {aggregateName, aggregateId, type: typeWithEvent}
-    });
+describe('CommandHandler processes HTTP requests', () => {
+    test('/commands', async () => {
+        const event = await commandHandler.handle({
+            blackrik: {},
+            body: {aggregateName, aggregateId, type: typeWithEvent}
+        });
 
-    expect(event).toStrictEqual(exampleEvent);
-    expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
+        expect(event).toStrictEqual(exampleEvent);
+        expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
+    });
+    test('/command/:aggregateName/:type', async () => {
+        const event = await commandHandler.handle({
+            blackrik: {},
+            params: {aggregateName, type: typeWithEvent},
+            body: {aggregateId}
+        });
+
+        expect(event).toStrictEqual(exampleEvent);
+        expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
+    });
 });
 
 test('CommandHandler handles overlapping events', () => {

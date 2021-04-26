@@ -10,8 +10,7 @@ const AdapterListScheme = require('./YupExtensions/AdapterListScheme');
 yup.adapterList = () => new AdapterListScheme();
 
 const httpMethods = require('./httpMethods');
-const {ROUTE_COMMAND, ROUTE_QUERY} = require('../core/Constants');
-const reservedRoutes = [ROUTE_COMMAND, ROUTE_QUERY]; // this would allow /query/:rm/:res :(
+const reservedRoutes = Object.values(require('../core/Constants').ROUTES); // this would allow /query/:rm/:res :(
 
 const sagaSource = yup.object({
     handlers: yup.object().required(),
