@@ -50,8 +50,8 @@ class CommandHandler
     {
         const args = req.params
             ? {
-                ...req.params,
-                ...req.body
+                ...req.body,
+                ...req.params
             }
             : req.body;
         return this.process(args, this.#blackrik.buildContext(req));

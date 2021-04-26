@@ -16,7 +16,7 @@ initial | string | | Name of the initial step
 context | object | optional | Set an initial context to be used inside the [action callbacks](#action)
 steps | object | | An object that contains [steps](#step)
 
-Example:
+### Examples
 ```javascript
 module.exports = {
     name: 'MyWorkflow',
@@ -71,7 +71,7 @@ The function receives an object as the first parameter that contains the same pr
 # Workflow identifier
 A workflow needs to be identified in order to load the correct state. For simple workflows that process only events from one aggregate it uses the `aggregateId` of the event by default. When different aggregates are involved, you need to find a common denominator and provide a custom `idHandler` function that receives the event and returns an id.
 
-Example:
+### Examples
 ```javascript
 event => {
     if(event.type === 'USER_CREATED')

@@ -25,7 +25,8 @@ An object containing the default adapters that can be used inside read model sto
     }
 }
 ```
-Example:
+
+### Examples
 ```javascript
 eventBusAdapter: {
     module: Blackrik.ADAPTERS.EVENTBUS.Kafka
@@ -50,7 +51,8 @@ When used inside the routes array lower or upper case does not matter.
     'all'
 ]
 ```
-Example:
+
+### Examples
 ```javascript
 routes: [
     {
@@ -83,7 +85,8 @@ ForbiddenError // 403 Forbidden
 NotFoundError // 404 Not Found
 ConflictError // 409 Conflict
 ```
-Example:
+
+### Examples
 ```javascript
 const {BadRequestError, BaseError} = require('blackrik').ERRORS
 
@@ -98,7 +101,8 @@ if(userWantsCoffee())
 # constructor
 `constructor(...configs: object)`  
 Creates a new Blackrik instance based on the provided [config(s)](Config).  
-Example:
+
+### Examples
 ```javascript
 const Blackrik = require('blackrik');
 
@@ -124,7 +128,7 @@ command | object | | The command to be executed
 `true` if an event was created, otherwise `false`  
 May throw an error
 
-Example:
+### Examples
 ```javascript
 try
 {
@@ -147,7 +151,7 @@ catch(e)
 // inside a saga
 'USER_CREATED': async (store, {aggregateId, payload: {email}}, sideEffects) => {
     if(await store.findOne('emails', {email}))
-        return await executeCommand({
+        return await sideEffects.executeCommand({
             aggregateName: 'User',
             aggregateId,
             type: 'reject',
@@ -168,6 +172,19 @@ Under the hood scheduleCommand is implemented using [setTimeout](https://nodejs.
 ### Return
 `true` if the command was successfully scheduled.
 
+### Examples
+```javascript
+// inside a saga
+'USER_REGISTERED': async (store, {timestamp, aggregateId}, {scheduleCommand}) => {
+    // send the first newsletter 7 days after the registration
+    await scheduleCommand(timestamp + 1000*60*60*24*7, {
+        aggregateName: 'User',
+        aggregateId,
+        type: 'sendNewsletter'
+    });
+}
+```
+
 # executeQuery
 `async executeQuery(readModel: string, resolver: string, ?query: object): mixed`  
 Executes a query on the [read model's](ReadModels#Introduction) [resolver](ReadModels#Resolver).
@@ -183,7 +200,7 @@ query | object | optional<br>default: `{}` | A query for the resolver
 The result of the resolver  
 May throw an error
 
-Example:
+### Examples
 ```javascript
 const response = await executeQuery('users', 'get', {id: 42});
 ```

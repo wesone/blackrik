@@ -26,7 +26,7 @@ event | object | | The event to be saved
 ### Return
 The position of the event inside the event store or `false` if the new position of the event is already taken (conflict).
 
-Example:
+### Examples
 ```javascript
 const position = await eventStore.save({
     aggregateId: '4233fb22-76eb-4b8f-9b34-8fdcb994e370',
@@ -70,7 +70,7 @@ Property | Type | Attribute | Description
 events | array | | An array that contains the matching events
 cursor | mixed | | A cursor that can be passed to another call to `load` to scroll the result
 
-Example:
+### Examples
 ```javascript
 const {events, cursor} = await eventStore.load({
     aggregateIds: [
@@ -91,10 +91,10 @@ const {events, cursor} = await eventStore.load({
 `async close(): boolean`  
 Securely closes all open connections to the database server.
 
-Example:
+### Return
+`true` if the connections were closed successfully. Otherwise it throws an error.
+
+### Examples
 ```javascript
 await eventStore.close();
 ```
-
-### Return
-`true` if the connections were closed successfully. Otherwise it throws an error.
