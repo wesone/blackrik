@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed workflow property `currentEvent` to `event`
 - Renamed workflow function `transition` to `trigger`
 
+### Added
+- Alternative HTTP route to execute commands
+
 ## [1.1.1] - 2021-04-19
 ### Changed
 - MySQL read model schema types are now case insenitive
