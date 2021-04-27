@@ -24,11 +24,12 @@ Name | Type | Attribute | Description
 event | object | | The event to be saved
 
 ### Return
-The position of the event inside the event store or `false` if the new position of the event is already taken (conflict).
+The `position` (number) of the event inside the event store or `false` if the new position of the event is already taken (conflict).
 
 ### Examples
 ```javascript
 const position = await eventStore.save({
+    id: 'b42e61d5-e911-4ea8-92fd-57ceb552e712',
     aggregateId: '4233fb22-76eb-4b8f-9b34-8fdcb994e370',
     aggregateVersion: 0,
     type: 'ANSWER_CREATED',
@@ -69,6 +70,24 @@ Property | Type | Attribute | Description
 :--- | :--- | :--- | :---
 events | array | | An array that contains the matching events
 cursor | mixed | | A cursor that can be passed to another call to `load` to scroll the result
+
+An event that was loaded contains the additional property `position` that was given to the event during [save](#save).  
+So an event may look like this:
+```json
+{
+    "id": "b42e61d5-e911-4ea8-92fd-57ceb552e712",
+    "position": 423,
+    "aggregateId": "4233fb22-76eb-4b8f-9b34-8fdcb994e370",
+    "aggregateVersion": 0,
+    "type": "ANSWER_CREATED",
+    "timestamp": 123456789,
+    "correlationId": "4233fb22-76eb-4b8f-9b34-8fdcb994e370",
+    "causationId": null,
+    "payload": {
+        "answer": 42
+    }
+}
+```
 
 ### Examples
 ```javascript
