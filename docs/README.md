@@ -22,7 +22,7 @@ It also has a [projection](Aggregates#Projection) that uses all events that belo
 
 ### [ReadModels](ReadModels)
 A read model will listen to events of an aggregate and will also efficiently build a [projection](ReadModels#Projection) of the current state.  
-It also has [resolvers](ReadModels#Resolvers) that will use the read model's projection to perform queries (e.g. what is the user's address).
+It also has [resolvers](ReadModels#Resolvers) that will use the read models projection to perform queries (e.g. what is the users address).
 
 ### [Sagas](Sagas)
 Just like read models, sagas will listen to events of an aggregate and execute [business logic](Sagas#Handlers).  

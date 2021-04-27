@@ -75,6 +75,9 @@ class CommandHandler
         context.aggregateVersion = latestEvent
             ? latestEvent.aggregateVersion
             : 0;
+        context.latestEventPosition = latestEvent
+            ? latestEvent.position
+            : null;
         
         const event = await commands[type](
             command, 
