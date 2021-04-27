@@ -4,7 +4,7 @@ The read model store adapter is an interface to a persistence level.
 # Reference
 Visibility | Property
 :---: | :---
-public |     async [defineTable](ReadModelStoreAdapter#defineTable)(name: string, scheme: object, ?options: object): boolean<br>Defines a table and it's structure
+public |     async [defineTable](ReadModelStoreAdapter#defineTable)(name: string, scheme: object, ?options: object): boolean<br>Defines a table and its structure
 public |     async [dropTable](ReadModelStoreAdapter#dropTable)(name: string)<br>Deletes the specified table
 public |     async [find](ReadModelStoreAdapter#find)(name: string, ?conditions: object, ?queryOptions: object): array<br>Loads entries from the store
 public |     async [findOne](ReadModelStoreAdapter#findOne)(name: string, ?conditions: object, ?queryOptions: object): object \| null<br>Loads a single entry from the store
@@ -15,7 +15,7 @@ public |     async [delete](ReadModelStoreAdapter#delete)(name: string, conditio
 
 # defineTable
 `async defineTable(name: string, scheme: object, ?options: object): boolean`  
-Defines a table and it's structure. It will remove and recreate existing tables if their scheme changed.
+Defines a table and its structure. It will remove and recreate existing tables if their scheme changed.
 
 ### Parameters
 Name | Type | Attribute | Description
