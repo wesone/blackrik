@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Alternative HTTP route to execute commands
+- New property `latestEventPosition` inside the context of commands
 
 ## [1.1.1] - 2021-04-19
 ### Changed
