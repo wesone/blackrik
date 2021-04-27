@@ -16,7 +16,7 @@ There are 3 major parts inside a Blackrik application.
 
 ### [Aggregates](Aggregates)
 An aggregate represents a state of a single unit inside your system (e.g. user).  
-It receives [commands](Aggregates#Commands) that request changes to the unit's state (e.g. update user).  
+It receives [commands](Aggregates#Commands) that request changes to the units state (e.g. update user).  
 A command can emit an event to tell the system that a state change happened (e.g. user was updated).  
 It also has a [projection](Aggregates#Projection) that uses all events that belong to the unit, to build the current state to be used inside the commands.
 

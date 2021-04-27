@@ -99,7 +99,7 @@ sagas: [
 ```
 
 # adapter
-The framework needs a store for it's core stuff (e.g. to persist [scheduled commands](Blackrik#schedulecommand)).  
+The framework needs a store for its core stuff (e.g. to persist [scheduled commands](Blackrik#schedulecommand)).  
 The specified adapter needs to be the name of one of the stores from the [readModelStoreAdapters](#readModelStoreAdapters) object.  
 By default the adapter `'default'` will be used. 
 
@@ -115,7 +115,7 @@ Refer to [read model store adapter](ReadModelStoreAdapter) to see how to create 
 
 The property `module` is a string that contains the full path to the adapter (or just the name of the module if the module is a stand-alone package).
 
-The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
+The property `args` will be used as a configuration for the adapter and its content will depend on the adapter.
 
 ### Examples
 ```javascript
@@ -141,7 +141,7 @@ Refer to [event store adapter](EventStoreAdapter) to see how to create an event 
 
 The property `module` is a string that contains the full path to the adapter (or just the name of the module if the module is a stand-alone package).
 
-The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
+The property `args` will be used as a configuration for the adapter and its content will depend on the adapter.
 
 ### Examples
 ```javascript
@@ -162,7 +162,7 @@ Refer to [event bus adapter](EventBusAdapter) to see how to create an event bus 
 
 The property `module` is a string that contains the full path to the adapter (or just the name of the module if the module is a stand-alone package).
 
-The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
+The property `args` will be used as a configuration for the adapter and its content will depend on the adapter.
 
 ### Examples
 ```javascript
