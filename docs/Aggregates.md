@@ -38,7 +38,7 @@ Custom properties can be added with the [contextProvider](Config#contextProvider
 
 Property | Type | Attribute | Description
 :--- | :--- | :--- | :---
-aggregateVersion | number | `0` <small>for a new aggregateId</small> | A number indicating the amount of events that belong to the aggregate
+aggregateVersion | number | `0` <small>for a new aggregate id</small> | A number indicating the amount of events that belong to the aggregate
 causationEvent | object | optional | An event that caused this command. If the command returns a new event, the causationEvent will be the event's "parent"
 
 ## Event
