@@ -264,10 +264,63 @@ describe('Test save', () => {
         
         const spyExecute = jest.spyOn(mockConnection, 'execute');
         
-        testObj.db.execute();
-
         expect(spyExecute).toHaveBeenCalled();
         expect(result).toBe(expected);
+    });
+    test('Throw error', async () => {
+        const testObj = new Adapter(testInstance);
+        const mockConnection = {execute: jest.fn()};
+        testObj.db = mockConnection;
+        const data = {
+            aggregateId: '001',
+            aggregateVersion: 0,
+            type: 'USER_UPDATED',
+            correlationId: '111',
+            causation: '100',
+            payload: 'TEST'
+        };
+        const testEvent = new Event(data);
+
+        try 
+        {
+            await testObj.save(testEvent);
+        } 
+        catch(error)
+        {
+            expect(error).not.toBe(undefined);            
+        }
+        
+        const spyExecute = jest.spyOn(mockConnection, 'execute');
+        expect(spyExecute).toHaveBeenCalled();
+    });
+    test('Throw error with number 1062', async () => {
+        const testObj = new Adapter(testInstance);
+        const error = new Error('test error');
+        error.errno = 1062;
+        const mockConnection = {execute: jest.fn(() => {throw error;})};
+        testObj.db = mockConnection;
+        const data = {
+            aggregateId: '001',
+            aggregateVersion: 0,
+            type: 'USER_UPDATED',
+            correlationId: '111',
+            causation: '100',
+            payload: 'TEST'
+        };
+        const testEvent = new Event(data);
+        let result;
+        try 
+        {
+            result = await testObj.save(testEvent);
+        } 
+        catch(error)
+        {
+            expect(result).toBe(false);            
+            expect(error.errno).toBe(1062);            
+        }
+        
+        const spyExecute = jest.spyOn(mockConnection, 'execute');
+        expect(spyExecute).toHaveBeenCalled();
     });
 });
 
