@@ -35,7 +35,7 @@ just use:
 ## Codestyle
 We use [ESLint](https://eslint.org/) to make sure the code has a consistent style. That style is described via rules inside the [.eslintrc.js](https://github.com/wesone/blackrik/blob/master/.eslintrc.js) file.
 
-To test if all rules are satisfied run `$ npx eslint .` from the project's root directory (or `$ npx eslint <dir>`).  
+To test if all rules are satisfied run `$ npx eslint .` from the projects root directory (or `$ npx eslint <dir>`).  
 ESLint can fix some problems automatically if you use `$ npx eslint --fix .` but be advised that the `--fix` flag might manipulate your code.
 
 ### Naming

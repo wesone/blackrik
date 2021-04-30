@@ -30,7 +30,7 @@ Property | Type | Attribute | Description
 [readModelStoreAdapters](Config#readModelStoreAdapters) | object | | An object containing available read model store adapter definitions
 [eventStoreAdapter](Config#eventStoreAdapter) | object | | An event store adapter definition
 [eventBusAdapter](Config#eventBusAdapter) | object | | An event bus adapter definition
-[contextProvider](Config#contextProvider) | function | | A function to create a custom context for commands and queries
+[contextProvider](Config#contextProvider) | function | optional | A function to create a custom context for commands and queries
 [server](Config#server) | object | optional | An object containing additional properties for the server
 [server.config](Config#config) | object | optional | A config used by the server
 [server.middlewares](Config#middlewares) | array | optional | An array of middlewares for the server
