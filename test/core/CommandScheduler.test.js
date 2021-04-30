@@ -1,5 +1,5 @@
 const CommandScheduler = require('../../src/core/CommandScheduler');
-const Store = require('../mock/ReadModelStore');
+const Store = require('../_mock/ReadModelStore');
 const {COMMAND_SCHEDULER_TABLE_NAME: CommandSchedulerStoreTable} = require('../../src/core/Constants');
 
 const command = {

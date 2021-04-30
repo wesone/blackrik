@@ -1,6 +1,6 @@
 const ReadModelStore = require('../../src/core/ReadModelStore');
 const {READMODEL_INIT_FUNCTION} = require('../../src/core/Constants');
-const Store = require('../mock/ReadModelStore');
+const Store = require('../_mock/ReadModelStore');
 
 const getEvent = (replay = false) => ({
     aggregateId: '0648b417-80c7-42ca-a027-9efe08bc00c4',
