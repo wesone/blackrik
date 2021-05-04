@@ -70,10 +70,8 @@ describe('Test start', () => {
         
         expect(testObj.start).toHaveBeenCalled();
     });
-    // test('Start sucessfull - already started', async () => {
-    //     app.#started = true
-    //     await app.start();
-        
-    //     expect(testObj.start).toHaveBeenCalled();
-    // });
+    test('Start sucessfull - already started', async () => {
+        await app.start();
+        await app.start();
+    });
 });

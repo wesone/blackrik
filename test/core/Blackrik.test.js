@@ -277,6 +277,17 @@ describe('Test _processSagas', () => {
         expect(testObj._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything()
         );
     });
+
+    test('Call callback', async () => {
+        const handler = jest.fn();
+        testObj._getSideEffectsProxy = jest.fn();
+        testObj._registerSubscribers = jest.fn(async (name, handlers, adapter, callback) => { 
+            await callback(handler);
+        });
+
+        await testObj._processSagas();
+        expect(handler).toHaveBeenCalled();
+    });
 });
 
 // describe('Test _processSubscribers', () => {
