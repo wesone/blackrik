@@ -1,6 +1,6 @@
 const Blackrik = require('../src/index');
 const Application = require('../src/core/Blackrik');
-const exampleInstance = require('../examples/hello-world/config');
+const exampleInstance = require('./config');
 
 const defaultAdapters = Object.freeze(require('../src/adapters'));
 const httpMethods = Object.freeze(require('../src/resources/httpMethods'));

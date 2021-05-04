@@ -1,5 +1,5 @@
 const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
-const instance = require('../../../examples/hello-world/config');
+const instance = require('../../config');
 const {EVENT_LIMIT_REPLAY} = require('../../../src/core/Constants');
 const Event = require('../../../src/core/Event');
 const mysql = require('mysql2/promise');
@@ -379,6 +379,58 @@ describe('Test load', () => {
         expect(debug.toExecute).toEqual(expectedToExecute);
         expect(debug.values).toEqual(expectedValues);
     });
+    test('Check for correct loading of events - to types', async () => {
+        const testObj = new Adapter(testInstance);
+        const expected = [
+            { payload: { test: 42 } },
+            { payload: { test: 42 } },
+            { payload: { test: 42 } }
+        ];
+        const next = null;
+        const filter = {
+            aggregateIds: ['one', 'two', 'three'],
+            // types: ['USER_CREATED', 'USER_UPDATED'],
+            correlationIds: ['id1', 'id2', 'id3'],
+            causationIds: ['id3', 'id2', 'id1'],
+            since: 1234,
+            until: 4321,
+            limit: EVENT_LIMIT_REPLAY,
+            cursor: next
+        };
+        const expectedToExecute = 'SELECT * FROM events WHERE aggregateId IN (?,?,?) AND correlationId IN (?,?,?) AND causationId IN (?,?,?) AND timestamp >= ? AND timestamp < ? ORDER BY position ASC LIMIT ? OFFSET ?';
+        const expectedValues = [
+            'one',
+            'two',
+            'three',
+            'id1',
+            'id2',
+            'id3',
+            'id3',
+            'id2',
+            'id1',
+            1234,
+            4321,
+            1000,
+            0
+        ];
+        const mockConnection = {
+            execute: jest.fn(() => 
+                [[
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'}
+                ]])
+        };
+        const spyExecute= jest.spyOn(mockConnection, 'execute');
+
+        testObj.db = mockConnection;
+        const {events, cursor, debug}  = await testObj.load(filter);
+        expect(spyExecute).toHaveBeenCalled();
+        expect(events).toStrictEqual(expected);
+        expect(cursor).toBe(null);
+        expect(debug.toExecute).toEqual(expectedToExecute);
+        expect(debug.values).toEqual(expectedValues);
+    });
     test('Check for correct loading of events with correlationIds in filter', async () => {
         const testObj = new Adapter(testInstance);
         const expected = [
@@ -568,6 +620,36 @@ describe('Test load', () => {
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(1);
+    });
+    test('Check for correct loading of events - cursor undefined', async () => {
+        const testObj = new Adapter(testInstance);
+        const expected = [
+            { payload: { test: 42 } },
+            { payload: { test: 42 } },
+            { payload: { test: 42 } }
+        ];
+        const filter = {
+            limit: 1,
+            cursor: undefined,
+            types: 
+                ['USER_CREATED', 'USER_UPDATED']
+        };
+
+        const mockConnection = {
+            execute: jest.fn(() => 
+                [[
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'},
+                    {payload: '{"test": 42}'}
+                ]])
+        };
+        const spyExecute= jest.spyOn(mockConnection, 'execute');
+ 
+
+        testObj.db = mockConnection;
+        const {events}  = await testObj.load(filter);
+        expect(spyExecute).toHaveBeenCalled();
+        expect(events).toStrictEqual(expected);
     });
 });
 

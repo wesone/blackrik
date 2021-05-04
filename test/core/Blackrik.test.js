@@ -1,6 +1,6 @@
 const Application = require('../../src/core/Blackrik');
 const Blackrik = require('../../src/index');
-const exampleInstance = require('../../examples/hello-world/config');
+const exampleInstance = require('../config');
 const CONSTANTS = require('../../src/core/Constants');
 // const CommandHandler = require('../../src/core/CommandHandler');
 // const QueryHandler = require('../../src/core/QueryHandler');
@@ -158,6 +158,29 @@ describe('Test _initEventHandler', () => {
             expect(error.message).toBe(`EventBus adapter '${testObj.config.eventBusAdapter.module || 'default'}' is invalid.`);
         }
         Adapter.create = adapterCreate;
+    });
+});
+
+describe('Test _createSubscriptions', () => {
+    test('Call callback', async () => {
+        const eventMap = {
+            init: jest.fn(),
+            'USER_CREATED': jest.fn(),
+            'USER_UPDATED': jest.fn(),
+            'USER_REJECTED': jest.fn(),
+        };
+        const testReturn = 'testReturn';
+        const store = {createProxy: jest.fn(() => testReturn), config: 'test config'};
+        const callback = jest.fn();
+        testObj._eventHandler = {subscribe: jest.fn((name, eventType, callback) => {
+            callback();
+        })};
+
+        const spyCreateProxy = jest.spyOn(store, 'createProxy');
+
+        await testObj._createSubscriptions('user', eventMap, store, callback);
+        expect(spyCreateProxy).toHaveBeenCalled();
+        expect(callback).toHaveBeenCalledWith(eventMap['USER_CREATED'], testReturn, undefined, store.config);
     });
 });
 
