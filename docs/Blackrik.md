@@ -116,7 +116,7 @@ blackrik = new Blackrik({
 `async start()`  
 Initializes the application and starts the server.
 
-# start
+# stop
 `async stop()`  
 Stops the application and the server. It will also close all open connections in read models, the event store and the event bus.
 

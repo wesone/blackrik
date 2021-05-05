@@ -22,7 +22,7 @@ Starts the event bus. This will be executed after all subscribers called `subscr
 
 # stop
 `async stop()`  
-Stops the event bus. Connections to underlying systems should be closed.
+Stops the event bus. Connections to underlying systems will be closed.
 
 # subscribe
 `async subscribe(name: string, type: string, callback: function)`  
