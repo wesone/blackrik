@@ -1,0 +1,3 @@
+test('', () => {
+    expect(null).toBeNull();
+});

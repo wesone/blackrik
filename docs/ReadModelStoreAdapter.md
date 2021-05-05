@@ -4,7 +4,7 @@ The read model store adapter is an interface to a persistence level.
 # Reference
 Visibility | Property
 :---: | :---
-public |     async [defineTable](ReadModelStoreAdapter#defineTable)(name: string, scheme: object, ?options: object): boolean<br>Defines a table and it's structure
+public |     async [defineTable](ReadModelStoreAdapter#defineTable)(name: string, scheme: object, ?options: object): boolean<br>Defines a table and its structure
 public |     async [dropTable](ReadModelStoreAdapter#dropTable)(name: string)<br>Deletes the specified table
 public |     async [find](ReadModelStoreAdapter#find)(name: string, ?conditions: object, ?queryOptions: object): array<br>Loads entries from the store
 public |     async [findOne](ReadModelStoreAdapter#findOne)(name: string, ?conditions: object, ?queryOptions: object): object \| null<br>Loads a single entry from the store
@@ -15,7 +15,7 @@ public |     async [delete](ReadModelStoreAdapter#delete)(name: string, conditio
 
 # defineTable
 `async defineTable(name: string, scheme: object, ?options: object): boolean`  
-Defines a table and it's structure. It will remove and recreate existing tables if their scheme changed.
+Defines a table and its structure. It will remove and recreate existing tables if their scheme changed.
 
 ### Parameters
 Name | Type | Attribute | Description
@@ -27,7 +27,7 @@ options | object | optional | Options to control the definition behavior. See: [
 ### Return
 `true` if the table was created which means that the table did not exist or the scheme was changed. Otherwise `false`.
 
-Example:
+### Examples
 ```javascript
 await store.defineTable(tableName, {
     id: {
@@ -46,7 +46,7 @@ Each key is the name of a field with a value that is either the data type of the
 
 Property | Type | Attribute | Description
 :--- | :--- | :--- | :---
-type | string | | The field's data type. Can be one of the following:<br>`boolean` true or false<br>`date` Dates like JavaScript Date objects<br>`json` Objects that can be JSON serialized<br>`number` Positive or negative float or integer<br>`string` Strings with a max length of 512 characters<br>`text` Strings of indefinite length<br>`uuid` Strings with 36 characters
+type | string | | The fields data type. Can be one of the following:<br>`boolean` true or false<br>`date` Dates like JavaScript Date objects<br>`json` Objects that can be JSON serialized<br>`number` Positive or negative float or integer<br>`string` Strings with a max length of 512 characters<br>`text` Strings of indefinite length<br>`uuid` Strings with 36 characters
 primaryKey | boolean | optional | Sets the field as Primary key
 unique | boolean | optional | Sets the field to be unique across all entries
 
@@ -73,7 +73,7 @@ queryOptions | object | optional | Additional options that affect the query. See
 ### Return
 `array` of objects
 
-Example:
+### Examples
 ```javascript
 await store.find('Users',
     {

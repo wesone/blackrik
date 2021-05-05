@@ -10,7 +10,7 @@ An example:
 - Someday the user read model changes (e.g. a new field was added to the database scheme) and all user events will be replayed
 - The saga will see the old `USER_REGISTERED` event and should NOT send an email to the user again
 
-Example:
+### Examples
 ```javascript
 module.exports = {
     handlers: {

@@ -4,7 +4,7 @@ To achieve this, the read model listens to the events created by commands and up
 While a command is just a request to change the state, an event is an actual state change that should be reflected inside the persistence level of the read model.
 
 # Projection
-The projection listens to events and may update the read model's "state".  
+The projection listens to events and may update the read models "state".  
 However unlike the aggregate projection, the read model projection persists the state for efficient reading.
 
 ## init
@@ -19,7 +19,7 @@ Name | Type | Attribute | Description
 store | object | | An instance of a [read model store adapter](ReadModelStoreAdapter)
 event | object | | The event
 
-Example:
+### Examples
 ```javascript
 module.exports = {
     init: async store => {
@@ -84,7 +84,7 @@ Property | Type | Attribute | Description
 :--- | :--- | :--- | :---
  |  |  | 
 
-Example:
+### Examples
 ```javascript
 module.exports = {
     get: async (store, args, context) => {

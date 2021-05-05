@@ -11,6 +11,7 @@
     "type": "git",
     "url": "https://github.com/wesone/blackrik.git"
   },
+  "homepage": "https://wesone.github.io/blackrik",
   "keywords": [
     "cqrs",
     "command",

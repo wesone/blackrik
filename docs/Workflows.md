@@ -16,7 +16,7 @@ initial | string | | Name of the initial step
 context | object | optional | Set an initial context to be used inside the [action callbacks](#action)
 steps | object | | An object that contains [steps](#step)
 
-Example:
+### Examples
 ```javascript
 module.exports = {
     name: 'MyWorkflow',
@@ -66,12 +66,12 @@ rollback | function | Triggers a rollback. All rollback actions will be executed
 ## rollbackAction
 `async [rollback](rollbackWorkflow: object)`  
 The rollbackAction function will be executed if an action executes the rollback function (`workflow.rollback()`).  
-The function receives an object as the first parameter that contains the same properties as the parameter of the [action function](#action) but without the properties `transition` and `rollback`.
+The function receives an object as the first parameter that contains the same properties as the parameter of the [action function](#action) but without the properties `trigger` and `rollback`.
 
 # Workflow identifier
 A workflow needs to be identified in order to load the correct state. For simple workflows that process only events from one aggregate it uses the `aggregateId` of the event by default. When different aggregates are involved, you need to find a common denominator and provide a custom `idHandler` function that receives the event and returns an id.
 
-Example:
+### Examples
 ```javascript
 event => {
     if(event.type === 'USER_CREATED')
@@ -89,7 +89,7 @@ For each step you can define a rollback action that can execute compensation act
 ![image](https://user-images.githubusercontent.com/55196856/115556239-bf28d480-a2b0-11eb-968b-9bcd55ad4ff1.png)
 
 # Example
-In this example ([full source](https://github.com/wesone/blackrik/tree/master/examples/workflow)) we give the user the option to revert to the old email-address if it has changed.
+In this example ([full source](https://github.com/wesone/blackrik/tree/master/examples/workflow)) we give the user the option to revert to the old email address if it has changed.
 
 ![image](https://user-images.githubusercontent.com/55196856/115555769-30b45300-a2b0-11eb-842e-05979111cd63.png)
 

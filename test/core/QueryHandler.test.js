@@ -1,5 +1,5 @@
 const QueryHandler = require('../../src/core/QueryHandler');
-const BlackrikMock = require('../mock/Blackrik');
+const BlackrikMock = require('../_mock/Blackrik');
 
 describe('QueryHandler handles', () => {
     let blackrik;

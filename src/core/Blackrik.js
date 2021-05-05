@@ -225,7 +225,7 @@ class Blackrik
     _registerErrorHandlingMiddlewares()
     {
         // http://expressjs.com/en/guide/error-handling.html
-        // Asynchronous route handlers, middleware must call next(err) otherwise its an unhandled error
+        // Asynchronous route handlers, middleware must call next(err) otherwise it's an unhandled error
         // Starting with Express 5 route handlers and middleware that return a Promise will call next(value) automatically when they reject or throw an error
 
         //TODO use this when Express 5 is production ready
@@ -247,8 +247,10 @@ class Blackrik
 
     _registerInternalAPI()
     {
-        this.#server.route(CONSTANTS.ROUTE_COMMAND).post(new RequestHandler(this._commandHandler.handle));
-        this.#server.route(CONSTANTS.ROUTE_QUERY).get(new RequestHandler(this._queryHandler.handle));
+        const commandRequestHandler = new RequestHandler(this._commandHandler.handle);
+        this.#server.route(CONSTANTS.ROUTES.COMMANDS).post(commandRequestHandler);
+        this.#server.route(CONSTANTS.ROUTES.COMMAND).post(commandRequestHandler);
+        this.#server.route(CONSTANTS.ROUTES.QUERY).get(new RequestHandler(this._queryHandler.handle));
     }
 
     _registerAPI()

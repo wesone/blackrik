@@ -30,7 +30,7 @@ Property | Type | Attribute | Description
 [readModelStoreAdapters](Config#readModelStoreAdapters) | object | | An object containing available read model store adapter definitions
 [eventStoreAdapter](Config#eventStoreAdapter) | object | | An event store adapter definition
 [eventBusAdapter](Config#eventBusAdapter) | object | | An event bus adapter definition
-[contextProvider](Config#contextProvider) | function | | A function to create a custom context for commands and queries
+[contextProvider](Config#contextProvider) | function | optional | A function to create a custom context for commands and queries
 [server](Config#server) | object | optional | An object containing additional properties for the server
 [server.config](Config#config) | object | optional | A config used by the server
 [server.middlewares](Config#middlewares) | array | optional | An array of middlewares for the server
@@ -40,7 +40,7 @@ Property | Type | Attribute | Description
 An array of objects where each object represents an aggregate.  
 Each aggregate needs to have a unique `name`, [commands](Aggregates#Commands) and a [projection](Aggregates#Projection).  
 
-Example:
+### Examples
 ```javascript
 aggregates: [
     {
@@ -63,7 +63,7 @@ The projection and the resolvers depend on a store that is accessed through an a
 By default the adapter `'default'` will be used.  
 You can reference any adapter from the [readModelStoreAdapters](Config#readModelStoreAdapters) object.
 
-Example:
+### Examples
 ```javascript
 readModels: [
     {
@@ -87,7 +87,7 @@ Just like [read models](Config#ReadModels), sagas depend on a store that is acce
 By default the adapter `'default'` will be used.  
 You can reference any adapter from the [readModelStoreAdapters](Config#readModelStoreAdapters) object.
 
-Example:
+### Examples
 ```javascript
 sagas: [
     {
@@ -99,11 +99,11 @@ sagas: [
 ```
 
 # adapter
-The framework needs a store for it's core stuff (e.g. to persist [scheduled commands](Blackrik#schedulecommand)).  
+The framework needs a store for its core stuff (e.g. to persist [scheduled commands](Blackrik#schedulecommand)).  
 The specified adapter needs to be the name of one of the stores from the [readModelStoreAdapters](#readModelStoreAdapters) object.  
 By default the adapter `'default'` will be used. 
 
-Example:
+### Examples
 ```javascript
 adapter: 'MyCustomAdapter'
 ```
@@ -115,9 +115,9 @@ Refer to [read model store adapter](ReadModelStoreAdapter) to see how to create 
 
 The property `module` is a string that contains the full path to the adapter (or just the name of the module if the module is a stand-alone package).
 
-The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
+The property `args` will be used as a configuration for the adapter and its content will depend on the adapter.
 
-Example:
+### Examples
 ```javascript
 readModelStoreAdapters: {
     default: {
@@ -141,9 +141,9 @@ Refer to [event store adapter](EventStoreAdapter) to see how to create an event 
 
 The property `module` is a string that contains the full path to the adapter (or just the name of the module if the module is a stand-alone package).
 
-The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
+The property `args` will be used as a configuration for the adapter and its content will depend on the adapter.
 
-Example:
+### Examples
 ```javascript
 eventStoreAdapter: {
     module: Blackrik.ADAPTERS.EVENTSTORE.MySQL
@@ -162,9 +162,9 @@ Refer to [event bus adapter](EventBusAdapter) to see how to create an event bus 
 
 The property `module` is a string that contains the full path to the adapter (or just the name of the module if the module is a stand-alone package).
 
-The property `args` will be used as a configuration for the adapter and it's content will depend on the adapter.
+The property `args` will be used as a configuration for the adapter and its content will depend on the adapter.
 
-Example:
+### Examples
 ```javascript
 eventBusAdapter: {
     module: Blackrik.ADAPTERS.EVENTBUS.Kafka
@@ -179,7 +179,7 @@ An optional function to create a custom context to use inside [commands](Aggrega
 The function receives the `req` object (just like [routes](#routes) and [middlewares](#middlewares)) which may be `null` if the command or query was not called by the HTTP API.  
 The function should return an object that holds infos or helper functions. Reserved properties (e.g. `causationEvent`) may be overridden.
 
-Example:
+### Examples
 ```javascript
 contextProvider: (req = null) => ({
     user: req?.user ?? 'system'
@@ -189,7 +189,7 @@ contextProvider: (req = null) => ({
 # server
 Blackrik utilizes [Express](https://expressjs.com/) as a server and you are able to affect the creation of the server by using the `server` property.
 
-Example:
+### Examples
 ```javascript
 server: {
     config: {
