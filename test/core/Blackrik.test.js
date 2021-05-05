@@ -1,5 +1,6 @@
 const Application = require('../../src/core/Blackrik');
 const Blackrik = require('../../src/index');
+const ReadModelStore = require('../../src/core/ReadModelStore');
 const exampleInstance = require('../config');
 const CONSTANTS = require('../../src/core/Constants');
 // const CommandHandler = require('../../src/core/CommandHandler');
@@ -32,9 +33,13 @@ jest.mock('../../src/core/EventHandler', () => {
 });
 
 jest.mock('../../src/core/ReadModelStore', () => {
+    // const init = jest.fn(() => false);
+    const init = jest.fn()
+        .mockReturnValueOnce(false)
+        .mockReturnValue('bounce');
     return jest.fn(() => {
         return {
-            init: jest.fn(() => 'Test string')
+            init
         };
     });
 });
@@ -103,17 +108,18 @@ describe('Test _createReadModelStore', () => {
     });
 });
 
-// describe('Test _initStore', () => {
-//     test('Check for correct function call', () => {
-//         const mockFunction = {_createReadModelStore: jest.fn()};
-//         const spy = jest.spyOn(mockFunction, '_createReadModelStore');
+describe('Test _initStore', () => {
+    test('Check for correct function call - default adpater', () => {
+        testObj.config.adapter = undefined;
+        const mockFunction = {_createReadModelStore: jest.fn()};
+        const spy = jest.spyOn(mockFunction, '_createReadModelStore');
 
-//         testObj._createReadModelStore = mockFunction._createReadModelStore;
-//         testObj._initStore();
+        testObj._createReadModelStore = mockFunction._createReadModelStore;
+        testObj._initStore();
 
-//         expect(spy).toHaveBeenCalled();
-//     });
-// });
+        expect(spy).toHaveBeenCalled();
+    });
+});
 
 describe('Test _initEventStore', () => {
     // test('Initialise event store successfully', async () => {
@@ -185,27 +191,41 @@ describe('Test _createSubscriptions', () => {
 });
 
 describe('Test _registerSubscribers', () => {
-    // test('Register subscribers successfully', async () => {
-    //     const callback = jest.fn();
-    //     const adapter = 'default';
-    //     const handlers = {
-    //         init: jest.fn(),
-    //         'USER_CREATED': jest.fn(),
-    //         'USER_UPDATED': jest.fn(),
-    //         'USER_REJECTED': jest.fn(),
-    //     };
-    //     testObj._createSubscriptions = jest.fn();
-    //     testObj._createReadModelStore = jest.fn();
-    //     const spyCreateSubscriptions = jest.spyOn(testObj, '_createSubscriptions');
-    //     const spyCreateReadModelStore = jest.spyOn(testObj, '_createReadModelStore');
+    test('Register subscribers successfully - no init in readmodelstore', async () => {
 
-    //     const expected = {handlers, adapter};
-    //     const result = await testObj._registerSubscribers('name', handlers, adapter, callback);
+        // jest.mock('../../src/core/ReadModelStore', () => {
+        //     const init = jest.fn(() => false);
+        //     // const init = jest.fn()
+        //     //     .mockReturnValueOnce('bounce')
+        //     //     .mockReturnValue(false);
+        //     return jest.fn(() => {
+        //         return {
+        //             // init: jest.fn(() => 'Test string')
+        //             init
+        //         };
+        //     });
+        // });
 
-    //     expect(spyCreateSubscriptions).toHaveBeenCalled();
-    //     expect(spyCreateReadModelStore).toHaveBeenCalled();
-    //     expect(result).toEqual(expected);        
-    // });
+        const callback = jest.fn();
+        const adapter = 'default';
+        const handlers = {
+            init: jest.fn(),
+            'USER_CREATED': jest.fn(),
+            'USER_UPDATED': jest.fn(),
+            'USER_REJECTED': jest.fn(),
+        };
+        testObj._createSubscriptions = jest.fn();
+        testObj._createReadModelStore = jest.fn();
+        const spyCreateSubscriptions = jest.spyOn(testObj, '_createSubscriptions');
+        const spyCreateReadModelStore = jest.spyOn(testObj, '_createReadModelStore');
+
+        const expected = {handlers, adapter};
+        const result = await testObj._registerSubscribers('name', handlers, adapter, callback);
+
+        expect(spyCreateSubscriptions).toHaveBeenCalled();
+        expect(spyCreateReadModelStore).toHaveBeenCalled();
+        expect(result).toEqual(expected);        
+    });
     test('Register subscribers successfully - no adapter', async () => {
         const callback = jest.fn();
         const adapter = undefined;
