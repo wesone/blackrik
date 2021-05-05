@@ -56,11 +56,18 @@ class EventBusMock
     {
         this.started = false;
         this.subscribers = {};
+
+        this.stop = jest.fn(this._stop);
     }
 
     async start()
     {
         this.started = true;
+    }
+
+    async _stop()
+    {
+        this.started = false;
     }
 
     async publish(name, event)
@@ -205,4 +212,11 @@ describe('EventHandler handles replays', () => {
 
         expect(callback).toHaveBeenCalledTimes(0);
     });
+});
+
+test('EventHandler closes the EventBus', async () => {
+    await eventHandler.start();
+    await eventHandler.stop();
+
+    expect(eventBus.stop).toHaveBeenCalledTimes(1);
 });

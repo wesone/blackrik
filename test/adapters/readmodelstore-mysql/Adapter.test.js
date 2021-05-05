@@ -145,7 +145,7 @@ test('disconnect', async () => {
         end: jest.fn()
     };
     
-    await expect(adapter.disconnect()).resolves.toBeUndefined();
+    await expect(adapter.close()).resolves.toBeUndefined();
     expect(adapter.connection).toBeFalsy();
 });
 
