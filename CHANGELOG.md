@@ -8,10 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Renamed workflow property `currentEvent` to `event`
 - Renamed workflow function `transition` to `trigger`
+- EventBus adapter interface and added function `stop`
+- EventStore adapter interface and added function `close`
+- ReadModelStore adapter interface and added function `close`
+
+### Fixed
+- Bug where MySQL read model adapter may override an open database connection with a new one which results in closing only the latest connection
 
 ### Added
 - Alternative HTTP route to execute commands
 - New property `latestEventPosition` inside the context of commands
+- Blackrik function `stop` to stop a running application
 
 ## [1.1.1] - 2021-04-19
 ### Changed

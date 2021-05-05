@@ -9,6 +9,7 @@ Visibility | Property
 public |     async [init](EventStoreAdapter#init)()<br>Initializes the adapter
 public |     async [save](EventStoreAdapter#save)(event: object): int \| false<br>Saves an event
 public |     async [load](EventStoreAdapter#load)(filter: object): object<br>Loads events
+public |     async [close](EventStoreAdapter#close)()<br>Closes the event store
 
 # init
 `async init()`  
@@ -107,13 +108,5 @@ const {events, cursor} = await eventStore.load({
 ```
 
 # close
-`async close(): boolean`  
+`async close()`  
 Securely closes all open connections to the database server.
-
-### Return
-`true` if the connections were closed successfully. Otherwise it throws an error.
-
-### Examples
-```javascript
-await eventStore.close();
-```

@@ -12,6 +12,7 @@ public |     async [count](ReadModelStoreAdapter#count)(name: string, ?condition
 public |     async [insert](ReadModelStoreAdapter#insert)(name: string, data: object): boolean<br>Inserts a new entry into the table
 public |     async [update](ReadModelStoreAdapter#update)(name: string, conditions: object, data: object): number<br>Updates entries in the table
 public |     async [delete](ReadModelStoreAdapter#delete)(name: string, conditions: object): number<br>Deletes entries from the table
+public |     async [close](ReadModelStoreAdapter#close)()<br>Closes the read model store
 
 # defineTable
 `async defineTable(name: string, scheme: object, ?options: object): boolean`  
@@ -189,8 +190,6 @@ conditions | object | | An object with conditions to specify the affected entrie
 ### Return
 The amount of affected entries.
 
-# beginTransaction()
-
-# commit()
-
-# rollback()
+# close
+`async close()`  
+Securely closes all open connections to the database server.

@@ -84,7 +84,15 @@ class Blackrik
         if(this.#started)
             return;
         this.#started = true;
-        await this.#blackrik.start();
+        return await this.#blackrik.start();
+    }
+
+    async stop()
+    {
+        if(!this.#started)
+            return;
+        this.#started = false;
+        return await this.#blackrik.stop();
     }
 }
 

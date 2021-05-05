@@ -37,6 +37,11 @@ class EventHandler
         return await this.eventBus.start();
     }
 
+    async stop()
+    {
+        return await this.eventBus.stop();
+    }
+
     async persistEvent(event)
     {
         //TODO create snapshot if too many events are stored

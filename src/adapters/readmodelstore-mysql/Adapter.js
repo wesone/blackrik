@@ -50,14 +50,23 @@ class Adapter extends ReadModelStoreAdapterInterface
     {
         if(!this.connection)
         {
-            await this.connect();
-            await this.useDB();
+            if(this._conn)
+                await this._conn;
+            else
+            {
+                await this.connect();
+                await this.useDB();
+            }
         }
     }
 
     async connect()
     {
-        this.connection = await mysql.createConnection(this.args);
+        this._conn = mysql.createConnection(this.args).then(conn => {
+            this._conn = null;
+            return conn;
+        });
+        this.connection = await this._conn;
     }
 
     async disconnect()
@@ -85,8 +94,7 @@ class Adapter extends ReadModelStoreAdapterInterface
     {
         await this.checkConnection();
         this.printDebugStatemant(sql, parameters);
-        const connection = this.transactionConnection ?? this.connection;
-        return connection.execute(sql, parameters);
+        return this.connection.execute(sql, parameters);
     }
 
     getAffectedCount([results])
@@ -295,6 +303,11 @@ class Adapter extends ReadModelStoreAdapterInterface
         }
         await this.connection.rollback();
         this.isTransaction = false;
+    }
+
+    async close()
+    {
+        await this.disconnect();
     }
 }
 

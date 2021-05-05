@@ -56,6 +56,12 @@ class Adapter extends EventBusAdapterInterface
         });
     }
 
+    async stop()
+    {
+        await this.producer.disconnect();
+        await this.consumer.disconnect();
+    }
+
     async subscribe(name, type, callback)
     {
         if(typeof name !== 'string')

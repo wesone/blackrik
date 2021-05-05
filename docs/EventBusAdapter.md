@@ -8,6 +8,7 @@ Visibility | Property
 :---: | :---
 public |     async [init](EventBusAdapter#init)()<br>Initializes the adapter
 public |     async [start](EventBusAdapter#start)()<br>Starts the event bus
+public |     async [stop](EventBusAdapter#stop)()<br>Stops the event bus
 public |     async [subscribe](EventBusAdapter#subscribe)(name: string, type: string, callback: function)<br>Subscribes to an event
 public |     async [publish](EventBusAdapter#publish)(name: string, event: object): boolean<br>Publishes an event
 
@@ -18,6 +19,10 @@ Initializes the adapter.
 # start
 `async start()`  
 Starts the event bus. This will be executed after all subscribers called `subscribe`.
+
+# stop
+`async stop()`  
+Stops the event bus. Connections to underlying systems should be closed.
 
 # subscribe
 `async subscribe(name: string, type: string, callback: function)`  

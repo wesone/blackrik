@@ -6,6 +6,7 @@ public static |     [HTTP_METHODS](Blackrik#HTTP_METHODS)<br>Available HTTP meth
 public static |     [ERRORS](Blackrik#ERRORS)<br>An object containing default errors to throw
 public |     [constructor](Blackrik#constructor)(...[configs](Config): object)
 public |     async [start](Blackrik#start)()<br>Initializes the application and starts the server
+public |     async [stop](Blackrik#stop)()<br>Stops the application
 public |     async [executeCommand](Blackrik#executeCommand)(command: object): boolean<br>Calls a command
 public |     async [scheduleCommand](Blackrik#scheduleCommand)(timestamp: number, command: object): boolean<br>Delays a command execution
 public |     async [executeQuery](Blackrik#executeQuery)(readModel: string, resolver: string, ?query: object): mixed<br>Performs a query on a resolver
@@ -114,6 +115,10 @@ blackrik = new Blackrik({
 # start
 `async start()`  
 Initializes the application and starts the server.
+
+# start
+`async stop()`  
+Stops the application and the server. It will also close all open connections in read models, the event store and the event bus.
 
 # executeCommand
 `async executeCommand(command: object): boolean`  

@@ -122,7 +122,7 @@ class Blackrik
     {
         return Promise.all(
             this.config.readModels.map(
-                ({name, projection, resolvers, adapter}) => 
+                async ({name, projection, resolvers, adapter}) => 
                     this._registerSubscribers(name, projection, adapter, async (handler, store, event) => await handler(store, event))
                         .then(({adapter}) => (this._resolvers[name] = {handlers: resolvers, adapter}))
             )
@@ -162,12 +162,12 @@ class Blackrik
     {
         return Promise.all(
             this.config.sagas.map(
-                ({name, source, adapter}) => {
+                async ({name, source, adapter}) => {
                     const {handlers, sideEffects} = source.initial === undefined
                         ? source
                         : new Workflow(source).connect();
 
-                    this._registerSubscribers(
+                    return this._registerSubscribers(
                         name,
                         handlers,
                         adapter,
@@ -315,6 +315,14 @@ class Blackrik
         await this.#server.start();
 
         return this;
+    }
+
+    async stop()
+    {
+        await this.#server.stop();
+        await this._eventHandler.stop();
+        await this._eventStore.close();
+        await Promise.all(Object.values(this._stores).map(store => store.close()));
     }
 
     async executeCommand(command, causationEvent = null)

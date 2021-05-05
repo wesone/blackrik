@@ -16,6 +16,11 @@ class Adapter extends EventBusAdapterInterface
         return true;
     }
 
+    async stop()
+    {
+        return true;
+    }
+
     async subscribe(name, type, callback)
     {
         if(typeof name !== 'string')
