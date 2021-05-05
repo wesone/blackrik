@@ -265,3 +265,47 @@ test('position check handling', async () => {
     expect(result).toEqual(expectedResult);
 
 });
+
+test('disconnect', async () => {
+
+    const schema = {
+        id: {
+            type: 'number'
+        },
+        myJSON: {
+            type: 'json',
+        }
+    };
+   
+    await adapter.dropTable(tableName);
+
+    await adapter.disconnect();
+
+    await adapter.defineTable(tableName, schema);
+
+    await adapter.disconnect();
+
+    await Promise.all([ adapter.findOne(tableName), adapter.findOne(tableName)]);
+
+    await adapter.disconnect();
+
+    await adapter.insert(tableName, {
+        id: 1,
+        myJSON: {text: 'Hello World!'},
+    });
+
+    await adapter.disconnect();
+
+    await adapter.insert(tableName, {
+        id: 2,
+        myJSON: ['Hello', 'World', '!'],
+    });
+    
+    const result = await adapter.count(tableName);
+    expect(result).toEqual(2);
+
+    await adapter.disconnect();
+
+    expect(adapter.connection).toEqual(null);
+
+});
