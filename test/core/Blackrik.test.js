@@ -1,6 +1,5 @@
 const Application = require('../../src/core/Blackrik');
 const Blackrik = require('../../src/index');
-const ReadModelStore = require('../../src/core/ReadModelStore');
 const exampleInstance = require('../config');
 const CONSTANTS = require('../../src/core/Constants');
 // const CommandHandler = require('../../src/core/CommandHandler');
@@ -33,13 +32,22 @@ jest.mock('../../src/core/EventHandler', () => {
 });
 
 jest.mock('../../src/core/ReadModelStore', () => {
-    // const init = jest.fn(() => false);
     const init = jest.fn()
         .mockReturnValueOnce(false)
-        .mockReturnValue('bounce');
+        .mockReturnValue('Test string');
+    return jest.fn(arg => {
+        if(arg === 'return false')
+            return {init: jest.fn(() => false)};
+        return {init};
+    });
+});
+
+jest.mock('../../src/core/Workflow/index', () => {
     return jest.fn(() => {
         return {
-            init
+            connect: jest.fn(() =>
+                ({handlers: 'handlers', sideEffects: 'sideEffects'})
+            )
         };
     });
 });
@@ -66,7 +74,13 @@ jest.mock('../../src/core/CommandScheduler', () => {
 });
 
 jest.mock('../../src/core/Server', () => {
-    const use = jest.fn();
+    const req = {};
+    const next = jest.fn(() => true);
+
+    const use = jest.fn(callback => {
+        if(typeof callback === 'function')
+            callback(req, 'test', next);
+    });
     const post = jest.fn();
     const get = jest.fn();
     const start = jest.fn();
@@ -192,20 +206,6 @@ describe('Test _createSubscriptions', () => {
 
 describe('Test _registerSubscribers', () => {
     test('Register subscribers successfully - no init in readmodelstore', async () => {
-
-        // jest.mock('../../src/core/ReadModelStore', () => {
-        //     const init = jest.fn(() => false);
-        //     // const init = jest.fn()
-        //     //     .mockReturnValueOnce('bounce')
-        //     //     .mockReturnValue(false);
-        //     return jest.fn(() => {
-        //         return {
-        //             // init: jest.fn(() => 'Test string')
-        //             init
-        //         };
-        //     });
-        // });
-
         const callback = jest.fn();
         const adapter = 'default';
         const handlers = {
@@ -297,7 +297,14 @@ describe('Test _processSagas', () => {
         expect(testObj._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything()
         );
     });
+    test('Handlers and side effects from workflow', async () => {
+        testObj.config.sagas[0].source.initial = 'defined';
+        const {name, adapter} = testObj.config.sagas[0];
+        testObj._registerSubscribers = jest.fn();
+        await testObj._processSagas();
 
+        expect(testObj._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything());
+    });
     test('Call callback', async () => {
         const handler = jest.fn();
         testObj._getSideEffectsProxy = jest.fn();
@@ -355,6 +362,14 @@ describe('Test _processSagas', () => {
 //         expect(spyMockRegisterMiddlewares).toHaveBeenCalled();
 //     });
 // });
+
+describe('Test buildContext', () => {
+    test('Return empty object', () => {
+        testObj.config.contextProvider = jest.fn();
+        const result = testObj.buildContext();
+        expect(result).toEqual({});
+    });
+});
 
 describe('Test _registerAPI', () => {
     test('Method not included', async () => {
@@ -416,7 +431,6 @@ describe('Test executeQuery', () => {
         const result = await testObj.executeQuery();
         expect(result).toBe('test');
         expect(spyBuildContext).toHaveBeenCalled();
-
     });
 });
 
@@ -468,5 +482,9 @@ describe('Test start()', () => {
         expect(testServer.start).toHaveBeenCalled();
         // return
         expect(result).not.toBe(undefined);
+    });
+    test('Start with no replay events', async () => {
+        testObj._createReadModelStore = jest.fn(() => 'return false');
+        await testObj.start();
     });
 });
