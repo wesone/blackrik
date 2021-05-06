@@ -262,6 +262,16 @@ describe('Test _processReadModels', () => {
         expect(result).toEqual(expected);
         expect(testObj._resolvers).toEqual(expectedResolvers);
     });
+    test('Call callback', async () => {
+        const handler = jest.fn();
+        testObj._registerSubscribers = jest.fn(async (name, projection, adapter, callback) => {
+            await callback(handler);
+            return new Promise(resolve => resolve({adapter}));
+        });
+
+        await testObj._processReadModels();
+        expect(handler).toHaveBeenCalled();
+    });
 });
 
 describe('Test _getSideEffectsProxy', () => {
