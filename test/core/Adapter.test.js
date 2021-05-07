@@ -35,7 +35,7 @@ describe('Create adapter with config', () => {
 
     test('but the module does not expose a function', () => {
         const adapter = Adapter.create({
-            module: __dirname + '/../mock/Adapter/Invalid',
+            module: __dirname + '/../_mock/Adapter/Invalid',
             args
         });
         expect(adapter).toBeNull();
@@ -43,7 +43,7 @@ describe('Create adapter with config', () => {
 
     test('and a valid module that exposes a function', () => {
         const adapter = Adapter.create({
-            module: __dirname + '/../mock/Adapter/Valid',
+            module: __dirname + '/../_mock/Adapter/Valid',
             args
         });
         expect(adapter).toBe(args);

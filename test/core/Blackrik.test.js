@@ -1,6 +1,6 @@
 const Application = require('../../src/core/Blackrik');
 const Blackrik = require('../../src/index');
-const exampleInstance = require('../testExample/config');
+const exampleInstance = require('../_resources/testApp/config');
 const CONSTANTS = require('../../src/core/Constants');
 // const CommandHandler = require('../../src/core/CommandHandler');
 // const QueryHandler = require('../../src/core/QueryHandler');

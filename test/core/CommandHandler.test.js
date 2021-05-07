@@ -1,5 +1,5 @@
 const CommandHandler = require('../../src/core/CommandHandler');
-const BlackrikMock = require('../mock/Blackrik');
+const BlackrikMock = require('../_mock/Blackrik');
 
 const aggregateName = 'testAggregate';
 const aggregateId = '42';
