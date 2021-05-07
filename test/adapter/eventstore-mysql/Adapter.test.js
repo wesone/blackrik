@@ -1,5 +1,5 @@
 const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
-const instance = require('../../testExample/config');
+const instance = require('../../_resources/testApp/config');
 const {EVENT_LIMIT_REPLAY} = require('../../../src/core/Constants');
 const Event = require('../../../src/core/Event');
 const mysql = require('mysql2/promise');
