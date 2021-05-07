@@ -42,7 +42,7 @@ jest.mock('../../src/core/ReadModelStore', () => {
     });
 });
 
-jest.mock('../../src/core/Workflow/index', () => {
+jest.mock('../../src/core/workflow/index', () => {
     return jest.fn(() => {
         return {
             connect: jest.fn(() =>
