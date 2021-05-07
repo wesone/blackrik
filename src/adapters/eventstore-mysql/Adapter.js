@@ -101,7 +101,7 @@ class Adapter extends EventStoreAdapterInterface
             throw Error('EventStore-MySQL needs a config.');
         if(!this.config.host || !this.config.host.length)
             throw Error('EventStore-MySQL needs a host.');
-        if(!this.config.port || !this.config.host.port)
+        if(!this.config.port)
             this.config.port = 3306;
         if(!this.config.database || !this.config.database.length)
             throw Error('EventStore-MySQL needs a database name.');
@@ -120,6 +120,7 @@ class Adapter extends EventStoreAdapterInterface
         // see https://github.com/sidorares/node-mysql2/issues/1239
         //========MySQL 8.0.22 (and higher) fix========
         const originalExecute = this.db.execute.bind(this.db);
+        /* istanbul ignore next */
         this.db.execute = function(...args){
             const [query, substitutions, ...rest] = args;
             for(const key in substitutions) // array or object

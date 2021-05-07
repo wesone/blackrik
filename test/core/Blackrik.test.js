@@ -1,6 +1,6 @@
-const Application = require('../../src/core/Blackrik');
-const Blackrik = require('../../src/index');
-const exampleInstance = require('../../examples/hello-world/config');
+const Blackrik = require('../../src/core/Blackrik');
+const Application = require('../../src/index');
+const exampleInstance = require('../_resources/testApp/config');
 const CONSTANTS = require('../../src/core/Constants');
 // const CommandHandler = require('../../src/core/CommandHandler');
 // const QueryHandler = require('../../src/core/QueryHandler');
@@ -11,10 +11,11 @@ jest.mock('../../src/core/Adapter', () => {
         create: jest.fn(adapterName => {
             if(adapterName === 'bad adapter')
             {
-                return false;
+                return null;
             }
             return {
-                init: jest.fn()
+                init: jest.fn(),
+                close: jest.fn()
             };
         })
     };
@@ -26,15 +27,29 @@ jest.mock('../../src/core/EventHandler', () => {
             init: jest.fn(),
             subscribe: jest.fn(),
             start: jest.fn(),
+            stop: jest.fn(),
             replayEvents: jest.fn()
         };
     });
 });
 
 jest.mock('../../src/core/ReadModelStore', () => {
+    const init = jest.fn()
+        .mockReturnValueOnce(false)
+        .mockReturnValue('Test string');
+    return jest.fn(arg => {
+        if(arg === 'return false')
+            return {init: jest.fn(() => false)};
+        return {init};
+    });
+});
+
+jest.mock('../../src/core/workflow/index', () => {
     return jest.fn(() => {
         return {
-            init: jest.fn(() => 'Test string')
+            connect: jest.fn(() =>
+                ({handlers: 'handlers', sideEffects: 'sideEffects'})
+            )
         };
     });
 });
@@ -60,24 +75,33 @@ jest.mock('../../src/core/CommandScheduler', () => {
     });
 });
 
+let serverMock = {};
 jest.mock('../../src/core/Server', () => {
-    const use = jest.fn();
+    const req = {};
+    const next = jest.fn(() => true);
+
+    const use = jest.fn(callback => {
+        if(typeof callback === 'function')
+            callback(req, 'test', next);
+    });
     const post = jest.fn();
     const get = jest.fn();
-    const start = jest.fn();
     const route = jest.fn(() => {
         return {
             post,
             get,
         };
     });
+    serverMock.start = jest.fn();
+    serverMock.stop = jest.fn();
     return jest.fn(() => {
         return {
             init: jest.fn(),
             use,
             get,
             route,
-            start
+            start: serverMock.start,
+            stop: serverMock.stop
         };
     });
 });
@@ -86,8 +110,8 @@ jest.mock('../../src/core/Server', () => {
 let app;
 let testObj;
 beforeEach(() => {
-    app = new Blackrik(exampleInstance);
-    testObj = new Application(app);
+    app = new Application(exampleInstance);
+    testObj = new Blackrik(app);
 });
 
 describe('Test _createReadModelStore', () => {
@@ -103,17 +127,18 @@ describe('Test _createReadModelStore', () => {
     });
 });
 
-// describe('Test _initStore', () => {
-//     test('Check for correct function call', () => {
-//         const mockFunction = {_createReadModelStore: jest.fn()};
-//         const spy = jest.spyOn(mockFunction, '_createReadModelStore');
+describe('Test _initStore', () => {
+    test('Check for correct function call - default adpater', () => {
+        testObj.config.adapter = undefined;
+        const mockFunction = {_createReadModelStore: jest.fn()};
+        const spy = jest.spyOn(mockFunction, '_createReadModelStore');
 
-//         testObj._createReadModelStore = mockFunction._createReadModelStore;
-//         testObj._initStore();
+        testObj._createReadModelStore = mockFunction._createReadModelStore;
+        testObj._initStore();
 
-//         expect(spy).toHaveBeenCalled();
-//     });
-// });
+        expect(spy).toHaveBeenCalled();
+    });
+});
 
 describe('Test _initEventStore', () => {
     // test('Initialise event store successfully', async () => {
@@ -125,14 +150,7 @@ describe('Test _initEventStore', () => {
     // });
     test('Initialise event store - throw error', async () => {
         testObj.config.eventStoreAdapter = 'bad adapter';
-        try 
-        {
-            await testObj._initEventStore();
-        } 
-        catch(error)
-        {
-            expect(error.message).toBe('EventStore adapter \'undefined\' is invalid.');
-        }
+        expect(testObj._initEventStore()).rejects.toThrow();
     });
 });
 
@@ -161,28 +179,53 @@ describe('Test _initEventHandler', () => {
     });
 });
 
+describe('Test _createSubscriptions', () => {
+    test('Call callback', async () => {
+        const eventMap = {
+            init: jest.fn(),
+            'USER_CREATED': jest.fn(),
+            'USER_UPDATED': jest.fn(),
+            'USER_REJECTED': jest.fn(),
+        };
+        const testReturn = 'testReturn';
+        const store = {createProxy: jest.fn(() => testReturn), config: 'test config'};
+        const callback = jest.fn();
+        testObj._eventHandler = {
+            subscribe: jest.fn((name, eventType, callback) => {
+                callback();
+            })
+        };
+
+        const spyCreateProxy = jest.spyOn(store, 'createProxy');
+
+        await testObj._createSubscriptions('user', eventMap, store, callback);
+        expect(spyCreateProxy).toHaveBeenCalled();
+        expect(callback).toHaveBeenCalledWith(eventMap['USER_CREATED'], testReturn, undefined, store.config);
+    });
+});
+
 describe('Test _registerSubscribers', () => {
-    // test('Register subscribers successfully', async () => {
-    //     const callback = jest.fn();
-    //     const adapter = 'default';
-    //     const handlers = {
-    //         init: jest.fn(),
-    //         'USER_CREATED': jest.fn(),
-    //         'USER_UPDATED': jest.fn(),
-    //         'USER_REJECTED': jest.fn(),
-    //     };
-    //     testObj._createSubscriptions = jest.fn();
-    //     testObj._createReadModelStore = jest.fn();
-    //     const spyCreateSubscriptions = jest.spyOn(testObj, '_createSubscriptions');
-    //     const spyCreateReadModelStore = jest.spyOn(testObj, '_createReadModelStore');
+    test('Register subscribers successfully - no init in readmodelstore', async () => {
+        const callback = jest.fn();
+        const adapter = 'default';
+        const handlers = {
+            init: jest.fn(),
+            'USER_CREATED': jest.fn(),
+            'USER_UPDATED': jest.fn(),
+            'USER_REJECTED': jest.fn(),
+        };
+        testObj._createSubscriptions = jest.fn();
+        testObj._createReadModelStore = jest.fn();
+        const spyCreateSubscriptions = jest.spyOn(testObj, '_createSubscriptions');
+        const spyCreateReadModelStore = jest.spyOn(testObj, '_createReadModelStore');
 
-    //     const expected = {handlers, adapter};
-    //     const result = await testObj._registerSubscribers('name', handlers, adapter, callback);
+        const expected = {handlers, adapter};
+        const result = await testObj._registerSubscribers('name', handlers, adapter, callback);
 
-    //     expect(spyCreateSubscriptions).toHaveBeenCalled();
-    //     expect(spyCreateReadModelStore).toHaveBeenCalled();
-    //     expect(result).toEqual(expected);        
-    // });
+        expect(spyCreateSubscriptions).toHaveBeenCalled();
+        expect(spyCreateReadModelStore).toHaveBeenCalled();
+        expect(result).toEqual(expected);        
+    });
     test('Register subscribers successfully - no adapter', async () => {
         const callback = jest.fn();
         const adapter = undefined;
@@ -219,6 +262,16 @@ describe('Test _processReadModels', () => {
         expect(result).toEqual(expected);
         expect(testObj._resolvers).toEqual(expectedResolvers);
     });
+    test('Call callback', async () => {
+        const handler = jest.fn();
+        testObj._registerSubscribers = jest.fn(async (name, projection, adapter, callback) => {
+            await callback(handler);
+            return new Promise(resolve => resolve({adapter}));
+        });
+
+        await testObj._processReadModels();
+        expect(handler).toHaveBeenCalled();
+    });
 });
 
 describe('Test _getSideEffectsProxy', () => {
@@ -254,53 +307,33 @@ describe('Test _processSagas', () => {
         expect(testObj._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything()
         );
     });
+    test('Handlers and side effects from workflow', async () => {
+        testObj.config.sagas[0].source.initial = 'defined';
+        const {name, adapter} = testObj.config.sagas[0];
+        testObj._registerSubscribers = jest.fn();
+        await testObj._processSagas();
+
+        expect(testObj._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything());
+    });
+    test('Call callback', async () => {
+        const handler = jest.fn();
+        testObj._getSideEffectsProxy = jest.fn();
+        testObj._registerSubscribers = jest.fn(async (name, handlers, adapter, callback) => { 
+            await callback(handler);
+        });
+
+        await testObj._processSagas();
+        expect(handler).toHaveBeenCalled();
+    });
 });
 
-// describe('Test _processSubscribers', () => {
-//     test('Check for function calls', () => {
-//         const mockProcessReadModels = jest.fn();
-//         const mockProcessSagas = jest.fn();
-        
-//         testObj._processReadModels = mockProcessReadModels;
-//         testObj._processSagas = mockProcessSagas;
-//         const spyProcessReadModels = jest.spyOn(testObj, '_processReadModels');
-//         const spyProcessSagas = jest.spyOn(testObj, '_processSagas');
-
-//         testObj._processSubscribers();
-//         expect(spyProcessReadModels).toHaveBeenCalled();
-//         expect(spyProcessSagas).toHaveBeenCalled();
-//     });
-// });
-
-// describe('Test _initHandlers', () => {
-//     test('Check for function calls', async () => {
-//         await testObj._initHandlers();
-//         expect(CommandHandler).toHaveBeenCalledWith(testObj);
-//         expect(QueryHandler).toHaveBeenCalledWith(testObj);
-//         expect(CommandScheduler).toHaveBeenCalled();
-
-//         const spyInit = jest.spyOn(new CommandScheduler, 'init');
-//         expect(spyInit).toHaveBeenCalled();
-//     });
-// });
-
-// describe('Test _processMiddlewares', () => {
-//     test('Check for correct function calls', () => {
-//         const mockRegisterInternalMiddlewares = jest.fn();
-//         const mockRegisterMiddlewares = jest.fn();
-
-//         testObj._registerInternalMiddlewares = mockRegisterInternalMiddlewares;
-//         testObj._registerMiddlewares = mockRegisterMiddlewares;
-
-//         const spyMockInternalMiddlewares = jest.spyOn(testObj, '_registerInternalMiddlewares');
-//         const spyMockRegisterMiddlewares = jest.spyOn(testObj, '_registerMiddlewares'); 
-
-//         testObj._processMiddlewares();
-
-//         expect(spyMockInternalMiddlewares).toHaveBeenCalled();
-//         expect(spyMockRegisterMiddlewares).toHaveBeenCalled();
-//     });
-// });
+describe('Test buildContext', () => {
+    test('Return empty object', () => {
+        testObj.config.contextProvider = jest.fn();
+        const result = testObj.buildContext();
+        expect(result).toEqual({});
+    });
+});
 
 describe('Test _registerAPI', () => {
     test('Method not included', async () => {
@@ -362,7 +395,6 @@ describe('Test executeQuery', () => {
         const result = await testObj.executeQuery();
         expect(result).toBe('test');
         expect(spyBuildContext).toHaveBeenCalled();
-
     });
 });
 
@@ -414,4 +446,17 @@ describe('Test start()', () => {
         // return
         expect(result).not.toBe(undefined);
     });
+    test('Start with no replay events', async () => {
+        testObj._createReadModelStore = jest.fn(() => 'return false');
+        await testObj.start();
+    });
+});
+
+test('Stop a running application', async () => {
+    await testObj.start();
+    await testObj.stop();
+    
+    expect(serverMock.stop).toHaveBeenCalled();
+    expect(testObj._eventHandler.stop).toHaveBeenCalled();
+    expect(testObj._eventStore.close).toHaveBeenCalled();
 });
