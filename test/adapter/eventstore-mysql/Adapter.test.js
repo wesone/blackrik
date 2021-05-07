@@ -18,10 +18,9 @@ jest.mock('mysql2/promise', () => {
             end: mockEnd
         };
     });
-    const mockMysql = {
+    return {
         createConnection: mockCreateConnection
     };
-    return mockMysql;
 });
 
 const testInstance = instance.eventStoreAdapter.args;
