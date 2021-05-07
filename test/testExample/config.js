@@ -4,22 +4,22 @@ module.exports = {
     aggregates: [
         {
             name: 'user',
-            commands: require('../examples/hello-world/aggregates/user.commands'),
-            projection: require('../examples/hello-world/aggregates/user.projection')
+            commands: require('./aggregates/user.commands'),
+            projection: require('./aggregates/user.projection')
         }
     ],
     readModels: [
         {
             name: 'user',
-            projection: require('../examples/hello-world/readModels/user.projection'),
-            resolvers: require('../examples/hello-world/readModels/user.resolvers'),
+            projection: require('./readModels/user.projection'),
+            resolvers: require('./readModels/user.resolvers'),
             adapter: 'default'
         }
     ],
     sagas: [
         {
             name: 'user',
-            source: require('../examples/hello-world/sagas/user'),
+            source: require('./sagas/user'),
             adapter: 'default'
         }
     ],

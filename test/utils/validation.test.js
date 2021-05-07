@@ -1,5 +1,5 @@
 const {validateConfig} = require('../../src/utils/validation');
-const configs = require('../config');
+const configs = require('../testExample/config');
 const merge = require('../../src/utils/merge');
 const defaultAdapters = Object.freeze(require('../../src/adapters'));
 const config = {
