@@ -75,7 +75,7 @@ jest.mock('../../src/core/CommandScheduler', () => {
     });
 });
 
-let serverMock = {};
+const serverMock = {};
 jest.mock('../../src/core/Server', () => {
     const req = {};
     const next = jest.fn(() => true);
@@ -437,7 +437,7 @@ describe('Test start()', () => {
         const testServer = Server();
         expect(testServer.use).toHaveBeenCalled();
         // _registerInternalAPI
-        Object.values(CONSTANTS.ROUTES).forEach(route => expect(testServer.route).toHaveBeenCalledWith(route))
+        Object.values(CONSTANTS.ROUTES).forEach(route => expect(testServer.route).toHaveBeenCalledWith(route));
         expect(testServer.route().post).toHaveBeenCalled();
         expect(testServer.route().get).toHaveBeenCalled();
         // _registerErrorHandlingMiddlewares
