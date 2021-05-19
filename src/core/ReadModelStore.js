@@ -58,13 +58,18 @@ class ReadModelStore
 
     createProxy(event)
     {
+        let operation = 0;
         const self = this;
         const proxy = new Proxy(this.#store, {
             get: (target, prop, ...rest) => {
                 const originalValue = Reflect.get(target, prop, ...rest);
                 const handler = typeof originalValue === 'function'
                     ? function(...args){
-                        return originalValue.bind(proxy)(...args, event.position);
+                        operation++;
+                        return originalValue.bind(proxy)(...args, {
+                            position: event.position,
+                            operation
+                        });
                     }
                     : originalValue;
                 if(event.isReplay)
