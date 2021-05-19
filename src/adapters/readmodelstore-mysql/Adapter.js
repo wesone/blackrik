@@ -135,7 +135,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         return tableCheckTypes.unchanged;
     }
 
-    async defineTable(tableName, scheme, indexes){
+    async defineTable(tableName, scheme, indexes = []){
         const options = {triggerReplay: true};
 
         if(scheme._lastPosition)
@@ -143,12 +143,16 @@ class Adapter extends ReadModelStoreAdapterInterface
             throw new Error('_lastPosition is a reserved field name.');
         }
 
+        if(scheme._operation)
+        {
+            throw new Error('_operation is a reserved field name.');
+        }
+
         const schemeWithMetaData = {...scheme, 
-            _lastPosition: {
-                type: 'number',
-                unique: true
-            }
+            _lastPosition: 'number',
+            _operation: 'number',
         };
+        indexes.push({fields: ['_lastPosition', '_operation'], unique: true});
 
         const {sql, hash} = createTableBuilder(tableName, schemeWithMetaData, indexes);
         
@@ -191,13 +195,13 @@ class Adapter extends ReadModelStoreAdapterInterface
         return await this.exec(['DROP TABLE IF EXISTS', quoteIdentifier(tableName)].join(' '));
     }
 
-    async insert(tableName, data, position = null){
-        const {sql, parameters} = insertIntoBuilder(tableName, data, position);
+    async insert(tableName, data, meta = null){
+        const {sql, parameters} = insertIntoBuilder(tableName, data, meta);
         return !!this.getAffectedCount(await this.exec(sql, parameters));
     }
 
-    async update(tableName, conditions, data, position = null){
-        const {sql, parameters} = updateBuilder(tableName, data, conditions, position);
+    async update(tableName, conditions, data, meta = null){
+        const {sql, parameters} = updateBuilder(tableName, data, conditions, meta);
         return this.getAffectedCount(await this.exec(sql, parameters));
     }
 
@@ -240,14 +244,14 @@ class Adapter extends ReadModelStoreAdapterInterface
         return res?.[0]?.cnt ?? 0;
     }
 
-    async delete(tableName, conditions, position = null){
+    async delete(tableName, conditions, meta = null){
         let {sql, parameters} = conditionBuilder(conditions);
         let affectedCount;
-        if(position !== null)
+        if(meta !== null)
         {
-            const checkCondition = getPositionCheckCondition(tableName, position);
+            const checkCondition = getPositionCheckCondition(tableName, meta);
             sql += [' AND', checkCondition[0]].join(' ');
-            parameters.push(convertValue(checkCondition[1]));
+            parameters.push(...checkCondition[1].map(p => convertValue(p)));
             await this.beginTransaction();
         }
         try 
@@ -255,19 +259,20 @@ class Adapter extends ReadModelStoreAdapterInterface
             affectedCount = this.getAffectedCount(
                 await this.exec(['DELETE FROM', quoteIdentifier(tableName), 'WHERE', sql].join(' '), parameters)
             );
-            if(affectedCount > 0 && position)
+            if(affectedCount > 0 && meta)
             {
-                await this.exec(['UPDATE', quoteIdentifier(tableName), 'SET', quoteIdentifier('_lastPosition'), '=', '?', 
+                await this.exec(['UPDATE', quoteIdentifier(tableName), 'SET', quoteIdentifier('_lastPosition'), '=', '?',
+                    ',',quoteIdentifier('_operation'), '=', '?',
                     'ORDER BY', quoteIdentifier('_lastPosition'), 'DESC', 'LIMIT', '?'].join(' '), 
-                [convertValue(position), convertValue(1)]);
+                [convertValue(meta.position),convertValue(meta.operation), convertValue(1)]);
             }
-            if(position !== null)
+            if(meta !== null)
                 await this.commit();
         }
         catch(e)
         {
             console.log('Error', e);
-            if(position !== null)
+            if(meta !== null)
                 await this.rollback();
             throw e;
         }

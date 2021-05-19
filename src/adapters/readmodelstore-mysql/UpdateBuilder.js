@@ -1,7 +1,7 @@
 const { quoteIdentifier, convertValue, getPositionCheckCondition } = require('./utils');
 const { conditionBuilder } = require('./ConditionBuilder');
 
-function updateBuilder(tableName, data, conditions, position = null)
+function updateBuilder(tableName, data, conditions, meta = null)
 {
     if(typeof data !== 'object')
     {
@@ -15,10 +15,12 @@ function updateBuilder(tableName, data, conditions, position = null)
         throw new Error('No Fields given');
     }
 
-    if(position !== null)
+    if(meta !== null)
     {
-        data._lastPosition = position;
+        data._lastPosition = meta.position;
         fieldNames.push('_lastPosition');
+        data._operation = meta.operation;
+        fieldNames.push('_operation');
     }
 
     const assignments = fieldNames.map(n => [quoteIdentifier(n), '=', '?'].join(' '));
@@ -32,12 +34,12 @@ function updateBuilder(tableName, data, conditions, position = null)
         sql += [' WHERE', condition.sql].join(' ');
         parameters = parameters.concat(condition.parameters);
     }
-    if(position)
+    if(meta)
     {
         const startString = conditions && typeof conditions === 'object' ? ' AND' : ' WHERE';
-        const checkCondition = getPositionCheckCondition(tableName, position);
+        const checkCondition = getPositionCheckCondition(tableName, meta);
         sql += [startString, checkCondition[0]].join(' ');
-        parameters.push(convertValue(checkCondition[1]));
+        parameters.push(...checkCondition[1].map(p => convertValue(p)));
     }
     return {sql, parameters: values.concat(parameters)};
 }

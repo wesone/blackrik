@@ -47,13 +47,16 @@ test('with position but no conditions', () => {
     const data = {
         test: 'Hello world'
     };
-    const expectedSQL = 'UPDATE `TestTable` SET `test` = ?, `_lastPosition` = ? WHERE COALESCE(( SELECT * FROM ( SELECT MAX( `_lastPosition` ) FROM `TestTable` ) AS _maxPosition ), -1) < ?';
+    const expectedSQL = 'UPDATE `TestTable` SET `test` = ?, `_lastPosition` = ?, `_operation` = ? WHERE (COALESCE(( SELECT * FROM ( SELECT MAX( `_lastPosition` ) FROM `TestTable` ) AS _maxPosition ), -1) < ? OR EXISTS ( SELECT `_maxOp` FROM ( SELECT MAX( `_operation` ) AS `_maxOp` , `_lastPosition` FROM `TestTable` GROUP BY `_lastPosition` HAVING `_lastPosition` = ? AND ? > `_maxOp` ) AS _maxOp ))';
     const expectedParameters = [
         'Hello world',
         '1',
-        '1'
+        '2',
+        '1',
+        '1',
+        '2'
     ];
-    const {sql, parameters} = updateBuilder(tableName, data, null, 1);
+    const {sql, parameters} = updateBuilder(tableName, data, null, {position: 1, operation: 2});
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);
 });

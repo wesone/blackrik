@@ -63,7 +63,7 @@ function convertValue(value, arrayToJSON = true)
     return value;
 }
 
-function getPositionCheckCondition(tableName, position)
+function getPositionCheckCondition(tableName, meta)
 {
     /*
         COALESCE((SELECT * FROM (SELECT MAX(_lastPosition) FROM table) AS _maxPosition), -1) < position
@@ -78,8 +78,13 @@ function getPositionCheckCondition(tableName, position)
     
     const maxPositionSubQuery = ['SELECT', 'MAX(', quoteIdentifier('_lastPosition'), ')', 'FROM', quoteIdentifier(tableName)].join(' ');
     const maxPositionQuery = ['SELECT', '*', 'FROM', '(', maxPositionSubQuery, ')', 'AS', '_maxPosition'].join(' ');
-    const condition = ['COALESCE((', maxPositionQuery, '), -1)', '<', '?'].join(' ');
-    return [condition, position];
+    const maxOperationSubQuery = ['SELECT', 'MAX(',quoteIdentifier('_operation'), ') AS', quoteIdentifier('_maxOp'), ',', quoteIdentifier('_lastPosition'), 
+        'FROM', quoteIdentifier(tableName), 
+        'GROUP BY', quoteIdentifier('_lastPosition'), 
+        'HAVING', quoteIdentifier('_lastPosition'), '=', '?', 'AND', '?','>', quoteIdentifier('_maxOp')].join(' ');
+    const maxOperationQuery = ['SELECT', quoteIdentifier('_maxOp'), 'FROM', '(', maxOperationSubQuery, ')', 'AS', '_maxOp'].join(' ');
+    const condition = ['(COALESCE((', maxPositionQuery, '), -1)', '<', '?', 'OR', 'EXISTS','(', maxOperationQuery, '))'].join(' ');
+    return [condition, [meta.position, meta.position, meta.operation]];
 }
 
 function convertBinaryRows(rows)

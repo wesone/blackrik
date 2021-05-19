@@ -34,7 +34,7 @@ test('create insert into statement with position check', () => {
         testUndefined: undefined,
     };
    
-    const expectedSQL = 'INSERT INTO `TestTable` (`test`, `testDate`, `testInt`, `testNull`, `testUndefined`, `_lastPosition`) SELECT ?, ?, ?, ?, ?, ? WHERE ? > COALESCE(( SELECT MAX( `_lastPosition` ) FROM `TestTable` ),-1)';
+    const expectedSQL = 'INSERT INTO `TestTable` (`test`, `testDate`, `testInt`, `testNull`, `testUndefined`, `_lastPosition`, `_operation`) SELECT ?, ?, ?, ?, ?, ?, ? WHERE ? > COALESCE(( SELECT MAX( `_lastPosition` ) FROM `TestTable` ),-1) OR EXISTS ( SELECT MAX( `_operation` ) AS `_maxOp` , `_lastPosition` FROM `TestTable` GROUP BY `_lastPosition` HAVING `_lastPosition` = ? AND ? > `_maxOp` )';
     const expectedParameters = [
         'Hello world',
         '2021-12-17 02:24:00',
@@ -42,9 +42,12 @@ test('create insert into statement with position check', () => {
         null,
         null,
         '4',
+        '2',
         '4',
+        '4',
+        '2'
     ];
-    const {sql, parameters} = insertIntoBuilder(tableName, data, 4);
+    const {sql, parameters} = insertIntoBuilder(tableName, data, {position: 4, operation: 2});
     expect(sql).toEqual(expectedSQL);
     expect(parameters).toEqual(expectedParameters);
 });

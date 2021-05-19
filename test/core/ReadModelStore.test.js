@@ -75,8 +75,8 @@ describe('ReadModelStore', () => {
         expect(eventHandler).toHaveBeenNthCalledWith(1, storeProxy, event);
         
         expect(store.insert).toHaveBeenCalledTimes(2);
-        expect(store.insert).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
-        expect(store.insert).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, event.position);
+        expect(store.insert).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, {position: event.position, operation: 1});
+        expect(store.insert).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, {position: event.position, operation: 2});
     });
 
     test('prevents executing state changing store functions for replayed events on existing tables', async () => {
@@ -114,16 +114,16 @@ describe('ReadModelStore', () => {
         expect(eventHandler).toHaveBeenNthCalledWith(1, storeProxy, event);
         
         expect(store.insert).toHaveBeenCalledTimes(1);
-        expect(store.insert).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
+        expect(store.insert).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, {operation: 1, position: event.position});
         
         expect(store.update).toHaveBeenCalledTimes(1);
-        expect(store.update).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
+        expect(store.update).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, {operation: 2, position: event.position});
         
         expect(store.delete).toHaveBeenCalledTimes(1);
-        expect(store.delete).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
+        expect(store.delete).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, {operation: 3, position: event.position});
         
         expect(store.find).toHaveBeenCalledTimes(2);
-        expect(store.find).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, event.position);
-        expect(store.find).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, event.position);
+        expect(store.find).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, {operation: 4, position: event.position});
+        expect(store.find).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, {operation: 5, position: event.position});
     });
 });

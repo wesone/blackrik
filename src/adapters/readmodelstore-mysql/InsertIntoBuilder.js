@@ -1,6 +1,6 @@
 const { quoteIdentifier, convertValue } = require('./utils');
 
-function insertIntoBuilder(tableName, data, position = null)
+function insertIntoBuilder(tableName, data, meta = null)
 {
     if(typeof data !== 'object')
     {
@@ -14,16 +14,18 @@ function insertIntoBuilder(tableName, data, position = null)
         throw new Error('No Fields given');
     }
 
-    if(position !== null)
+    if(meta !== null)
     {
-        data._lastPosition = position;
+        data._lastPosition = meta.position;
         fieldNames.push('_lastPosition');
+        data._operation = meta.operation;
+        fieldNames.push('_operation');
     }
 
     const parameters = fieldNames.map(name => convertValue(data[name]));
     const fieldList = ['(', fieldNames.map(n => quoteIdentifier(n)).join(', '), ')'].join('');
 
-    if(position === null)
+    if(meta === null)
     {
         const valueList = ['(', parameters.map(() => '?').join(', ') ,')'].join('');
         const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'VALUES', valueList].join(' ');
@@ -31,9 +33,13 @@ function insertIntoBuilder(tableName, data, position = null)
     }
     
     const valueList = [parameters.map(() => '?').join(', ')].join('');
-    const subQuery = ['SELECT', 'MAX(', quoteIdentifier('_lastPosition'), ')', 'FROM', quoteIdentifier(tableName)].join(' ');
-    const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'SELECT', valueList, 'WHERE', '?', '>', 'COALESCE((', subQuery, '),-1)'].join(' ');
-    parameters.push(convertValue(position));
+    const subQueryPos = ['SELECT', 'MAX(', quoteIdentifier('_lastPosition'), ')', 'FROM', quoteIdentifier(tableName)].join(' ');
+    const subQueryOp = ['SELECT', 'MAX(',quoteIdentifier('_operation'), ') AS', quoteIdentifier('_maxOp'), ',', quoteIdentifier('_lastPosition'), 
+        'FROM', quoteIdentifier(tableName), 
+        'GROUP BY', quoteIdentifier('_lastPosition'), 
+        'HAVING', quoteIdentifier('_lastPosition'), '=', '?', 'AND', '?','>', quoteIdentifier('_maxOp')].join(' ');
+    const sql = ['INSERT INTO', quoteIdentifier(tableName), fieldList, 'SELECT', valueList, 'WHERE', '?', '>', 'COALESCE((', subQueryPos, '),-1)', 'OR', 'EXISTS', '(', subQueryOp, ')'].join(' ');
+    parameters.push(convertValue(meta.position), convertValue(meta.position), convertValue(meta.operation));
     return {sql, parameters};
 }
 
