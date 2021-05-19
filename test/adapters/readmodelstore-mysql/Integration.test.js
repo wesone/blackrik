@@ -6,7 +6,7 @@ let adapter;
 
 beforeAll(() => {
     adapter = new Adapter({ 
-        debugSql: true,
+        //debugSql: true,
         host: 'localhost',
         user: 'root',
         password: '1234',
@@ -15,7 +15,7 @@ beforeAll(() => {
 });
 
 afterAll(async () => {
-    //await adapter.exec(`DROP DATABASE IF EXISTS ${adapter.args.database}`, []);
+    await adapter.exec(`DROP DATABASE IF EXISTS ${adapter.args.database}`, []);
     return adapter.disconnect();
 });
 
