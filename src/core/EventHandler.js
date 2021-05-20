@@ -50,9 +50,10 @@ class EventHandler
 
     async onEvent(name, event)
     {
-        this.queues[name].add(event);
-        if(this.queues[name].length > 1)
-            await this.queues[name].waitFor(event);
+        const queue = this.queues[name];
+        queue.add(event);
+        if(queue.length > 1)
+            await queue.waitFor(event).catch(() => {});
 
         // parallel
         // await Promise.all(
@@ -63,7 +64,7 @@ class EventHandler
         // consecutively
         await this.listeners[name].iterate(event.type, event);
 
-        this.queues[name].next();
+        queue.next();
     }
 
     async persistEvent(event)

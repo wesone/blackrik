@@ -22,7 +22,7 @@ class Q extends EventEmitter
             return;
 
         const item = this.#queue.shift();
-        const isLast = this.length <= 1;
+        const isLast = !this.length;
         let found = false;
         for(let i = 0; i < this.#pending.length; i++)
         {
