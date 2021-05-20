@@ -79,10 +79,15 @@ class EventHandler
                 //             .execute(event.type, event)
                 //             // .map(cb => cb.catch(error => console.error(error)))
                 //     );
-                await Promise.all(
-                    this.listeners[name]
-                        .execute(event.type, event)
-                );
+
+                // parallel
+                // await Promise.all(
+                //     this.listeners[name]
+                //         .execute(event.type, event)
+                // );
+
+                // consecutively
+                await this.listeners[name].iterate(event.type, event);
             });
     }
 
