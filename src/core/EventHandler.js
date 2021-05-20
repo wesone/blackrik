@@ -4,6 +4,7 @@ const {
 } = require('./Constants');
 const Event = require('./Event');
 const ListenerMap = require('../utils/ListenerMap');
+const Q = require('../utils/Q');
 const {ConflictError} = require('./Errors');
 
 class EventHandler
@@ -15,26 +16,26 @@ class EventHandler
         this.store = store;
 
         this.listeners = {};
+        this.queues = {};
     }
 
     addListener(name, type, callback)
     {
-        let created = false;
         if(!this.listeners[name])
-        {
             this.listeners[name] = new ListenerMap();
-            created = true;
-        }
-        this.listeners[name].add(type, callback);
-        return created;
+        return this.listeners[name].add(type, callback);
+    }
+
+    addQueue(name)
+    {
+        if(this.queues[name])
+            return;
+        this.queues[name] = new Q();
     }
 
     async init()
     {
-        // if(await this.store.defineTable(TABLE_NAME, {
-        //     position: 'number'
-        // }))
-        //     await this.store.insert(TABLE_NAME, {position: -1});
+
     }
 
     async start()
@@ -45,6 +46,23 @@ class EventHandler
     async stop()
     {
         return await this.eventBus.stop();
+    }
+
+    async onEvent(name, event)
+    {
+        this.queues[name].add(event);
+        await this.queues[name].waitFor(event);
+
+        // parallel
+        // await Promise.all(
+        //     this.listeners[name]
+        //         .execute(event.type, event)
+        // );
+
+        // consecutively
+        await this.listeners[name].iterate(event.type, event);
+
+        this.queues[name].next();
     }
 
     async persistEvent(event)
@@ -72,27 +90,10 @@ class EventHandler
 
     async subscribe(name, type, callback)
     {
-        // we have one listener that will execute all callbacks, we could prevent sending a message multiple times to a callback
-        // this way we create idempotence which is good but we also bypass the retry strategy which is bad
-        //TODO needs more tests to decide which way to go
+        this.addQueue(name);
         if(this.addListener(name, type, callback))
             await this.eventBus.subscribe(name, type, async event => {
-                // const {position} = event;
-                // if(await this.store.update(TABLE_NAME, {position: {$lt: position}}, {position}))
-                //     await Promise.all(
-                //         this.listeners[name]
-                //             .execute(event.type, event)
-                //             // .map(cb => cb.catch(error => console.error(error)))
-                //     );
-
-                // parallel
-                // await Promise.all(
-                //     this.listeners[name]
-                //         .execute(event.type, event)
-                // );
-
-                // consecutively
-                await this.listeners[name].iterate(event.type, event);
+                await this.onEvent(name, event);
             });
     }
 
