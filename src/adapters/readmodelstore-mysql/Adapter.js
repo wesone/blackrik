@@ -222,7 +222,7 @@ class Adapter extends ReadModelStoreAdapterInterface
 
         if(queryOptions.position)
         {
-            const maxPosition = results[1]?._lastPosition ?? -1;
+            const maxPosition = results[1]?._lastPosition ?? Number.MAX_SAFE_INTEGER;
             if(maxPosition < queryOptions.position)
             {
                 const error =  new Error('Data not yet availible');
@@ -263,7 +263,7 @@ class Adapter extends ReadModelStoreAdapterInterface
             {
                 await this.exec(['UPDATE', quoteIdentifier(tableName), 'SET', quoteIdentifier('_lastPosition'), '=', '?',
                     ',',quoteIdentifier('_operation'), '=', '?',
-                    'ORDER BY', quoteIdentifier('_lastPosition'), 'DESC', 'LIMIT', '?'].join(' '), 
+                    'ORDER BY', quoteIdentifier('_lastPosition'), ',', quoteIdentifier('_operation'), 'DESC', 'LIMIT', '?'].join(' '), 
                 [convertValue(meta.position),convertValue(meta.operation), convertValue(1)]);
             }
             if(meta !== null)
