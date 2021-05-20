@@ -85,14 +85,14 @@ class Blackrik
             Object.entries(eventMap).map(
                 ([eventType, handler]) =>
                     eventType !== CONSTANTS.READMODEL_INIT_FUNCTION && 
-                        this._eventHandler.subscribe(name, eventType, async event => { 
+                        this._eventHandler.subscribe(name, eventType, async event => 
                             await callback(
                                 handler,
                                 store.createProxy(event),
                                 event,
                                 store.config
-                            );
-                        })
+                            )
+                        )
             )
         );
     }
