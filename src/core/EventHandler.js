@@ -19,9 +19,14 @@ class EventHandler
 
     addListener(name, type, callback)
     {
+        let created = false;
         if(!this.listeners[name])
+        {
             this.listeners[name] = new ListenerMap();
-        return this.listeners[name].add(type, callback);
+            created = true;
+        }
+        this.listeners[name].add(type, callback);
+        return created;
     }
 
     async init()
