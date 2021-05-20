@@ -10,10 +10,20 @@ class ReadModelStore
 
     config;
 
+    // name of the function and its default return value
+    #stateChangingFunctions = {
+        insert: false,
+        update: 0,
+        delete: 0
+    };
+    #criticalProps;
+
     constructor(store, handlers)
     {
         this.#store = store;
         this.#handlers = handlers;
+
+        this.#criticalProps = Object.keys(this.#stateChangingFunctions);
     }
 
     _createInitProxy()
@@ -59,28 +69,29 @@ class ReadModelStore
     createProxy(event)
     {
         let operation = 0;
+
         const self = this;
         const proxy = new Proxy(this.#store, {
             get: (target, prop, ...rest) => {
                 const originalValue = Reflect.get(target, prop, ...rest);
                 const handler = typeof originalValue === 'function'
-                    ? function(...args){
-                        operation++;
-                        return originalValue.bind(proxy)(...args, {
-                            position: event.position,
-                            operation
-                        });
-                    }
+                    ? self.#criticalProps.includes(prop)
+                        ? function(...args){
+                            operation++;
+                            return originalValue.bind(proxy)(...args, {
+                                position: event.position,
+                                operation
+                            });
+                        }
+                        : function(...args){
+                            return originalValue.bind(proxy)(...args, {
+                                position: event.position,
+                                operation
+                            });
+                        }
                     : originalValue;
-                if(event.isReplay)
-                {
-                    if(prop === 'insert')
-                        return self._wrapReadModelStoreFunction(handler, false);
-                    if(prop === 'update')
-                        return self._wrapReadModelStoreFunction(handler, 0);
-                    if(prop === 'delete')
-                        return self._wrapReadModelStoreFunction(handler, 0);
-                }
+                if(event.isReplay && self.#criticalProps.includes(prop))
+                    return self._wrapReadModelStoreFunction(handler, self.#stateChangingFunctions[prop]);
                 return handler;
             }
         });
