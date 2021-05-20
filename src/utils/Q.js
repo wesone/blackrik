@@ -24,7 +24,7 @@ class Q extends EventEmitter
                 else
                     reject();
                     
-                this.#pending.slice(i, 1);
+                this.#pending.splice(i, 1);
                 i--;
             }
         }
