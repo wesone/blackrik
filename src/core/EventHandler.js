@@ -51,7 +51,8 @@ class EventHandler
     async onEvent(name, event)
     {
         this.queues[name].add(event);
-        await this.queues[name].waitFor(event);
+        if(this.queues[name].length > 1)
+            await this.queues[name].waitFor(event);
 
         // parallel
         // await Promise.all(

@@ -4,16 +4,26 @@ class Q extends EventEmitter
 {
     #queue = [];
     #pending = [];
-    #coldBoot = false;
 
     get length()
     {
         return this.#queue.length;
     }
 
-    _handle(item)
+    add(item)
     {
-        const isLast = !!this.length;
+        this.#queue.push(item);
+        return item;
+    }
+
+    next() 
+    {
+        if(!this.length)
+            return;
+
+        const item = this.#queue.shift();
+        const isLast = this.length <= 1;
+        let found = false;
         for(let i = 0; i < this.#pending.length; i++)
         {
             const {item: subject, resolve, reject} = this.#pending[i];
@@ -26,22 +36,14 @@ class Q extends EventEmitter
                     
                 this.#pending.splice(i, 1);
                 i--;
+                found = true;
             }
         }
+
         this.emit('handle', item);
-    }
 
-    add(item)
-    {
-        if(this.#queue.push(item) === 1)
-            this.#coldBoot = true;
-        return item;
-    }
-
-    next() 
-    {
-        if(this.length)
-            this._handle(this.#queue.shift());
+        if(!found)
+            this.next();
     }
 
     waitFor(item)
@@ -53,11 +55,6 @@ class Q extends EventEmitter
                 reject
             });
         });
-        if(this.#coldBoot)
-        {
-            this.next();
-            this.#coldBoot = false;
-        }
         return promise;
     }
 };
