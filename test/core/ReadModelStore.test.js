@@ -123,7 +123,7 @@ describe('ReadModelStore', () => {
         expect(store.delete).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, {operation: 3, position: event.position});
         
         expect(store.find).toHaveBeenCalledTimes(2);
-        expect(store.find).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, {operation: 4, position: event.position});
-        expect(store.find).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, {operation: 5, position: event.position});
+        expect(store.find).toHaveBeenNthCalledWith(1, NEW_TABLE_NAME, {operation: 3, position: event.position});
+        expect(store.find).toHaveBeenNthCalledWith(2, EXISTING_TABLE_NAME, {operation: 3, position: event.position});
     });
 });
