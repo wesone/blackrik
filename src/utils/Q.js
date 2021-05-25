@@ -23,6 +23,6 @@ class Q
         this.#queue.push(generator);
         return this._process(generator);
     }
-};
+}
 
 module.exports = Q;
