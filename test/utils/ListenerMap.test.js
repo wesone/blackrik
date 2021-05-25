@@ -84,3 +84,28 @@ describe('ListenerMap', () => {
         expect(listenerMap.execute(type)).toHaveLength(0);
     });
 });
+
+describe('Can execute callbacks', () => {
+    const listenerMap = new ListenerMap();
+    const type = 'type1';
+    const callbackDurations = [2, 4, 3];
+    callbackDurations.forEach(duration => listenerMap.add(type, async () => new Promise(r => setTimeout(r, duration))));
+
+    test('concurrently', async () => {
+        const now = Date.now();
+        await listenerMap.execute(type);
+        const duration = Date.now() - now;
+
+        expect(duration).toBeLessThan(callbackDurations.reduce((acc, value) => acc + value));
+    });
+
+    test('in series', async () => {
+        const now = Date.now();
+        await listenerMap.iterate(type);
+        const duration = Date.now() - now;
+
+        expect(duration).toBeGreaterThan(Math.max(...callbackDurations));
+
+        expect(await listenerMap.iterate('unknowntype')).toBe(undefined);
+    });
+});
