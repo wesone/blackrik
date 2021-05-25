@@ -192,6 +192,13 @@ describe('EventHandler handles replays', () => {
             [aggregate, [eventType]]
         ]);
 
+        // wait for all events to be handled
+        await new Promise(async resolve => {
+            while(eventHandler.queuedEvents > 0)
+                await new Promise(r => setTimeout(r, 1));
+            resolve();
+        });
+
         expect(callback).toHaveBeenCalledTimes(eventCount * 2);
         for(let i = 0; i < eventCount; i++)
             expect(callback).toHaveBeenNthCalledWith(i+1, filledEvents[i]);

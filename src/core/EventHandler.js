@@ -17,6 +17,7 @@ class EventHandler
 
         this.listeners = {};
         this.queues = {};
+        this.queuedEvents = 0;
     }
 
     addListener(name, type, callback)
@@ -50,11 +51,6 @@ class EventHandler
 
     async onEvent(name, event)
     {
-        const queue = this.queues[name];
-        queue.add(event);
-        if(queue.length > 1)
-            await queue.waitFor(event).catch(() => {});
-
         // parallel
         // await Promise.all(
         //     this.listeners[name]
@@ -62,9 +58,10 @@ class EventHandler
         // );
 
         // consecutively
-        await this.listeners[name].iterate(event.type, event);
+        // await this.listeners[name].iterate(event.type, event);
 
-        queue.next();
+        await this.queues[name].add(() => this.listeners[name].iterate(event.type, event));
+        this.queuedEvents--;
     }
 
     async persistEvent(event)
@@ -87,6 +84,7 @@ class EventHandler
 
     async sendEvent(name, event)
     {
+        this.queuedEvents++;
         return await this.eventBus.publish(name, event) && event;
     }
 
@@ -123,8 +121,7 @@ class EventHandler
                 });
 
                 if(events.length)
-                    // await Promise.all(events.map(event => this.sendEvent(name, {...event, isReplay: true}))); //TODO make sure events are send in the right order
-                    for(const event of events)
+                    for(const event of events) // make sure events are send in the right order
                         await this.sendEvent(name, {...event, isReplay: true});
                 next = cursor;
             } while(next); 

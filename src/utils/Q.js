@@ -1,61 +1,27 @@
-const EventEmitter = require('events');
-
-class Q extends EventEmitter
+class Q
 {
     #queue = [];
-    #pending = [];
+    #chain = Promise.resolve();
 
     get length()
     {
         return this.#queue.length;
     }
 
-    add(item)
+    _process(generator) 
     {
-        this.#queue.push(item);
-        return item;
+        return this.#chain = this.#chain
+            .then(() => generator())
+            .then(value => this.#queue.shift() && value);
     }
 
-    next() 
+    add(generator)
     {
-        if(!this.length)
-            return;
-
-        const item = this.#queue.shift();
-        const isLast = !this.length;
-        let found = false;
-        for(let i = 0; i < this.#pending.length; i++)
-        {
-            const {item: subject, resolve, reject} = this.#pending[i];
-            if(subject === item || isLast)
-            {
-                if(subject === item)
-                    resolve(item);
-                else
-                    reject();
-                    
-                this.#pending.splice(i, 1);
-                i--;
-                found = true;
-            }
-        }
-
-        this.emit('handle', item);
-
-        if(!found)
-            this.next();
-    }
-
-    waitFor(item)
-    {
-        const promise = new Promise((resolve, reject) => {
-            this.#pending.push({
-                item,
-                resolve,
-                reject
-            });
-        });
-        return promise;
+        if(typeof generator !== 'function')
+            throw Error('Parameter needs to be of type function.');
+        
+        this.#queue.push(generator);
+        return this._process(generator);
     }
 };
 

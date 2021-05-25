@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - Bug where idempotency in read model store fails for multiple inserts/updates per event
+- Bug where projections handle events in a wrong order during a replay 
 
 ## [1.1.2] - 2021-05-05
 ### Changed
