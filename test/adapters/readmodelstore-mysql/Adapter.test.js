@@ -153,10 +153,8 @@ test('default values', async () => {
     const adapter = new Adapter({database: 'test', debugSql: true});
     expect(adapter.getAffectedCount([])).toEqual(0);
 
-    const expectedError = new Error('Data not yet availible');
-    expectedError.status = 409;
     adapter.exec = jest.fn().mockImplementation(() => [[],[]]);
-    await expect(adapter.find(tableName, {id: 1}, {position: 1})).rejects.toEqual(expectedError);
+    await expect(adapter.find(tableName, {id: 1}, {position: 1})).resolves.toEqual([]);
 
     adapter.find = jest.fn().mockImplementation(() => []);
     await expect(adapter.count(tableName, {id: 1})).resolves.toEqual(0);
