@@ -71,6 +71,8 @@ function _translateType(field, type, attributes, state, fieldIndex, fieldDefinit
         _addIndex({fields: [field], unique: true}, state, fieldDefinitions);
     if(attributes.primaryKey)
         _addIndex({fields: [field], primaryKey: true}, state, fieldDefinitions);
+    if(attributes.index)
+        _addIndex({fields: [field], index: attributes.index}, state, fieldDefinitions);
     return typeDef;
 }
 
@@ -78,7 +80,9 @@ function _translateIndexType(indexDef, name)
 {
     if(indexDef.primaryKey)
         return 'PRIMARY KEY';
-    return [indexDef.unique ? 'UNIQUE KEY': 'KEY', quoteIdentifier(name)].join(' ');
+    if(indexDef.index === 'fulltext')
+        return ['FULLTEXT', quoteIdentifier(name)].join(' ');
+    return [indexDef.unique ? 'UNIQUE KEY': 'INDEX', quoteIdentifier(name)].join(' ');
 }
 
 function _addIndex(indexDef, state, fieldDefinitions)
@@ -135,15 +139,6 @@ function _calculateHash(fieldTokens)
 function createTableBuilder(tableName, fieldDefinitions, indexes)
 {
 
-    /*
-
-const indexes = [
-        {fields: ['id', 'test'], primaryKey: true},
-        {fields: ['id', 'test', 'testDate'], unique: true},
-        {fields: ['testInt', 'testInc'], name: 'myIndex'},
-    ];
-    */
-
     if(typeof fieldDefinitions !== 'object')
     {
         throw new Error('fieldDefinitions has to be an object');
@@ -168,7 +163,8 @@ const indexes = [
             defaultValue, 
             unique, 
             primaryKey, 
-            autoIncrement
+            autoIncrement,
+            index: indexType
         } = typeof fieldDefinitions[name] === 'object' ? 
             fieldDefinitions[name] : {type: fieldDefinitions[name]};
         if(!type)
@@ -182,7 +178,8 @@ const indexes = [
             defaultValue, 
             unique, 
             primaryKey, 
-            autoIncrement
+            autoIncrement,
+            index: indexType
         }, state, index, fieldDefinitions)].join(' ');
     });
 

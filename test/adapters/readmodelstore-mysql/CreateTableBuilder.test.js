@@ -27,12 +27,13 @@ test('Build creat table statement', () => {
         testDefault: {
             type: 'string',
             defaultValue: 'Ein Test',
+            index: true,
         },
         testShorthand: 'Date',
     };
    
-    const expectedSQL = 'CREATE TABLE `TestTable` (`id` CHAR(36), `test` VARCHAR(512) NULL, `testDate` TIMESTAMP, `testInt` DOUBLE, `testInc` DOUBLE, `testDefault` VARCHAR(512) DEFAULT \'Ein Test\', `testShorthand` TIMESTAMP, PRIMARY KEY ( `id` ), UNIQUE KEY `index_1` ( `testInt` ), UNIQUE KEY `index_2` ( `testInc` )) COMMENT="1:d859fc83ac11f80b3aa1f20be2dc7a5069505c07ab516aafec7bb1adcc941407f911244d93c9409374e38d565b436d4f029e932c68025260caa97b539b3379af"';
-    const expectedHash = '1:d859fc83ac11f80b3aa1f20be2dc7a5069505c07ab516aafec7bb1adcc941407f911244d93c9409374e38d565b436d4f029e932c68025260caa97b539b3379af';
+    const expectedSQL = 'CREATE TABLE `TestTable` (`id` CHAR(36), `test` VARCHAR(512) NULL, `testDate` TIMESTAMP, `testInt` DOUBLE, `testInc` DOUBLE, `testDefault` VARCHAR(512) DEFAULT \'Ein Test\', `testShorthand` TIMESTAMP, PRIMARY KEY ( `id` ), UNIQUE KEY `index_1` ( `testInt` ), UNIQUE KEY `index_2` ( `testInc` ), INDEX `index_3` ( `testDefault` )) COMMENT="1:3152cbaaf95bd82eecaba564bbd9ac2a7cc3d5a8040ab477a5cf80d345c6f69da3e038810d6398ff694683aa6d4b3648bb6c22ce63ca29f5e46e4b5350ba7865"';
+    const expectedHash = '1:3152cbaaf95bd82eecaba564bbd9ac2a7cc3d5a8040ab477a5cf80d345c6f69da3e038810d6398ff694683aa6d4b3648bb6c22ce63ca29f5e46e4b5350ba7865';
     const {sql, hash} = createTableBuilder(tableName, fieldDefinition);
     expect(sql).toEqual(expectedSQL);
     expect(hash).toEqual(expectedHash);
@@ -71,16 +72,18 @@ test('indexes', () => {
         },
         testDefault:'string',
         testShorthand: 'date',
+        testFulltext: 'text',
     };
 
     const indexes = [
         {fields: ['id', 'test'], primaryKey: true},
         {fields: ['id', 'test', 'testDate'], unique: true},
         {fields: ['testInt', 'testInc'], name: 'myIndex'},
+        {fields: ['testFulltext'], index: 'fulltext'}
     ];
    
-    const expectedSQL = 'CREATE TABLE `TestTable` (`test` VARCHAR(512), `testDate` VARCHAR(512), `testInt` VARCHAR(512), `testInc` VARCHAR(512), `id` CHAR(36), `testDefault` VARCHAR(512), `testShorthand` TIMESTAMP, PRIMARY KEY ( `id`, `test` ), UNIQUE KEY `index_1` ( `id`, `test`, `testDate` ), KEY `myIndex` ( `testInt`, `testInc` )) COMMENT="1:9304b9f596f20b3918e3da30cfdf04bf85c90fcfdaa349b08ea29c5d56de733b233ffac0fbcfc0c9d7e3c01ce8c58e189ebe264fceb7e86f0ea7d2ea60d33eb9"';
-    const expectedHash = '1:9304b9f596f20b3918e3da30cfdf04bf85c90fcfdaa349b08ea29c5d56de733b233ffac0fbcfc0c9d7e3c01ce8c58e189ebe264fceb7e86f0ea7d2ea60d33eb9';
+    const expectedSQL = 'CREATE TABLE `TestTable` (`test` VARCHAR(512), `testDate` VARCHAR(512), `testInt` VARCHAR(512), `testInc` VARCHAR(512), `id` CHAR(36), `testDefault` VARCHAR(512), `testShorthand` TIMESTAMP, `testFulltext` TEXT, PRIMARY KEY ( `id`, `test` ), UNIQUE KEY `index_1` ( `id`, `test`, `testDate` ), INDEX `myIndex` ( `testInt`, `testInc` ), FULLTEXT `index_3` ( `testFulltext` )) COMMENT="1:defdb3d1ef7e4636d9051acf407d4944a87a0ca8cca2f717947104002d5214b9a914edea85ce4f4e815a3a30df766a8b4f91ebe7539d3423a660e5cacd5c6b9b"';
+    const expectedHash = '1:defdb3d1ef7e4636d9051acf407d4944a87a0ca8cca2f717947104002d5214b9a914edea85ce4f4e815a3a30df766a8b4f91ebe7539d3423a660e5cacd5c6b9b';
     const {sql, hash} = createTableBuilder(tableName, fieldDefinition, indexes);
     expect(sql).toEqual(expectedSQL);
     expect(hash).toEqual(expectedHash);
@@ -102,12 +105,13 @@ test('indexes order', () => {
     const indexes = [
         {fields: ['id', 'test', 'testDate'], unique: true},
         {fields: ['id', 'test'], primaryKey: true},
+        {fields: ['test'], name: 'textsearch', index: 'fulltext'},
         {fields: ['testInt', 'testInc'], name: 'myIndex'},
         {fields: ['testDefault', 'testShorthand'], unique: true},
     ];
    
-    const expectedSQL = 'CREATE TABLE `TestTable` (`test` VARCHAR(512), `testDate` VARCHAR(512), `testInt` VARCHAR(512), `testInc` VARCHAR(512), `id` CHAR(36), `testDefault` VARCHAR(512), `testShorthand` TIMESTAMP, PRIMARY KEY ( `id`, `test` ), UNIQUE KEY `index_0` ( `id`, `test`, `testDate` ), UNIQUE KEY `index_3` ( `testDefault`, `testShorthand` ), KEY `myIndex` ( `testInt`, `testInc` )) COMMENT="1:9d4df0dfc453e2d862325cdab8ebb358853b2359c0702ec9664dc9d9c048502cda73564e56e3eac15a5271caf337b584a00c87044bdb7824dd04b036346e53e6"';
-    const expectedHash = '1:9d4df0dfc453e2d862325cdab8ebb358853b2359c0702ec9664dc9d9c048502cda73564e56e3eac15a5271caf337b584a00c87044bdb7824dd04b036346e53e6';
+    const expectedSQL = 'CREATE TABLE `TestTable` (`test` VARCHAR(512), `testDate` VARCHAR(512), `testInt` VARCHAR(512), `testInc` VARCHAR(512), `id` CHAR(36), `testDefault` VARCHAR(512), `testShorthand` TIMESTAMP, PRIMARY KEY ( `id`, `test` ), UNIQUE KEY `index_0` ( `id`, `test`, `testDate` ), UNIQUE KEY `index_4` ( `testDefault`, `testShorthand` ), FULLTEXT `textsearch` ( `test` ), INDEX `myIndex` ( `testInt`, `testInc` )) COMMENT="1:4dd18e30302bef8cf278ce5e18d945bf8eae6cea1ed403092528a109d7c2c244d29a3b9ff2f4be401ec6a9c9df20475e3f78dbfdf8704d3bd9b96eaa96501dec"';
+    const expectedHash = '1:4dd18e30302bef8cf278ce5e18d945bf8eae6cea1ed403092528a109d7c2c244d29a3b9ff2f4be401ec6a9c9df20475e3f78dbfdf8704d3bd9b96eaa96501dec';
     const {sql, hash} = createTableBuilder(tableName, fieldDefinition, indexes);
     expect(sql).toEqual(expectedSQL);
     expect(hash).toEqual(expectedHash);
