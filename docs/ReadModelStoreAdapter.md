@@ -50,6 +50,7 @@ Property | Type | Attribute | Description
 type | string | | The fields data type. Can be one of the following:<br>`boolean` true or false<br>`date` Dates like JavaScript Date objects<br>`json` Objects that can be JSON serialized<br>`number` Positive or negative float or integer<br>`string` Strings with a max length of 512 characters<br>`text` Strings of indefinite length<br>`uuid` Strings with 36 characters
 primaryKey | boolean | optional | Sets the field as Primary key
 unique | boolean | optional | Sets the field to be unique across all entries
+index | boolean \| string | optional | Adds an index to the field. If index is `true`, B-Tree indexing is used, other values are:<br>`btree` B-Tree indexing<br>`fulltext` FULLTEXT indexing
 
 ## options
 Property | Type | Attribute | Description

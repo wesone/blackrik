@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest --testMatch=**/test/**/*.test.js --verbose --passWithNoTests",
-    "coverage": "jest --coverage"
+    "coverage": "jest --coverage",
+    "docs": "npx docsify serve docs"
   },
   "repository": {
     "type": "git",
