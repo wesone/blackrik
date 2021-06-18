@@ -33,13 +33,14 @@ class Aggregate
         return Object.prototype.hasOwnProperty.call(this.projection, eventType);
     }
 
-    _reduceEvents(events, state = {})
+    async _reduceEvents(events, state = {})
     {
-        events.forEach(event => {
+        for(const event of events)
+        {
             const {type} = event;
             if(this.hasProjection(type))
-                state = this.projection[type](state, event);
-        });
+                state = await this.projection[type](state, event);      
+        }
         return state;
     }
 
@@ -47,7 +48,7 @@ class Aggregate
     {
         const aggregateIds = [aggregateId];
         let state = (typeof this.projection.init === 'function' 
-            ? this.projection.init()
+            ? await this.projection.init()
             : {});
         let next = null;
         let latestEvent = null;
@@ -60,7 +61,7 @@ class Aggregate
             });
             if(events.length)
             {
-                state = this._reduceEvents(events, state);
+                state = await this._reduceEvents(events, state);
                 latestEvent = events.pop();
             }
             next = cursor;

@@ -107,7 +107,7 @@ describe('Test hasProjection', () => {
 });
 
 describe('Testing _reduceEvents', () => {
-    test('Test correct reduction of event list', () => {
+    test('Test correct reduction of event list', async () => {
         const mockProjection = { 
             init: 'This is no function',
             'USER_CREATED': (state, {payload}) => ({
@@ -121,9 +121,9 @@ describe('Testing _reduceEvents', () => {
             })
         };
         const testAggregate = new Aggregate({name: 'Test name', projection: mockProjection});
-        expect(testAggregate._reduceEvents(testEvents)).toEqual({name: '42'});
+        expect(await testAggregate._reduceEvents(testEvents)).toEqual({name: '42'});
     });
-    test('Return state if no projection available', () => {
+    test('Return state if no projection available', async () => {
         const mockProjection = { 
             init: 'This is no function',
             'USER_CREATED': (state, {payload}) => ({
@@ -137,7 +137,7 @@ describe('Testing _reduceEvents', () => {
             // })
         };
         const testAggregate = new Aggregate({name: 'Test name', projection: mockProjection}); 
-        const result = testAggregate._reduceEvents(testEvents);
+        const result = await testAggregate._reduceEvents(testEvents);
         expect(result).toEqual({});
     });
 });
