@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug where idempotency in read model store fails for multiple inserts/updates per event
 - Bug where projections handle events in a wrong order during a replay 
 
+### Added
+- DB reconnect on connection loss for eventstore-mysql and readmodelstore-mysql
 ## [1.1.2] - 2021-05-05
 ### Changed
 - Renamed workflow property `currentEvent` to `event`
