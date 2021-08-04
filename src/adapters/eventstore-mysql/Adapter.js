@@ -114,9 +114,17 @@ class Adapter extends EventStoreAdapterInterface
     async init()
     {
         await this.createDatabase();
-        this.db = await mysql.createConnection(this.config);
-        await this.db.connect();
+        await this.connect();
         await this.createTable();
+    }
+
+    async connect()
+    {
+        this.db = await mysql.createConnection(this.config);
+        this.db.on('error', err => {
+            this.errorHandler(err, false);
+        });
+        await this.db.connect();
         // see https://github.com/sidorares/node-mysql2/issues/1239
         //========MySQL 8.0.22 (and higher) fix========
         const originalExecute = this.db.execute.bind(this.db);
@@ -134,11 +142,25 @@ class Adapter extends EventStoreAdapterInterface
         //========/========
     }
 
+    async execute(sql, values)
+    {
+        try 
+        {
+            if(!this.db)
+                await this.connect();
+            return this.db.execute(sql, values);
+        }
+        catch(err)
+        {
+            this.errorHandler(err);
+        }
+    }
+
     async save(event)
     {
         try
         {
-            const result = await this.db.execute(
+            const result = await this.execute(
                 `INSERT INTO events (${Object.keys(event).join(',')}) VALUES (${Object.keys(event).map(() => '?').join(',')})`,
                 Object.values(event));
             return result[0].insertId;
@@ -147,7 +169,6 @@ class Adapter extends EventStoreAdapterInterface
         {
             if(e.errno === 1062)
                 return false;
-            throw e;
         }
     }
 
@@ -204,7 +225,7 @@ class Adapter extends EventStoreAdapterInterface
             }
         }
         const toExecute = `SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY position ASC ${limit.join(' ')}`;
-        const events = await this.db.execute(toExecute, values);
+        const events = await this.execute(toExecute, values);
         return {
             events: events[0].map(event => {
                 event.payload = JSON.parse(event.payload);
@@ -317,6 +338,17 @@ class Adapter extends EventStoreAdapterInterface
         queryParts.push(`, UNIQUE KEY \`${databaseSchema.options.uniqueKey.name}\` (${databaseSchema.options.uniqueKey.fields.join(',')})`);
         index.forEach(field => queryParts.push(`, INDEX USING BTREE (${field})`));
         return queryParts.join(' ');
+    }
+
+    errorHandler(err, shouldThrow = true){
+        if(err.fatal)
+        {
+            this.db = null;
+        }
+        if(shouldThrow) 
+            throw err;
+        else 
+            console.error(err);
     }
 }
 

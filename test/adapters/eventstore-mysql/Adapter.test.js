@@ -6,6 +6,7 @@ jest.mock('mysql2/promise', () => {
     const mockConnect = jest.fn();
     const mockExecute = jest.fn();
     const mockEnd = jest.fn();
+    const mockOn = jest.fn();
 
     const object = { // Object to spy on
         mockConnect, mockExecute
@@ -14,7 +15,8 @@ jest.mock('mysql2/promise', () => {
         return {
             connect: object.mockConnect,
             execute: object.mockExecute, // does not get executed in init() but still needed for a bind
-            end: mockEnd
+            end: mockEnd,
+            on: mockOn
         };
     });
     return {
