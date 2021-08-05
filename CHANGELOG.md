@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - New option `index` for ReadModelStore.defineTable scheme, to allow B-Tree and FULLTEXT indexing of fields
+- Database reconnect on connection loss for eventstore-mysql and readmodelstore-mysql
 
 ## [1.1.2] - 2021-05-05
 ### Changed

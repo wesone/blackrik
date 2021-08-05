@@ -46,6 +46,18 @@ class Adapter extends ReadModelStoreAdapterInterface
         );
     }
 
+    errorHandler(err, shouldThrow = true){
+        if(err.fatal)
+        {
+            this.connection = null;
+            this._conn = null;
+        }
+        if(shouldThrow) 
+            throw err;
+        else 
+            console.error(err);
+    }
+
     async checkConnection()
     {
         if(!this.connection)
@@ -67,6 +79,9 @@ class Adapter extends ReadModelStoreAdapterInterface
             return conn;
         });
         this.connection = await this._conn;
+        this.connection.on('error', err => {
+            this.errorHandler(err, false);
+        });
     }
 
     async disconnect()
@@ -75,6 +90,7 @@ class Adapter extends ReadModelStoreAdapterInterface
         {
             await this.connection.end();
             this.connection = null;
+            this._conn = null;
         }
     }
         
@@ -92,9 +108,16 @@ class Adapter extends ReadModelStoreAdapterInterface
 
     async exec(sql, parameters)
     {
-        await this.checkConnection();
-        this.printDebugStatemant(sql, parameters);
-        return this.connection.execute(sql, parameters);
+        try 
+        {
+            await this.checkConnection();
+            this.printDebugStatemant(sql, parameters);
+            return this.connection.execute(sql, parameters);
+        } 
+        catch(err)
+        {
+            this.errorHandler(err);
+        }
     }
 
     getAffectedCount([results])

@@ -2,10 +2,15 @@ const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
 const {EVENT_LIMIT_REPLAY} = require('../../../src/core/Constants');
 const Event = require('../../../src/core/Event');
 const mysql = require('mysql2/promise');
+let errorCallback;
 jest.mock('mysql2/promise', () => {
     const mockConnect = jest.fn();
     const mockExecute = jest.fn();
     const mockEnd = jest.fn();
+    const mockOn = jest.fn((name, cb) => {
+        if(name === 'error')
+            errorCallback = cb;
+    });
 
     const object = { // Object to spy on
         mockConnect, mockExecute
@@ -14,7 +19,8 @@ jest.mock('mysql2/promise', () => {
         return {
             connect: object.mockConnect,
             execute: object.mockExecute, // does not get executed in init() but still needed for a bind
-            end: mockEnd
+            end: mockEnd,
+            on: mockOn
         };
     });
     return {
@@ -325,6 +331,68 @@ describe('Test save', () => {
         const spyExecute = jest.spyOn(mockConnection, 'execute');
         expect(spyExecute).toHaveBeenCalled();
     });
+});
+test('Throw error and reconnect', async () => {
+    const testObj = new Adapter(testConfig);
+    const error = new Error('test error');
+    error.fatal = true;
+    const mockConnection = {execute: jest.fn(() => {throw error;})};
+    testObj.db = mockConnection;
+    const data = {
+        aggregateId: '001',
+        aggregateVersion: 0,
+        type: 'USER_UPDATED',
+        correlationId: '111',
+        causation: '100',
+        payload: 'TEST'
+    };
+    const testEvent = new Event(data);
+
+    try 
+    {
+        await testObj.save(testEvent);
+    } 
+    catch(error)
+    {
+        expect(error).not.toBe(undefined);            
+    }
+    
+    const spyExecute = jest.spyOn(mockConnection, 'execute');
+    expect(spyExecute).toHaveBeenCalled();
+
+    expect(testObj.db).toBe(null);
+
+});
+
+
+test('Reconnect on connection loss', async () => {
+    const error = new Error('test error');
+    error.fatal = true;
+    errorCallback = null;
+    const testObj = new Adapter(testConfig);
+    
+    await testObj.connect();
+
+    expect(errorCallback).not.toBe(null);
+    const originalError = console.error;
+    console.error = jest.fn();
+    
+    errorCallback(error);
+    expect(console.error).toHaveBeenCalled();
+    console.error = originalError;
+});
+
+
+test('Reconnect on execute', async () => {
+    const testObj = new Adapter(testConfig);
+
+    testObj.connect = jest.fn(() => testObj.db = { execute: jest.fn()});
+    testObj.db = null;
+
+    await testObj.execute();
+
+    expect(testObj.db).not.toBe(null);
+
 });
 
 describe('Test load', () => {
