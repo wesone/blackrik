@@ -104,7 +104,7 @@ class Blackrik
 
         const store = new ReadModelStore(this._createReadModelStore(adapter), handlers);
         if(await store.init())
-            this.#replayEvents.push([
+            this.#replayEvents.push([ //TODO filter duplicate entries
                 name,
                 Object.keys(handlers)
                     .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)

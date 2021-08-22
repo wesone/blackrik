@@ -51,15 +51,6 @@ class EventHandler
 
     async onEvent(name, event)
     {
-        // parallel
-        // await Promise.all(
-        //     this.listeners[name]
-        //         .execute(event.type, event)
-        // );
-
-        // consecutively
-        // await this.listeners[name].iterate(event.type, event);
-
         await this.queues[name].add(() => this.listeners[name].iterate(event.type, event));
         this.queuedEvents--;
     }
