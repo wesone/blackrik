@@ -33,3 +33,32 @@ test('Correct execution order', async () => {
 
     Object.keys(items).forEach((value, idx) => expect(results[idx]).toBe(value));
 });
+
+test('Can recover after rejection', async () => {
+    const queue = new Q();
+
+    const eventHandler = jest.fn(() => {});
+
+    let isFirstExecution = true;
+    const badEventHandler = jest.fn(() => {
+        if(isFirstExecution)
+        {
+            isFirstExecution = false;
+            throw 'Test';
+        }
+    });
+
+    await queue.add(eventHandler);
+    try
+    {
+        await queue.add(badEventHandler);
+    }
+    catch(e)
+    {
+        await queue.add(badEventHandler);
+    }
+    await queue.add(eventHandler);
+    
+    expect(eventHandler).toBeCalledTimes(2);
+    expect(badEventHandler).toBeCalledTimes(2);
+});
