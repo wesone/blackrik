@@ -426,8 +426,7 @@ describe('Test start()', () => {
         expect(testObj._commandScheduler).not.toBe(undefined);
         // replay events
         const expectedReplayCall = [
-            [ 'user', [ 'USER_CREATED', 'USER_UPDATED', 'USER_REJECTED' ] ],
-            [ 'user', [ 'USER_CREATED' ] ]
+            ['user', ['USER_CREATED', 'USER_UPDATED', 'USER_REJECTED']]
         ];
         expect(testObj._eventHandler.replayEvents).toHaveBeenCalledWith(expectedReplayCall);
         // new Server

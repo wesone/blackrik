@@ -102,7 +102,7 @@ class Blackrik
         if(!this.#replayEvents[name])
             this.#replayEvents[name] = [];
         this.#replayEvents[name].push(
-            Object.keys(handlers)
+            ...Object.keys(handlers)
                 .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION && !this.#replayEvents[name].includes(event))
         );
     }
