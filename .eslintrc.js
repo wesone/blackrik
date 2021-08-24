@@ -80,7 +80,8 @@ module.exports = {
                     'for': { 'after': false },
                     'function': { 'after': false },
                     'if': { 'after': false },
-                    'while': { 'after': false }
+                    'while': { 'after': false },
+                    'switch': { 'after': false }
                 }
             }
         ],
