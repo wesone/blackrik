@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Bug where event handler could not execute after Kafka retry mechanism kicked in
 
+### Added
+- Filtering duplicate events that will be replayed on startup to improve performance
+
 ## [1.1.3] - 2021-08-05
 ### Changed
 - Aggregate projections can now be async
