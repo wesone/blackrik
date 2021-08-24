@@ -21,7 +21,7 @@ class Blackrik
     config;
     #server;
 
-    #replayEvents = [];
+    #replayEvents = {};
 
     #store;
     _eventHandler;
@@ -97,6 +97,16 @@ class Blackrik
         );
     }
 
+    _addToReplay(name, handlers)
+    {
+        if(!this.#replayEvents[name])
+            this.#replayEvents[name] = [];
+        this.#replayEvents[name].push(
+            Object.keys(handlers)
+                .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION && !this.#replayEvents[name].includes(event))
+        );
+    }
+
     async _registerSubscribers(name, handlers, adapter, callback)
     {
         if(!adapter)
@@ -104,11 +114,7 @@ class Blackrik
 
         const store = new ReadModelStore(this._createReadModelStore(adapter), handlers);
         if(await store.init())
-            this.#replayEvents.push([ //TODO filter duplicate entries
-                name,
-                Object.keys(handlers)
-                    .filter(event => event !== CONSTANTS.READMODEL_INIT_FUNCTION)
-            ]);
+            this._addToReplay(name, handlers);
 
         await this._createSubscriptions(name, handlers, store, callback);
 
@@ -282,6 +288,16 @@ class Blackrik
         };
     }
 
+    async handleReplay()
+    {
+        const list = Object.entries(this.#replayEvents);
+        if(list.length)
+        {
+            console.log('Replaying events:', list.map(([, types]) => types.join(', ')).join(', '));
+            await this._eventHandler.replayEvents(list);
+        }
+    }
+
     async start()
     {
         await this._initStore();
@@ -302,11 +318,7 @@ class Blackrik
         console.log('Initialize Handlers');
         await this._initHandlers();
 
-        if(this.#replayEvents.length)
-        {
-            console.log('Replaying events:', this.#replayEvents.map(([, types]) => types.join(', ')).join(', '));
-            await this._eventHandler.replayEvents(this.#replayEvents);
-        }
+        await this._handleReplay();
 
         this.#server = new Server(this.config.server.config);
         this._processMiddlewares();
