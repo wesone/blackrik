@@ -288,7 +288,7 @@ class Blackrik
         };
     }
 
-    async handleReplay()
+    async _handleReplay()
     {
         const list = Object.entries(this.#replayEvents);
         if(list.length)
