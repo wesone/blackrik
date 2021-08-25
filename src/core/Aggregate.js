@@ -46,7 +46,11 @@ class Aggregate
 
     async load(eventStore, aggregateId)
     {
-        const aggregateIds = [aggregateId];
+        const filter = {
+            aggregateIds: [aggregateId],
+            types: Object.keys(this.projection).filter(type => type !== 'init'),
+            limit: EVENT_LIMIT_AGGREGATE
+        };
         let state = (typeof this.projection.init === 'function' 
             ? await this.projection.init()
             : {});
@@ -54,11 +58,8 @@ class Aggregate
         let latestEvent = null;
         do
         {
-            const {events, cursor} = await eventStore.load({
-                aggregateIds,
-                limit: EVENT_LIMIT_AGGREGATE,
-                cursor: next
-            });
+            filter.cursor = next;
+            const {events, cursor} = await eventStore.load(filter);
             if(events.length)
             {
                 state = await this._reduceEvents(events, state);
