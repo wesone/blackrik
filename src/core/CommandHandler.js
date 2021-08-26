@@ -57,6 +57,23 @@ class CommandHandler
         return this.process(args, this.#blackrik.buildContext(req));
     }
 
+    async executeHandler(handler, command, state, context)
+    {
+        const {type = null, payload = null} = await handler(
+            command, 
+            state, 
+            context
+        ) ?? {};
+        
+        if(!type)
+            return null;
+
+        return {
+            type,
+            payload
+        };
+    }
+
     async process(args, context = {})
     {
         const command = this.createCommand(args);
@@ -79,7 +96,8 @@ class CommandHandler
             ? latestEvent.position
             : null;
         
-        const event = await commands[type](
+        const event = await this.executeHandler(
+            commands[type], 
             command, 
             state, 
             Object.freeze(context)
