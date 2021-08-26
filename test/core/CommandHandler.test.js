@@ -6,7 +6,7 @@ const aggregateId = '42';
 const type = 'command';
 const typeWithEvent = 'commandWithEvent';
 
-const exampleEvent = {test: 42};
+const exampleEvent = {type: 'test'};
 
 describe('CommandHandler detects', () => {
     const blackrik = new BlackrikMock();
@@ -32,60 +32,72 @@ describe('CommandHandler detects', () => {
     });
 });
 
-let blackrik;
-let commandHandler;
-beforeEach(() => {
-    blackrik = new BlackrikMock(exampleEvent);
-    commandHandler = new CommandHandler(blackrik);
-});
+describe('CommandHandler', () => {
+    let blackrik;
+    let commandHandler;
+    beforeEach(() => {
+        blackrik = new BlackrikMock(exampleEvent);
+        commandHandler = new CommandHandler(blackrik);
+    });
 
-test('CommandHandler processes events', async () => {
-    let event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
-
-    expect(event).toStrictEqual(exampleEvent);
-    expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
-
-    blackrik.isFirstAggregateEvent = true;
-    event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
-
-    expect(event).toStrictEqual(exampleEvent);
-    expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(2);
-});
-
-test('CommandHandler processes causation events', async () => {
-    const causationEvent = {
-        correlationId: '21',
-        id: '42'
-    };
-    const event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent}, {causationEvent});
-
-    expect(event).toStrictEqual({...exampleEvent, causationId: causationEvent.id});
-    expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
-});
-
-describe('CommandHandler processes HTTP requests', () => {
-    test('/commands', async () => {
-        const event = await commandHandler.handle({
-            blackrik: {},
-            body: {aggregateName, aggregateId, type: typeWithEvent}
-        });
+    test('processes events', async () => {
+        let event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
 
         expect(event).toStrictEqual(exampleEvent);
         expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
-    });
-    test('/command/:aggregateName/:type', async () => {
-        const event = await commandHandler.handle({
-            blackrik: {},
-            params: {aggregateName, type: typeWithEvent},
-            body: {aggregateId}
-        });
+
+        blackrik.isFirstAggregateEvent = true;
+        event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
 
         expect(event).toStrictEqual(exampleEvent);
+        expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(2);
+    });
+
+    test('detects invalid events (returned by the handler)', async () => {
+        const invalidEvent = {test: 42};
+        blackrik = new BlackrikMock(invalidEvent);
+        commandHandler = new CommandHandler(blackrik);
+        let event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
+
+        expect(event).toBe(null);
+        expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(0);
+    });
+
+    test('processes causation events', async () => {
+        const causationEvent = {
+            correlationId: '21',
+            id: '42'
+        };
+        const event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent}, {causationEvent});
+
+        expect(event).toStrictEqual({...exampleEvent, causationId: causationEvent.id});
         expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
     });
-});
 
-test('CommandHandler handles overlapping events', () => {
-    blackrik.eventShouldOverlap = true;
-    expect(commandHandler.process({aggregateName, aggregateId, type: typeWithEvent})).rejects.toThrow();
+    describe('processes HTTP requests', () => {
+        test('/commands', async () => {
+            const event = await commandHandler.handle({
+                blackrik: {},
+                body: {aggregateName, aggregateId, type: typeWithEvent}
+            });
+
+            expect(event).toStrictEqual(exampleEvent);
+            expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
+        });
+        test('/command/:aggregateName/:type', async () => {
+            const event = await commandHandler.handle({
+                blackrik: {},
+                params: {aggregateName, type: typeWithEvent},
+                body: {aggregateId}
+            });
+
+            expect(event).toStrictEqual(exampleEvent);
+            expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    test('handles overlapping events', () => {
+        blackrik.eventShouldOverlap = true;
+        expect(commandHandler.process({aggregateName, aggregateId, type: typeWithEvent})).rejects.toThrow();
+    });
 });
