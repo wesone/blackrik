@@ -48,7 +48,7 @@ class Aggregate
     {
         const filter = {
             aggregateIds: [aggregateId],
-            types: Object.keys(this.projection).filter(type => type !== 'init'),
+            // types: Object.keys(this.projection).filter(type => type !== 'init'), //TODO needs more performance tests... if used, latestEvent must be fetched with another call to eventStore.load
             limit: EVENT_LIMIT_AGGREGATE
         };
         let state = (typeof this.projection.init === 'function' 
