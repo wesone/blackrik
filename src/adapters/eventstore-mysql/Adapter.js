@@ -253,7 +253,7 @@ class Adapter extends EventStoreAdapterInterface
         if(exists[0][0]['count(*)'])
         {
             const table = await this.db.execute('DESCRIBE events', []);
-            if(!await this.verifySchema(table[0], databaseSchema))
+            if(!this.verifySchema(table[0], databaseSchema))
                 throw Error('Existing table schema is not valid.');
         }
         else
@@ -276,34 +276,32 @@ class Adapter extends EventStoreAdapterInterface
 
     verifySchema(data, databaseSchema)
     {
-        return new Promise(resolve => {
-            let valid = false;
-            Object.values(databaseSchema.fields).forEach(field => {
-                for(let i = 0; i < data.length; i++)
+        let valid = false;
+        for(const field of Object.values(databaseSchema.fields))
+        {
+            for(let i = 0; i < data.length; i++)
+            {
+                if(data[i].Field === field.Field)
                 {
-                    if(data[i].Field === field.Field)
+                    if(
+                        data[i].Type === field.Type &&
+                        data[i].Null === field.Null &&
+                        data[i].Key === field.Key &&
+                        data[i].Default === field.Default &&
+                        data[i].Extra === field.Extra
+                    )
                     {
-                        if(
-                            data[i].Type === field.Type &&
-                            data[i].Null === field.Null &&
-                            data[i].Key === field.Key &&
-                            data[i].Default === field.Default &&
-                            data[i].Extra === field.Extra
-                        )
-                        {
-                            valid = true;
-                            break;
-                        }
-
-                        valid = false;
+                        valid = true;
+                        break;
                     }
+                    valid = false;
                 }
+            }
 
-                if(!valid)
-                    return resolve(false);
-            });
-            resolve(true);
-        });
+            if(!valid)
+                return false;
+        }
+        return true;
     }
 
     buildFieldListFromSchema(databaseSchema)
