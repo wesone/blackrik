@@ -36,7 +36,7 @@ const databaseSchema = {
         },
         type: {
             Field: 'type',
-            Type: 'varchar(32)',
+            Type: 'varchar(128)',
             Null: 'NO',
             Key: 'MUL',
             Default: null,
@@ -169,6 +169,7 @@ class Adapter extends EventStoreAdapterInterface
         {
             if(e.errno === 1062)
                 return false;
+            throw e;
         }
     }
 
