@@ -83,12 +83,7 @@ class ReadModelStore
                                 operation
                             });
                         }
-                        : function(...args){
-                            return originalValue.bind(proxy)(...args, {
-                                position: event.position,
-                                operation
-                            });
-                        }
+                        : originalValue.bind(proxy)
                     : originalValue;
                 if(event.isReplay && self.#criticalProps.includes(prop))
                     return self._wrapReadModelStoreFunction(handler, self.#stateChangingFunctions[prop]);
