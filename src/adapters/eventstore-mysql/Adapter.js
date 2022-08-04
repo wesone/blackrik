@@ -237,6 +237,25 @@ class Adapter extends EventStoreAdapterInterface
         };
     }
 
+    async delete(aggregateId, excludeTypes = [])
+    {
+        if(!aggregateId)
+            throw new Error('aggregateId is needed');
+
+        const values = [aggregateId];
+        const where = [
+            'aggregateId = ?',
+            ...excludeTypes.map(type => {
+                values.push(type);
+                return 'type != ?';
+            })
+        ];
+        
+        const toExecute = `DELETE FROM events WHERE ${where.join(' AND ')}`;
+        const [results] = await this.execute(toExecute, values);
+        return results?.affectedRows ?? 0;
+    }
+
     async close()
     {
         await this.db.end();

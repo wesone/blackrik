@@ -9,7 +9,8 @@ class EventBusAdapterInterface extends Interface
             start: 'function',
             stop: 'function',
             subscribe: 'function',
-            publish: 'function'
+            publish: 'function',
+            delete: 'function'
         });
     }
 }

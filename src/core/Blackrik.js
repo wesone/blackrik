@@ -145,7 +145,8 @@ class Blackrik
                 
                 for(const [fn, argCount] of Object.entries({
                     'executeCommand': 1,
-                    'scheduleCommand': 2
+                    'scheduleCommand': 2,
+                    'deleteEventStream': 2,
                 }))
                 {
                     if(prop !== fn)
@@ -365,6 +366,11 @@ class Blackrik
             query,
             this.buildContext()
         );
+    }
+
+    async deleteEventStream(aggregateId, excludeTypes = null)
+    {
+        return await this._eventStore.delete(aggregateId, excludeTypes);
     }
 }
 
