@@ -1,20 +1,28 @@
 const {
     USER_CREATED,
-    USER_UPDATED,
-    USER_REJECTED,
-    USER_MAIL_CHANGE_REVERTED
+    USER_EMAIL_ADDRESS_CHANGED,
+    USER_NAME_CHANGED,
+    USER_REJECTED
 } = require('../events/users');
 
 const {
+    DuplicateAggregateError,
     ConflictError,
+    NotFoundError,
     BadRequestError,
-    ForbiddenError
-} = require('../errors');
+    ForbiddenError,
+    UnalteredError
+} = require('blackrik').ERRORS;
 
 module.exports = {
-    create: async (command, state/* , context */) => {
+    create: async (command, state, context) => {
+        if(context.aggregateVersion && !state.registered)
+            throw new DuplicateAggregateError();
         if(state.registered)
             throw new ConflictError('User already registered');
+        if(state.removed)
+            throw new ForbiddenError();
+        
         if(!command.payload.email)
             throw new BadRequestError('Please provide an email address');
         if(!command.payload.name)
@@ -28,21 +36,35 @@ module.exports = {
             }
         };
     },
-    update: async (command, state/* , context */) => {
-        if(!state.registered || state.removed)
-            throw new ForbiddenError();
-        if(!command.payload.name && !command.payload.email)
-            throw new BadRequestError('Please specify a new name and/or email address');
-        if(command.payload.name === state.name)
-            throw new BadRequestError(`Name is already set to '${state.name}'`);
+    setEmailAddress: async (command, state/* , context */) => {
+        if(!state.registered)
+        throw new NotFoundError();
+        
+        if(!command.payload.email)
+        throw new BadRequestError('Please provide a new email address');
         if(command.payload.email === state.email)
-            throw new BadRequestError(`Email address is already set to '${state.email}'`);
+        throw new UnalteredError(`Current email address is already ${command.payload.email}`)
+        
+        return {
+            type: USER_EMAIL_ADDRESS_CHANGED,
+            payload: {
+                email: command.payload.email
+            }
+        };
+    },
+    setName: async (command, state/* , context */) => {
+        if(!state.registered)
+            throw new NotFoundError();
+
+        if(!command.payload.name)
+            throw new BadRequestError('Please provide a new name');
+        if(command.payload.name === state.name)
+            throw new UnalteredError(`Current name is already ${command.payload.name}`)
 
         return {
-            type: USER_UPDATED,
+            type: USER_NAME_CHANGED,
             payload: {
-                name: command.payload.name ?? state.name,
-                email: command.payload.email ?? state.email 
+                name: command.payload.name
             }
         };
     },
@@ -50,14 +72,6 @@ module.exports = {
         return {
             type: USER_REJECTED,
             payload: command.payload
-        };
-    },
-    restoreEmailAddress: async (command, state/*, context */) => {
-        if(!state.registered || state.removed)
-            throw new ForbiddenError();
-        return {
-            type: USER_MAIL_CHANGE_REVERTED,
-            payload: {},
         };
     }
 };

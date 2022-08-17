@@ -62,6 +62,7 @@ causationIds | array | optional | An array of strings with the desired causation
 since | int | optional | To exclude events with a `timestamp` < `since`
 until | int | optional | To exclude events with a `timestamp` >= `until`
 limit | int | optional | To limit the number of returned events
+reverse | boolean | optional<br>default: `false` | To reverse the order of the events
 cursor | mixed \| null | optional | A cursor to scroll the result if a limit was used
 
 ### Return

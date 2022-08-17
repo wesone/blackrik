@@ -144,16 +144,20 @@ class Blackrik
                     return () => {};
                 
                 for(const [fn, argCount] of Object.entries({
-                    'executeCommand': 1,
-                    'scheduleCommand': 2,
-                    'deleteEventStream': 2,
+                    executeCommand: 1,
+                    scheduleCommand: 2,
+                    deleteAggregate: 3,
                 }))
                 {
                     if(prop !== fn)
                         continue;
                     return function(...args){
+                        // make sure that args.length is not > argCount 
+                        // and fill gaps with undefined if args.length < argCount
+                        args = args.slice(0, argCount);
                         const params = [
-                            ...args.slice(0, argCount),
+                            ...args,
+                            ...Array(argCount - args.length),
                             event
                         ];
                         return this[fn](...params);
@@ -215,7 +219,10 @@ class Blackrik
     _registerMiddlewares()
     {
         const {middlewares} = this.config.server;
-        // middlewares.forEach(middleware => this.#server.use(...(Array.isArray(middleware) ? middleware : [middleware]))); // Express 5 (or higher)
+
+        // Express 5 (or higher)
+        // middlewares.forEach(middleware => this.#server.use(...(Array.isArray(middleware) ? middleware : [middleware]))); 
+
         // Express < 5
         middlewares.forEach(middleware => {
             if(Array.isArray(middleware))
@@ -368,9 +375,14 @@ class Blackrik
         );
     }
 
-    async deleteEventStream(aggregateId, excludeTypes = null)
+    async deleteAggregate(aggregateName, aggregateId, eventPayload = null, causationEvent = null)
     {
-        return await this._eventStore.delete(aggregateId, excludeTypes);
+        return !!await this._commandHandler.deleteAggregate(
+            aggregateName,
+            aggregateId,
+            eventPayload,
+            causationEvent
+        );
     }
 }
 

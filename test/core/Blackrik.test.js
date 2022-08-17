@@ -2,9 +2,6 @@ const Blackrik = require('../../src/core/Blackrik');
 const Application = require('../../src/index');
 const exampleInstance = require('../_resources/testApp/config');
 const CONSTANTS = require('../../src/core/Constants');
-// const CommandHandler = require('../../src/core/CommandHandler');
-// const QueryHandler = require('../../src/core/QueryHandler');
-// const CommandScheduler = require('../../src/core/CommandScheduler');
 
 jest.mock('../../src/core/Adapter', () => {
     return {
@@ -53,18 +50,6 @@ jest.mock('../../src/core/workflow/index', () => {
         };
     });
 });
-
-// jest.mock('../../src/core/workflow/index', () => {
-//     return jest.fn(() => {
-//         return {
-//             connect: jest.fn()
-//         };
-//     });
-// });
-
-// jest.mock('../../src/core/CommandHandler');
-
-// jest.mock('../../src/core/QueryHandler');
 
 jest.mock('../../src/core/CommandScheduler', () => {
     const init = jest.fn();
@@ -115,10 +100,6 @@ beforeEach(() => {
 });
 
 describe('Test _createReadModelStore', () => {
-    // test('Create store successfully', () => {
-    //     const result = testObj._createReadModelStore('Test adapter name');
-    //     expect(typeof result['init']).toBe('function');
-    // });
     test('Create store - invalid adapter', () => {
         const adapterName = 'bad adapter';
         testObj.config.readModelStoreAdapters[adapterName] = adapterName;
@@ -141,13 +122,6 @@ describe('Test _initStore', () => {
 });
 
 describe('Test _initEventStore', () => {
-    // test('Initialise event store successfully', async () => {
-    //     await testObj._initEventStore();
-    //     const initSpy = jest.spyOn(testObj._eventStore, 'init');
-
-    //     expect(typeof testObj._eventStore.init).toBe('function');
-    //     expect(initSpy).toHaveBeenCalled();
-    // });
     test('Initialise event store - throw error', async () => {
         testObj.config.eventStoreAdapter = 'bad adapter';
         expect(testObj._initEventStore()).rejects.toThrow();
@@ -155,14 +129,6 @@ describe('Test _initEventStore', () => {
 });
 
 describe('Test _initEventHandler', () => {
-    // test('Create handler successfully', async () => {
-    //     await testObj._initEventHandler();
-    //     const initSpyEventHandler = jest.spyOn(testObj._eventHandler, 'init');
-
-    //     expect(initSpyEventHandler).toHaveBeenCalled();
-    //     expect(typeof testObj._eventHandler.init).toBe('function');
-    // });
-    
     test('Create handler - invalid eventbus adapter', async () => {
         const Adapter = require('../../src/core/Adapter.js');
         const adapterCreate = Adapter.create;
@@ -276,7 +242,7 @@ describe('Test _processReadModels', () => {
 
 describe('Test _getSideEffectsProxy', () => {
     test('Return function with undefined as return', () => {
-        const sideEffects = { sendRegistrationMail: jest.fn() };
+        const sideEffects = {sendRegistrationMail: jest.fn()};
         const event = {isReplay: true};
     
         const result = testObj._getSideEffectsProxy(sideEffects, event, testObj.config.sagas[0].source.handlers).sendRegistrationMail();
@@ -284,7 +250,7 @@ describe('Test _getSideEffectsProxy', () => {
         expect(result).toEqual(undefined);
     });
     test('Bind function', async () => {
-        const sideEffects = { sendRegistrationMail: jest.fn(() => 'testarg'), executeCommand: jest.fn() };
+        const sideEffects = {sendRegistrationMail: jest.fn(() => 'testarg'), executeCommand: jest.fn()};
         const event = {isReplay: false};
         const mockExecuteCommand = jest.fn();
         testObj.executeCommand = mockExecuteCommand;

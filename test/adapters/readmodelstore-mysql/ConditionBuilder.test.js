@@ -1,5 +1,5 @@
 
-import { conditionBuilder } from '../../../src/adapters/readmodelstore-mysql/ConditionBuilder';
+import {conditionBuilder} from '../../../src/adapters/readmodelstore-mysql/ConditionBuilder';
 
 test('Build field based condition', () => {
     const condition = {

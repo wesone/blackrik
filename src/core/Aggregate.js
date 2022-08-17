@@ -39,9 +39,22 @@ class Aggregate
         {
             const {type} = event;
             if(this.hasProjection(type))
-                state = await this.projection[type](state, event);      
+                state = await this.projection[type](state, event);
         }
         return state;
+    }
+
+    async loadLatestEvent(eventStore, aggregateId)
+    {
+        const {events} = await eventStore.load({
+            aggregateIds: [aggregateId],
+            reverse: true,
+            limit: 1
+        });
+
+        if(events.length)
+            return events.pop();
+        return null;
     }
 
     async load(eventStore, aggregateId)
@@ -67,8 +80,41 @@ class Aggregate
             }
             next = cursor;
         } while(next);
-        return {state, latestEvent};
+        
+        return {
+            state, 
+            latestEvent
+        };
     }
 }
 
 module.exports = Aggregate;
+
+
+
+//TODO
+// Blackrik:
+// 	- Funktion zum Löschen von Aggregaten (name, aggregateId, payload = null)
+// 		- Entfernt Events aus dem Store
+// 		- Sendet TOMBSTONE-Event (optionale Payload)
+// 	- CommandHandler -> Senden des TOMBSTONE-Events
+// 		- Entfernt alle Events des Aggregats aus dem Store
+	
+// 	- CHANGELOG (minor change)
+// 	- Docs anpassen
+
+
+// Sensitive data (and handling General Data Protection Regulation (GDPR))
+// 	Individual events are generally considered immutable. 
+// 	the event store after all is an append-only database. 
+
+// 	to remove on request there would be a few options
+// 	- Referencing
+// 		- you would just store a reference to the sensitive data inside the eventstore 
+// 			and if a deletion is desired you would only delete the data in the other system
+// 			the reference will now point to "nothing" and the eventstore would'nt change at all
+// 	- Crypto-shredding
+// 	- Deleting
+// 		- You shouldn't delete the events from your event store. an event is something that happened and the past cannot be changed.
+// 		- but what if you delete all events that belong to a specific aggregate id?
+// 			as an aggregate is an encapsuled unit, deleting that unit would not affect any other aggregate

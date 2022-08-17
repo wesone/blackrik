@@ -1,6 +1,7 @@
 const {
     // EVENT_HANDLER_TABLE_NAME: TABLE_NAME,
-    EVENT_LIMIT_REPLAY
+    EVENT_LIMIT_REPLAY,
+    TOMBSTONE_EVENT_TYPE
 } = require('./Constants');
 const Event = require('./Event');
 const ListenerMap = require('../utils/ListenerMap');
@@ -17,7 +18,6 @@ class EventHandler
 
         this.listeners = {};
         this.queues = {};
-        this.queuedEvents = 0;
     }
 
     addListener(name, type, callback)
@@ -52,7 +52,6 @@ class EventHandler
     async onEvent(name, event)
     {
         await this.queues[name].add(() => this.listeners[name].iterate(event.type, event));
-        this.queuedEvents--;
     }
 
     async persistEvent(event)
@@ -75,8 +74,7 @@ class EventHandler
 
     async sendEvent(name, event)
     {
-        this.queuedEvents++;
-        return await this.eventBus.publish(name, event) && event;
+        await this.eventBus.publish(name, event);
     }
 
     async subscribe(name, type, callback)
@@ -90,8 +88,13 @@ class EventHandler
 
     async publish(name, event)
     {
-        return this.persistEvent(event)
-            .then(event => this.sendEvent(name, event));
+        event = await this.persistEvent(event);
+        await this.sendEvent(name, event);
+
+        if(event.type === TOMBSTONE_EVENT_TYPE)
+            await this.eventStore.delete(event.aggregateId);
+
+        return event;
     }
 
     async replayEvents(jobs)

@@ -225,7 +225,12 @@ class Adapter extends EventStoreAdapterInterface
                 limit.push('OFFSET ?');
             }
         }
-        const toExecute = `SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY position ASC ${limit.join(' ')}`;
+
+        const order = [
+            ['position', filter.reverse === true ? 'desc' : 'asc']
+        ];
+
+        const toExecute = `SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY ${order.map(sorting => sorting.join(' ')).join(', ')} ${limit.join(' ')}`;
         const events = await this.execute(toExecute, values);
         return {
             events: events[0].map(event => {
@@ -237,22 +242,9 @@ class Adapter extends EventStoreAdapterInterface
         };
     }
 
-    async delete(aggregateId, excludeTypes = [])
+    async delete(aggregateId)
     {
-        if(!aggregateId)
-            throw new Error('aggregateId is needed');
-
-        const values = [aggregateId];
-        const where = [
-            'aggregateId = ?',
-            ...excludeTypes.map(type => {
-                values.push(type);
-                return 'type != ?';
-            })
-        ];
-        
-        const toExecute = `DELETE FROM events WHERE ${where.join(' AND ')}`;
-        const [results] = await this.execute(toExecute, values);
+        const [results] = await this.execute('DELETE FROM events WHERE aggregateId = ?', [aggregateId]);
         return results?.affectedRows ?? 0;
     }
 

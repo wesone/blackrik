@@ -388,7 +388,7 @@ test('Reconnect on connection loss', async () => {
 test('Reconnect on execute', async () => {
     const testObj = new Adapter(testConfig);
 
-    testObj.connect = jest.fn(() => testObj.db = { execute: jest.fn()});
+    testObj.connect = jest.fn(() => testObj.db = {execute: jest.fn()});
     testObj.db = null;
 
     await testObj.execute();
@@ -401,9 +401,9 @@ describe('Test load', () => {
     test('Check for correct loading of events', async () => {
         const testObj = new Adapter(testConfig);
         const expected = [
-            { payload: { test: 42 } },
-            { payload: { test: 42 } },
-            { payload: { test: 42 } }
+            {payload: {test: 42}},
+            {payload: {test: 42}},
+            {payload: {test: 42}}
         ];
         const next = null;
         const filter = {
@@ -445,7 +445,7 @@ describe('Test load', () => {
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
         testObj.db = mockConnection;
-        const {events, cursor, debug}  = await testObj.load(filter);
+        const {events, cursor, debug} = await testObj.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -455,9 +455,9 @@ describe('Test load', () => {
     test('Check for correct loading of events - to types', async () => {
         const testObj = new Adapter(testConfig);
         const expected = [
-            { payload: { test: 42 } },
-            { payload: { test: 42 } },
-            { payload: { test: 42 } }
+            {payload: {test: 42}},
+            {payload: {test: 42}},
+            {payload: {test: 42}}
         ];
         const next = null;
         const filter = {
@@ -497,7 +497,7 @@ describe('Test load', () => {
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
         testObj.db = mockConnection;
-        const {events, cursor, debug}  = await testObj.load(filter);
+        const {events, cursor, debug} = await testObj.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -507,9 +507,9 @@ describe('Test load', () => {
     test('Check for correct loading of events with correlationIds in filter', async () => {
         const testObj = new Adapter(testConfig);
         const expected = [
-            { payload: { test: 42 } },
-            { payload: { test: 42 } },
-            { payload: { test: 42 } }
+            {payload: {test: 42}},
+            {payload: {test: 42}},
+            {payload: {test: 42}}
         ];
         const next = null;
         const filter = {
@@ -549,7 +549,7 @@ describe('Test load', () => {
 
 
         testObj.db = mockConnection;
-        const {events, cursor, debug}  = await testObj.load(filter);
+        const {events, cursor, debug} = await testObj.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -559,9 +559,9 @@ describe('Test load', () => {
     test('Check for correct loading of events with causationIds in filter', async () => {
         const testObj = new Adapter(testConfig);
         const expected = [
-            { payload: { test: 42 } },
-            { payload: { test: 42 } },
-            { payload: { test: 42 } }
+            {payload: {test: 42}},
+            {payload: {test: 42}},
+            {payload: {test: 42}}
         ];
         const next = null;
         const filter = {
@@ -601,7 +601,7 @@ describe('Test load', () => {
 
 
         testObj.db = mockConnection;
-        const {events, cursor, debug}  = await testObj.load(filter);
+        const {events, cursor, debug} = await testObj.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -611,9 +611,9 @@ describe('Test load', () => {
     test('Check for correct loading of events - undefined limit', async () => {
         const testObj = new Adapter(testConfig);
         const expected = [
-            { payload: { test: 42 } },
-            { payload: { test: 42 } },
-            { payload: { test: 42 } }
+            {payload: {test: 42}},
+            {payload: {test: 42}},
+            {payload: {test: 42}}
         ];
         const next = null;
         const filter = {
@@ -655,7 +655,7 @@ describe('Test load', () => {
  
 
         testObj.db = mockConnection;
-        const {events, cursor, debug}  = await testObj.load(filter);
+        const {events, cursor, debug} = await testObj.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -665,9 +665,9 @@ describe('Test load', () => {
     test('Check for correct loading of events - cursor increment', async () => {
         const testObj = new Adapter(testConfig);
         const expected = [
-            { payload: { test: 42 } },
-            { payload: { test: 42 } },
-            { payload: { test: 42 } }
+            {payload: {test: 42}},
+            {payload: {test: 42}},
+            {payload: {test: 42}}
         ];
         const next = null;
         const filter = {
@@ -689,7 +689,7 @@ describe('Test load', () => {
  
 
         testObj.db = mockConnection;
-        const {events, cursor}  = await testObj.load(filter);
+        const {events, cursor} = await testObj.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(1);
@@ -697,9 +697,9 @@ describe('Test load', () => {
     test('Check for correct loading of events - cursor undefined', async () => {
         const testObj = new Adapter(testConfig);
         const expected = [
-            { payload: { test: 42 } },
-            { payload: { test: 42 } },
-            { payload: { test: 42 } }
+            {payload: {test: 42}},
+            {payload: {test: 42}},
+            {payload: {test: 42}}
         ];
         const filter = {
             limit: 1,
@@ -720,7 +720,7 @@ describe('Test load', () => {
  
 
         testObj.db = mockConnection;
-        const {events}  = await testObj.load(filter);
+        const {events} = await testObj.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
     });
@@ -751,7 +751,7 @@ describe('Test createTable', () => {
                 if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
                 {
                     functionCallCheckEventCount++;   
-                    return [[{ 'count(*)': 1 }]];
+                    return [[{'count(*)': 1}]];
                 }
                 if(arg1 === 'DESCRIBE events')
                 {
@@ -781,7 +781,7 @@ describe('Test createTable', () => {
                 if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
                 {
                     functionCallCheckEventCount++;
-                    return [[{ 'count(*)': 1 }]];
+                    return [[{'count(*)': 1}]];
                 }
                 if(arg1 === 'DESCRIBE events')
                 {
@@ -822,7 +822,7 @@ describe('Test createTable', () => {
                 if(arg1 === 'SELECT count(*) FROM information_schema.TABLES WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = \'events\')')
                 {
                     functionCallCheckEventCount++;   
-                    return test = [[{ 'count(*)': 0 }]];
+                    return test = [[{'count(*)': 0}]];
                 }
                 if(arg1 === 'DESCRIBE events')
                 {

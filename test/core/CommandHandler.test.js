@@ -57,7 +57,7 @@ describe('CommandHandler', () => {
         const invalidEvent = {test: 42};
         blackrik = new BlackrikMock(invalidEvent);
         commandHandler = new CommandHandler(blackrik);
-        let event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
+        const event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
 
         expect(event).toBe(null);
         expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(0);

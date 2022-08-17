@@ -1,5 +1,5 @@
 
-import { selectBuilder } from '../../../src/adapters/readmodelstore-mysql/SelectBuilder';
+import {selectBuilder} from '../../../src/adapters/readmodelstore-mysql/SelectBuilder';
 
 const tableName = 'TestTable';
 

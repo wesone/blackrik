@@ -177,9 +177,9 @@ describe('EventHandler handles replays', () => {
     test('with events', async () => { 
         const callback = jest.fn(() => {});
 
+        const eventTestCount = EVENT_LIMIT_REPLAY * 2 - 1;
         const events = [];
-        const eventCount = EVENT_LIMIT_REPLAY * 2 - 1;
-        for(let i = 0; i < eventCount; i++)
+        for(let i = 0; i < eventTestCount; i++)
             events.push(createEvent());
         const eventType = events[0].type;
 
@@ -192,15 +192,14 @@ describe('EventHandler handles replays', () => {
             [aggregate, [eventType]]
         ]);
 
-        // wait for all events to be handled
-        while(eventHandler.queuedEvents > 0)
-            await new Promise(r => setTimeout(r, 1));
+        // due to async execution, we need to wait for the next tick 
+        await new Promise(r => setTimeout(r, 1));
 
-        expect(callback).toHaveBeenCalledTimes(eventCount * 2);
-        for(let i = 0; i < eventCount; i++)
+        expect(callback).toHaveBeenCalledTimes(eventTestCount * 2);
+        for(let i = 0; i < eventTestCount; i++)
             expect(callback).toHaveBeenNthCalledWith(i+1, filledEvents[i]);
-        for(let i = 0; i < eventCount; i++)
-            expect(callback).toHaveBeenNthCalledWith(eventCount+i+1, {...filledEvents[i], isReplay: true});
+        for(let i = 0; i < eventTestCount; i++)
+            expect(callback).toHaveBeenNthCalledWith(eventTestCount+i+1, {...filledEvents[i], isReplay: true});
     });
 
     test('without events', async () => {

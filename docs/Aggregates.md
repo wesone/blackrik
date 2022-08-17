@@ -4,8 +4,8 @@ It consists of a name, [commands](#Commands) and a [projection](#Projection).
 A specific instance of an aggregate (e.g. an actual user) is identified by `aggregateId`.
 
 # Commands
-A command is a request to change/update an aggregates state (e.g. update the users name).  
-It can be triggered through the [HTTP API](HTTP-API#Commands) or locally through [executeCommand](Blackrik#executeCommand).
+A command is a request to change/update an aggregate's state (e.g. update the user's name).  
+It can be triggered through the [HTTP API](HTTP-API#Commands) or programmatically through [executeCommand](Blackrik#executeCommand).
 
 ## Callback
 The actual callback that will be executed will receive 3 parameters.  
@@ -15,7 +15,7 @@ To reject a command (e.g. in case the validation of the payload failed) the call
 Name | Type | Attribute | Description
 :--- | :--- | :--- | :---
 command | object | | The [command](#Command) to be processed by the callback
-state | object | | The calculated state that is created with the help of the aggregates [projection](#Projection) and that is based on all events that belong to the aggregateId
+state | object | | The calculated state that is created with the help of the aggregate's [projection](#Projection) and that is based on all events that belong to the aggregateId
 context | object | | An object that contains [additional information or helper functions](#Context)
 
 ### Return
@@ -30,7 +30,7 @@ aggregateName | string | | The name of the aggregate
 aggregateId | string | | The aggregateId to identify an aggregate instance
 type | string | | The name of the command to execute
 timestamp | int | | The timestamp of the command issuing
-payload | object | optional<br>default: `null` | An optional payload that contains options or arguments for the command
+payload | mixed | optional<br>default: `null` | An optional payload that contains options or arguments for the command
 
 ## Context
 The context is an object that contains additional information or functions.  
@@ -43,7 +43,7 @@ latestEventPosition | number \| null | `null` <small>for a new aggregate id</sma
 causationEvent | object | optional | An event that caused this command. If the command returns a new event, the causationEvent will be the events "parent"
 
 ## Event
-The object that may be returned by the commands callback initiates a new event.  
+The object that may be returned by the command's callback initiates a new event.  
 That event will automatically be assigned to the aggregateId and will be populated with additional information (timestamp, aggregateVersion, ...)
 
 Property | Type | Attribute | Description
@@ -87,8 +87,8 @@ module.exports = {
 ```
 
 # Projection
-The projection will reduce all events that belong to the aggregateId and the resulting state will be passed to the commands callback.  
-To achieve this, the projection contains a function for each event type of the aggregate.  
+The projection will reduce all events that belong to the aggregateId and the resulting state will be passed to the command's callback.  
+To achieve this, the projection contains a function for each event type of the aggregate (that actually affects the state).  
 The function will receive the previous state and the event and returns the new state.  
 A projection can also have a function called `init` that returns a starting state. Without an init-function the first state will be an empty object (`{}`).
 

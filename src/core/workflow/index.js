@@ -192,7 +192,6 @@ class Workflow
             throw new Error('State needed');
         }
         const currentDate = new Date();
-        console.log('insert', id, event.position);
         await this.store.insert(SAGA_WORKFLOW_TABLE_NAME,{
             id,
             name: this.config.name,
@@ -254,7 +253,7 @@ class Workflow
         {
             await this.initializeState();
             this.state.createdPosition = event.position ?? 0;
-            await this.insertState(this.state,  this.id, event);
+            await this.insertState(this.state, this.id, event);
             return this.state;
         }
         
@@ -293,7 +292,7 @@ class Workflow
 
     genBlackrikHandlers()
     {
-        const eventHandlers =  {};
+        const eventHandlers = {};
         Object.keys(this.config.steps).forEach(stepKey => {
             const stepEvents = Object.keys(this.config.steps[stepKey].on);
             stepEvents.forEach(name => {
@@ -301,7 +300,7 @@ class Workflow
                 {
                     return; // internal event
                 }
-                eventHandlers[name] = async (_,  event, sideEffects) => {
+                eventHandlers[name] = async (_, event, sideEffects) => {
                     this.setSideEffects(sideEffects);
                     await this.loadState(event);
                     try 

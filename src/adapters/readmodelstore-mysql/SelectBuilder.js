@@ -1,5 +1,5 @@
-const { quoteIdentifier, convertValue } = require('./utils');
-const { conditionBuilder } = require('./ConditionBuilder');
+const {quoteIdentifier, convertValue} = require('./utils');
+const {conditionBuilder} = require('./ConditionBuilder');
 
 function selectBuilder(tableName, queryOptions)
 {
@@ -109,6 +109,6 @@ function selectBuilder(tableName, queryOptions)
     return {sql: sqlList.join(' '), parameters};
 }
 
-module.exports =  {
+module.exports = {
     selectBuilder,
 };

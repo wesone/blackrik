@@ -1,5 +1,5 @@
 
-import { updateBuilder } from '../../../src/adapters/readmodelstore-mysql/UpdateBuilder';
+import {updateBuilder} from '../../../src/adapters/readmodelstore-mysql/UpdateBuilder';
 
 const tableName = 'TestTable';
 

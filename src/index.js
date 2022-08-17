@@ -79,6 +79,11 @@ class Blackrik
         return this.#blackrik.executeQuery;
     }
 
+    deleteAggregate(aggregateName, aggregateId, eventPayload = null)
+    {
+        return this.#blackrik.deleteAggregate(aggregateName, aggregateId, eventPayload);
+    }
+
     async start()
     {
         if(this.#started)

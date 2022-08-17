@@ -28,7 +28,7 @@ const testEvents = [
 
 describe('Testing fromArray', () => {
     test('Create Aggregate from array', () => {
-        const toTest = [{name: 'a'}, {name: 'b'}, {name: 'c'}, {name: 'd'} ];
+        const toTest = [{name: 'a'}, {name: 'b'}, {name: 'c'}, {name: 'd'}];
         const expected = {'a': {'commands': undefined, 'name': 'a', 'projection': undefined}, 
             'b': {'commands': undefined, 'name': 'b', 'projection': undefined}, 
             'c': {'commands': undefined, 'name': 'c', 'projection': undefined}, 
@@ -36,15 +36,15 @@ describe('Testing fromArray', () => {
         expect(Aggregate.fromArray(toTest)).toEqual(expected);
     });
     test('Only create aggregates with different names', () => {
-        const toTest = [{name: 'a'}, {name: 'a'}, {name: 'c'}, {name: 'd'} ];
+        const toTest = [{name: 'a'}, {name: 'a'}, {name: 'c'}, {name: 'd'}];
         expect(() => Aggregate.fromArray(toTest)).toThrow();
     });
     test('Only create aggregates with existing name (EMPTY OBJECT)' , () => {
-        const toTest = [{}, {name: 'a'}, {name: 'c'}, {name: 'd'} ];
+        const toTest = [{}, {name: 'a'}, {name: 'c'}, {name: 'd'}];
         expect(() => Aggregate.fromArray(toTest)).toThrow();
     });
     test('Only create aggregates with existing name (EMPTY STRING)', () => {
-        const toTest = [{name: ''}, {name: 'a'}, {name: 'c'}, {name: 'd'} ];
+        const toTest = [{name: ''}, {name: 'a'}, {name: 'c'}, {name: 'd'}];
         expect(() => Aggregate.fromArray(toTest)).toThrow();
     });
 });
@@ -89,7 +89,7 @@ describe('Test hasProjection', () => {
             init: ({}),
             ['USER_CREATED']: jest.fn()
         };
-        const testObj = new Aggregate({name: 'Test name',  projection: mockProjection});
+        const testObj = new Aggregate({name: 'Test name', projection: mockProjection});
     
         const result = testObj.hasProjection(eventType);
         expect(result).toBe(true);
@@ -99,7 +99,7 @@ describe('Test hasProjection', () => {
         const mockProjection = {
             init: ({})
         };
-        const testObj = new Aggregate({name: 'Test name',  projection: mockProjection});
+        const testObj = new Aggregate({name: 'Test name', projection: mockProjection});
     
         const result = testObj.hasProjection(eventType);
         expect(result).toBe(false);
@@ -173,8 +173,8 @@ describe('Testing load', () => {
         
         const result = await testAggregate.load(mockEventStore, mockAggregateId);
         const expected = {
-            state: { name: '42' },
-            latestEvent: { type: 'USER_UPDATED', payload: { name: '42' } }
+            state: {name: '42'},
+            latestEvent: {type: 'USER_UPDATED', payload: {name: '42'}}
         };
         expect(copyEvents.length).toBe(copyEventsLength - 1);
         expect(spyInit).toHaveBeenCalled();
@@ -210,8 +210,8 @@ describe('Testing load', () => {
         
         const result = await testAggregate.load(mockEventStore, mockAggregateId);
         const expected = {
-            state: { name: '42' },
-            latestEvent: { type: 'USER_UPDATED', payload: { name: '42' } }
+            state: {name: '42'},
+            latestEvent: {type: 'USER_UPDATED', payload: {name: '42'}}
         };
 
         expect(copyEvents.length).toBe(copyEventsLength - 1);
