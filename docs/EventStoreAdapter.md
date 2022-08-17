@@ -9,6 +9,7 @@ Visibility | Property
 public |     async [init](EventStoreAdapter#init)()<br>Initializes the adapter
 public |     async [save](EventStoreAdapter#save)(event: object): int \| false<br>Saves an event
 public |     async [load](EventStoreAdapter#load)(filter: object): object<br>Loads events
+public |     async [delete](EventStoreAdapter#delete)(aggregateId: string): number<br>Removes every event of the specified aggregate id
 public |     async [close](EventStoreAdapter#close)()<br>Closes the event store
 
 # init
@@ -106,6 +107,23 @@ const {events, cursor} = await eventStore.load({
     limit: 5,
     cursor: null
 });
+```
+
+# delete
+`async delete(aggregateId: string): number`  
+Deletes all events that belong to the specified aggregate id.
+
+### Parameters
+Name | Type | Attribute | Description
+:--- | :--- | :--- | :---
+aggregateId | string | | The aggregate id
+
+### Return
+The `amount` (number) of events that were deleted.
+
+### Examples
+```javascript
+const eventCount = await eventStore.delete('4233fb22-76eb-4b8f-9b34-8fdcb994e370');
 ```
 
 # close

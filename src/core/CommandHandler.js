@@ -1,6 +1,6 @@
 const Event = require('./Event');
 const {BadRequestError} = require('./Errors');
-const { TOMBSTONE_EVENT_TYPE } = require('./Constants');
+const {TOMBSTONE_EVENT_TYPE} = require('./Constants');
 
 class CommandHandler 
 {
@@ -104,7 +104,7 @@ class CommandHandler
         const aggregate = this.#blackrik._aggregates[aggregateName];
         const latestEvent = await aggregate.loadLatestEvent(this.#blackrik._eventStore, aggregateId);
         if(!latestEvent)
-            return;
+            return false;
 
         await this.#blackrik._eventHandler.publish(
             aggregateName, 
@@ -118,6 +118,7 @@ class CommandHandler
                 causationEvent
             )
         );
+        return true;
     }
 }
 

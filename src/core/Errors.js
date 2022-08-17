@@ -60,18 +60,18 @@ module.exports.ConflictError = ConflictError;
 
 class DuplicateAggregateError extends ConflictError
 {
-    constructor()
+    constructor(message = 'Aggregate already created')
     {
-        super('Aggregate already created');
+        super(message);
     }
 }
 module.exports.DuplicateAggregateError = DuplicateAggregateError;
 
 class UnalteredError extends BadRequestError
 {
-    constructor()
+    constructor(message = 'Unaltered state')
     {
-        super('Unaltered state');
+        super(message);
     }
 }
 module.exports.UnalteredError = UnalteredError;

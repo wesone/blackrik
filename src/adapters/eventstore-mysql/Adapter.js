@@ -227,7 +227,7 @@ class Adapter extends EventStoreAdapterInterface
         }
 
         const order = [
-            ['position', filter.reverse === true ? 'desc' : 'asc']
+            ['position', filter.reverse === true ? 'DESC' : 'ASC']
         ];
 
         const toExecute = `SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY ${order.map(sorting => sorting.join(' ')).join(', ')} ${limit.join(' ')}`;

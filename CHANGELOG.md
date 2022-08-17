@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Filtering duplicate events that will be replayed on startup to improve performance
+- Emitting a `TOMBSTONE` event will delete the whole aggregate
+- Blackrik function `deleteAggregate` (also available in side effects)
 
 ## [1.1.3] - 2021-08-05
 ### Changed
