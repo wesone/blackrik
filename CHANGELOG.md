@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.2.0] - 2022-08-18
 ### Changed
 - Return values of a command handler that do not have a `type` property will be ignored
 
@@ -90,7 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release
 
-[Unreleased]: https://github.com/wesone/blackrik/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/wesone/blackrik/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/wesone/blackrik/compare/v1.1.3...v1.2.0
 [1.1.3]: https://github.com/wesone/blackrik/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/wesone/blackrik/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/wesone/blackrik/compare/v1.1.0...v1.1.1
