@@ -183,6 +183,10 @@ describe('EventHandler', () => {
 
     test(`publish executes a deletion if event type is ${TOMBSTONE_EVENT_TYPE}`, async () => {
         const event = createEvent();
+
+        await expect(eventHandler.publish(aggregateName, event)).resolves.not.toThrow();
+        expect(eventStore.delete).toHaveBeenCalledTimes(0);
+
         event.type = TOMBSTONE_EVENT_TYPE;
 
         await expect(eventHandler.publish(aggregateName, event)).resolves.not.toThrow();
