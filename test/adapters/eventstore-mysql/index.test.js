@@ -1,6 +1,6 @@
 //TODO refactor this whole file
 
-const Adapter = require('../../../src/adapters/eventstore-mysql/Adapter');
+const getEventStore = require('../../../src/adapters/eventstore-mysql');
 const {EVENT_LIMIT_REPLAY} = require('../../../src/core/Constants');
 const Event = require('../../../src/core/Event');
 const mysql = require('mysql2/promise');
@@ -193,61 +193,63 @@ const databaseSchema = {
     }
 };
 
+let eventStore;
+beforeEach(() => {
+    eventStore = getEventStore(testConfig);
+});
+
 describe('Correct object construction', () => {
-    test('Constructor set config', () => {
-        const testObj = new Adapter(testConfig);
-        expect(testObj.config).toBe(testConfig);
+    test('constructor sets config', () => {
+        expect(getEventStore(testConfig).config).toBe(testConfig);
     });
 });
 
-describe('Test validateConfig ', () => {
+describe('validateConfig ', () => {
     test('No config error', () => {
-        expect(() => new Adapter()).toThrow();
+        expect(() => getEventStore()).toThrow();
     });
     test('No host error', () => {
-        const copyInstance = JSON.parse(JSON.stringify(testConfig));
-        copyInstance.host = null;
-        expect(() => new Adapter(copyInstance)).toThrow();
+        const configCopy = JSON.parse(JSON.stringify(testConfig));
+        configCopy.host = null;
+        expect(() => getEventStore(configCopy)).toThrow();
     });
-    test('No port', () => {
-        const copyInstance = JSON.parse(JSON.stringify(testConfig));
-        copyInstance.port = null;
-        const testObj = new Adapter(copyInstance);
-        expect(testObj.config.port).toBe(3306);
+    test('No port error', () => {
+        const configCopy = JSON.parse(JSON.stringify(testConfig));
+        configCopy.port = null;
+        expect(getEventStore(configCopy).config.port).toBe(3306);
     });
     test('No database error', () => {
-        const copyInstance = JSON.parse(JSON.stringify(testConfig));
-        copyInstance.database = null;
-        expect(() => new Adapter(copyInstance)).toThrow();
+        const configCopy = JSON.parse(JSON.stringify(testConfig));
+        configCopy.database = null;
+        expect(() => getEventStore(configCopy)).toThrow();
 
     });
     test('No user error', () => {
-        const copyInstance = JSON.parse(JSON.stringify(testConfig));
-        copyInstance.user = null;
-        expect(() => new Adapter(copyInstance)).toThrow();
+        const configCopy = JSON.parse(JSON.stringify(testConfig));
+        configCopy.user = null;
+        expect(() => getEventStore(configCopy)).toThrow();
 
     });
     test('No password error', () => {
-        const copyInstance = JSON.parse(JSON.stringify(testConfig));
-        copyInstance.password = null;
-        expect(() => new Adapter(copyInstance)).toThrow();
+        const configCopy = JSON.parse(JSON.stringify(testConfig));
+        configCopy.password = null;
+        expect(() => getEventStore(configCopy)).toThrow();
     });
     test('Successful adapter creation', () => {
-        expect(() => new Adapter(testConfig)).not.toThrow();
+        expect(() => getEventStore(testConfig)).not.toThrow();
     });
 });
 
 describe('Test init', () => {
     test('Check for function calls', async () => {
-        const testObj = new Adapter(testConfig);
-        testObj.createDatabase = jest.fn();
-        testObj.createTable = jest.fn();
+        eventStore.createDatabase = jest.fn();
+        eventStore.createTable = jest.fn();
 
-        const spyCreateDatabase = jest.spyOn(testObj, 'createDatabase');
-        const spyCreateTable = jest.spyOn(testObj, 'createTable');
+        const spyCreateDatabase = jest.spyOn(eventStore, 'createDatabase');
+        const spyCreateTable = jest.spyOn(eventStore, 'createTable');
         const spyCreateConnection = jest.spyOn(mysql, 'createConnection');
         const spyConnect = jest.spyOn(mysql.createConnection(), 'connect');        
-        await testObj.init();
+        await eventStore.init();
 
         expect(spyCreateDatabase).toHaveBeenCalled();
         expect(spyCreateTable).toHaveBeenCalled();
@@ -258,9 +260,8 @@ describe('Test init', () => {
 
 describe('Test save', () => {
     test('Check for execute and return value', async () => {
-        const testObj = new Adapter(testConfig);
         const mockConnection = {execute: jest.fn(() => [{insertId: '123'}])};
-        testObj.db = mockConnection;
+        eventStore.db = mockConnection;
         const data = {
             aggregateId: '001',
             aggregateVersion: 0,
@@ -271,7 +272,7 @@ describe('Test save', () => {
         };
         const expected = '123';
         const testEvent = new Event(data);
-        const result = await testObj.save(testEvent);
+        const result = await eventStore.save(testEvent);
         
         const spyExecute = jest.spyOn(mockConnection, 'execute');
         
@@ -279,9 +280,8 @@ describe('Test save', () => {
         expect(result).toBe(expected);
     });
     test('Throw error', async () => {
-        const testObj = new Adapter(testConfig);
         const mockConnection = {execute: jest.fn()};
-        testObj.db = mockConnection;
+        eventStore.db = mockConnection;
         const data = {
             aggregateId: '001',
             aggregateVersion: 0,
@@ -294,7 +294,7 @@ describe('Test save', () => {
 
         try 
         {
-            await testObj.save(testEvent);
+            await eventStore.save(testEvent);
         } 
         catch(error)
         {
@@ -305,11 +305,10 @@ describe('Test save', () => {
         expect(spyExecute).toHaveBeenCalled();
     });
     test('Throw error with number 1062', async () => {
-        const testObj = new Adapter(testConfig);
         const error = new Error('test error');
         error.errno = 1062;
         const mockConnection = {execute: jest.fn(() => {throw error;})};
-        testObj.db = mockConnection;
+        eventStore.db = mockConnection;
         const data = {
             aggregateId: '001',
             aggregateVersion: 0,
@@ -322,7 +321,7 @@ describe('Test save', () => {
         let result;
         try 
         {
-            result = await testObj.save(testEvent);
+            result = await eventStore.save(testEvent);
         } 
         catch(error)
         {
@@ -335,11 +334,10 @@ describe('Test save', () => {
     });
 });
 test('Throw error and reconnect', async () => {
-    const testObj = new Adapter(testConfig);
     const error = new Error('test error');
     error.fatal = true;
     const mockConnection = {execute: jest.fn(() => {throw error;})};
-    testObj.db = mockConnection;
+    eventStore.db = mockConnection;
     const data = {
         aggregateId: '001',
         aggregateVersion: 0,
@@ -352,7 +350,7 @@ test('Throw error and reconnect', async () => {
 
     try 
     {
-        await testObj.save(testEvent);
+        await eventStore.save(testEvent);
     } 
     catch(error)
     {
@@ -362,7 +360,7 @@ test('Throw error and reconnect', async () => {
     const spyExecute = jest.spyOn(mockConnection, 'execute');
     expect(spyExecute).toHaveBeenCalled();
 
-    expect(testObj.db).toBe(null);
+    expect(eventStore.db).toBe(null);
 
 });
 
@@ -371,9 +369,8 @@ test('Reconnect on connection loss', async () => {
     const error = new Error('test error');
     error.fatal = true;
     errorCallback = null;
-    const testObj = new Adapter(testConfig);
     
-    await testObj.connect();
+    await eventStore.connect();
 
     expect(errorCallback).not.toBe(null);
     const originalError = console.error;
@@ -386,20 +383,18 @@ test('Reconnect on connection loss', async () => {
 
 
 test('Reconnect on execute', async () => {
-    const testObj = new Adapter(testConfig);
 
-    testObj.connect = jest.fn(() => testObj.db = {execute: jest.fn()});
-    testObj.db = null;
+    eventStore.connect = jest.fn(() => eventStore.db = {execute: jest.fn()});
+    eventStore.db = null;
 
-    await testObj.execute();
+    await eventStore.execute();
 
-    expect(testObj.db).not.toBe(null);
+    expect(eventStore.db).not.toBe(null);
 
 });
 
 describe('Test load', () => {
     test('Check for correct loading of events', async () => {
-        const testObj = new Adapter(testConfig);
         const expected = [
             {payload: {test: 42}},
             {payload: {test: 42}},
@@ -444,8 +439,8 @@ describe('Test load', () => {
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
-        testObj.db = mockConnection;
-        const {events, cursor, debug} = await testObj.load(filter);
+        eventStore.db = mockConnection;
+        const {events, cursor, debug} = await eventStore.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -453,7 +448,6 @@ describe('Test load', () => {
         expect(debug.values).toEqual(expectedValues);
     });
     test('Check for correct loading of events - to types', async () => {
-        const testObj = new Adapter(testConfig);
         const expected = [
             {payload: {test: 42}},
             {payload: {test: 42}},
@@ -496,8 +490,8 @@ describe('Test load', () => {
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
-        testObj.db = mockConnection;
-        const {events, cursor, debug} = await testObj.load(filter);
+        eventStore.db = mockConnection;
+        const {events, cursor, debug} = await eventStore.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -505,7 +499,6 @@ describe('Test load', () => {
         expect(debug.values).toEqual(expectedValues);
     });
     test('Check for correct loading of events with correlationIds in filter', async () => {
-        const testObj = new Adapter(testConfig);
         const expected = [
             {payload: {test: 42}},
             {payload: {test: 42}},
@@ -548,8 +541,8 @@ describe('Test load', () => {
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
 
-        testObj.db = mockConnection;
-        const {events, cursor, debug} = await testObj.load(filter);
+        eventStore.db = mockConnection;
+        const {events, cursor, debug} = await eventStore.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -557,7 +550,6 @@ describe('Test load', () => {
         expect(debug.values).toEqual(expectedValues);
     });
     test('Check for correct loading of events with causationIds in filter', async () => {
-        const testObj = new Adapter(testConfig);
         const expected = [
             {payload: {test: 42}},
             {payload: {test: 42}},
@@ -600,8 +592,8 @@ describe('Test load', () => {
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
 
-        testObj.db = mockConnection;
-        const {events, cursor, debug} = await testObj.load(filter);
+        eventStore.db = mockConnection;
+        const {events, cursor, debug} = await eventStore.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -609,7 +601,6 @@ describe('Test load', () => {
         expect(debug.values).toEqual(expectedValues);
     });
     test('Check for correct loading of events - undefined limit', async () => {
-        const testObj = new Adapter(testConfig);
         const expected = [
             {payload: {test: 42}},
             {payload: {test: 42}},
@@ -654,8 +645,8 @@ describe('Test load', () => {
         const spyExecute= jest.spyOn(mockConnection, 'execute');
  
 
-        testObj.db = mockConnection;
-        const {events, cursor, debug} = await testObj.load(filter);
+        eventStore.db = mockConnection;
+        const {events, cursor, debug} = await eventStore.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(null);
@@ -663,7 +654,6 @@ describe('Test load', () => {
         expect(debug.values).toEqual(expectedValues);
     });
     test('Check for correct loading of events - cursor increment', async () => {
-        const testObj = new Adapter(testConfig);
         const expected = [
             {payload: {test: 42}},
             {payload: {test: 42}},
@@ -688,14 +678,13 @@ describe('Test load', () => {
         const spyExecute= jest.spyOn(mockConnection, 'execute');
  
 
-        testObj.db = mockConnection;
-        const {events, cursor} = await testObj.load(filter);
+        eventStore.db = mockConnection;
+        const {events, cursor} = await eventStore.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
         expect(cursor).toBe(1);
     });
     test('Check for correct loading of events - cursor undefined', async () => {
-        const testObj = new Adapter(testConfig);
         const expected = [
             {payload: {test: 42}},
             {payload: {test: 42}},
@@ -719,30 +708,63 @@ describe('Test load', () => {
         const spyExecute= jest.spyOn(mockConnection, 'execute');
  
 
-        testObj.db = mockConnection;
-        const {events} = await testObj.load(filter);
+        eventStore.db = mockConnection;
+        const {events} = await eventStore.load(filter);
         expect(spyExecute).toHaveBeenCalled();
         expect(events).toStrictEqual(expected);
     });
+    test('filter "reverse" to reverse order of events', async () => {
+        const tableEntries = [
+            {position: 1, payload: 'null'},
+            {position: 2, payload: 'null'},
+            {position: 3, payload: 'null'},
+            {position: 4, payload: 'null'}
+        ];
+        eventStore.db = {
+            execute: jest.fn(statement => statement.includes('ORDER BY position DESC') ? [tableEntries.reverse()] : [tableEntries])
+        };
+
+        await expect(eventStore.load({})).resolves.toStrictEqual(expect.objectContaining({events: tableEntries}));
+        await expect(eventStore.load({reverse: true})).resolves.toStrictEqual(expect.objectContaining({events: tableEntries.reverse()}));
+    });
 });
 
-describe('Test close', () => {
+test('delete', async () => {
+    const tableEntries = [
+        {aggregateId: '1'},
+        {aggregateId: '1'},
+        {aggregateId: '2'},
+        {aggregateId: '1'},
+        {aggregateId: '1'}
+    ];
+    eventStore.db = {
+        execute: jest.fn((statement, values) => {
+            const aggregateId = values.pop();
+            return [{affectedRows: tableEntries.reduce((acc, entry) => entry.aggregateId === aggregateId ? acc + 1 : acc, 0)}];
+        })
+    };
+
+    await expect(eventStore.delete('1')).resolves.toBe(4);
+    await expect(eventStore.delete('2')).resolves.toBe(1);
+    await expect(eventStore.delete('3')).resolves.toBe(0);
+    await expect(eventStore.delete()).resolves.toBe(0);
+});
+
+describe('close', () => {
     test('Calling end on db connection', async () => {
-        const testObj = new Adapter(testConfig);
         const mockConnection = {
             end: jest.fn()
         };
         const spyEnd= jest.spyOn(mockConnection, 'end');
 
-        testObj.db = mockConnection;
-        await testObj.close();
+        eventStore.db = mockConnection;
+        await eventStore.close();
         expect(spyEnd).toHaveBeenCalled();
     });
 });
 
 describe('Test createTable', () => {
     test('Create table - event count >= 1', async () => {
-        const testObj = new Adapter(testConfig);
         let functionCallCheckEventCount = 0;
         let functionCallDescribeEvents = 0;
         let functionCallCreateTableEvents = 0;
@@ -764,15 +786,14 @@ describe('Test createTable', () => {
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
-        testObj.db = mockConnection;
-        await testObj.createTable();
+        eventStore.db = mockConnection;
+        await eventStore.createTable();
         expect(spyExecute).toHaveBeenCalledTimes(2);
         expect(functionCallCheckEventCount).toBe(1);
         expect(functionCallDescribeEvents).toBe(1);
         expect(functionCallCreateTableEvents).toBe(0);
     });
     test('Create table - event count >= 1 and wrong schema', async () => {
-        const testObj = new Adapter(testConfig);
         let functionCallCheckEventCount = 0;
         let functionCallDescribeEvents = 0;
         let functionCallCreateTableEvents = 0;
@@ -796,10 +817,10 @@ describe('Test createTable', () => {
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
-        testObj.db = mockConnection;
+        eventStore.db = mockConnection;
         try
         {
-            await testObj.createTable();
+            await eventStore.createTable();
             
         } 
         catch(error)
@@ -813,7 +834,6 @@ describe('Test createTable', () => {
         expect(functionCallCreateTableEvents).toBe(0);
     });
     test('Create table - no events', async () => {
-        const testObj = new Adapter(testConfig);
         let functionCallCheckEventCount = 0;
         let functionCallDescribeEvents = 0;
         let functionCallCreateTableEvents = 0;
@@ -834,8 +854,8 @@ describe('Test createTable', () => {
         };
         const spyExecute= jest.spyOn(mockConnection, 'execute');
 
-        testObj.db = mockConnection;
-        await testObj.createTable();
+        eventStore.db = mockConnection;
+        await eventStore.createTable();
         expect(spyExecute).toHaveBeenCalledTimes(2);
         expect(functionCallCheckEventCount).toBe(1);
         expect(functionCallDescribeEvents).toBe(0);
@@ -845,8 +865,7 @@ describe('Test createTable', () => {
 
 describe('Test createDatabase', () => {
     test('Create database and terminate connection', async () => {
-        const testObj = new Adapter(testConfig);
-        await testObj.createDatabase();
+        await eventStore.createDatabase();
         expect(mysql.createConnection().execute).toHaveBeenCalled();
         expect(mysql.createConnection).toHaveBeenCalled();
         expect(mysql.createConnection().end).toHaveBeenCalled();
@@ -855,69 +874,59 @@ describe('Test createDatabase', () => {
 
 describe('Test verifySchema', () => {
     test('Verify schema successfully', async () => {
-        const testObj = new Adapter(testConfig);
-        expect(await testObj.verifySchema(table[0], databaseSchema)).toBe(true);
+        expect(await eventStore.verifySchema(table[0], databaseSchema)).toBe(true);
     });
     test('Verify schema - no "Field" field', async () => {
-        const testObj = new Adapter(testConfig);
         const copy = JSON.parse(JSON.stringify(table));
         delete copy[0][0].Field;
-        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
+        expect(await eventStore.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Type" field', async () => {
-        const testObj = new Adapter(testConfig);
         const copy = JSON.parse(JSON.stringify(table));
         delete copy[0][0].Type;
-        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
+        expect(await eventStore.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Null" field', async () => {
-        const testObj = new Adapter(testConfig);
         const copy = JSON.parse(JSON.stringify(table));
         delete copy[0][0].Null;
-        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
+        expect(await eventStore.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Key" field', async () => {
-        const testObj = new Adapter(testConfig);
         const copy = JSON.parse(JSON.stringify(table));
         delete copy[0][0].Key;
-        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
+        expect(await eventStore.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Default" field', async () => {
-        const testObj = new Adapter(testConfig);
         const copy = JSON.parse(JSON.stringify(table));
         delete copy[0][0].Default;
-        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
+        expect(await eventStore.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
     test('Verify schema - no "Extra" field', async () => {
-        const testObj = new Adapter(testConfig);
         const copy = JSON.parse(JSON.stringify(table));
         delete copy[0][0].Extra;
-        expect(await testObj.verifySchema(copy[0], databaseSchema)).toBe(false);
+        expect(await eventStore.verifySchema(copy[0], databaseSchema)).toBe(false);
     });
 });
 
 describe('Test buildFieldListFromSchema', () => {
     test('Correct build of fieldlist from scheme', () => {
         const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(128) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36),payload text , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
-        const testObj = new Adapter(testConfig);
-        const result = testObj.buildFieldListFromSchema(databaseSchema);
+        const result = eventStore.buildFieldListFromSchema(databaseSchema);
         expect(result).toBe(expected);
     });
     test('Correct build of fieldlist from scheme with default values', () => {
         databaseSchema.fields.causationId.Default = 'NULL';
         const expected = 'id varchar(36) not null,position bigint not null unique auto_increment,aggregateId varchar(36) not null,aggregateVersion int not null,type varchar(128) not null,timestamp bigint not null,correlationId varchar(36) not null,causationId varchar(36) default NULL,payload text , PRIMARY KEY (id) , UNIQUE KEY `streamId` (aggregateId,aggregateVersion) , INDEX USING BTREE (aggregateId) , INDEX USING BTREE (type) , INDEX USING BTREE (timestamp) , INDEX USING BTREE (correlationId) , INDEX USING BTREE (causationId)';
-        const testObj = new Adapter(testConfig);
-        const result = testObj.buildFieldListFromSchema(databaseSchema);
+        const result = eventStore.buildFieldListFromSchema(databaseSchema);
         expect(result).toBe(expected);
     });
 });
 
 // see https://github.com/sidorares/node-mysql2/issues/1239
 test('MySQL 8.0.22 (and higher) workaround', async () => {
-    const testObj = new Adapter(testConfig); 
-    testObj.createDatabase = jest.fn();
-    testObj.createTable = jest.fn();
+    eventStore.createDatabase = jest.fn();
+    eventStore.createTable = jest.fn();
 
-    await testObj.init();
-    expect(testObj.db.execute('SELECT * FROM table WHERE ? = ?', ['test', 42])).toBe(undefined);
+    await eventStore.init();
+    expect(eventStore.db.execute('SELECT * FROM table WHERE ? = ?', ['test', 42])).toBe(undefined);
 });

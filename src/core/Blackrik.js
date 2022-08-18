@@ -377,7 +377,7 @@ class Blackrik
 
     async deleteAggregate(aggregateName, aggregateId, eventPayload = null, causationEvent = null)
     {
-        return !!await this._commandHandler.deleteAggregate(
+        return await this._commandHandler.deleteAggregate(
             aggregateName,
             aggregateId,
             eventPayload,

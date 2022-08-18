@@ -1,5 +1,6 @@
 const EventHandler = require('../../src/core/EventHandler');
 const {EVENT_LIMIT_REPLAY} = require('../../src/core/Constants');
+const {TOMBSTONE_EVENT_TYPE} = require('../../src/core/Constants');
 
 class EventStoreMock
 {
@@ -9,6 +10,7 @@ class EventStoreMock
 
         this.save = jest.fn(this._save);
         this.load = jest.fn(this._load);
+        this.delete = jest.fn(this._delete);
 
         this.throwOnSave = throwOnSave;
         this.overlapOnSave = overlapOnSave;
@@ -47,6 +49,13 @@ class EventStoreMock
                 ? null
                 : cursor
         };
+    }
+
+    async _delete(aggregateId)
+    {
+        const eventCount = this.events.reduce((acc, event) => event.aggregateId === aggregateId ? acc + 1 : acc, 0);
+        this.events = this.events.filter(event => event.aggregateId !== aggregateId);
+        return eventCount;
     }
 }
 
@@ -103,7 +112,7 @@ afterEach(() => {
 let eventStore;
 let eventBus;
 let eventHandler;
-const aggregate = 'testAggregate';
+const aggregateName = 'testAggregate';
 const createEvent = () => ({
     aggregateId: '0648b417-80c7-42ca-a027-9efe08bc00c4',
     type: 'EXAMPLE_EVENT',
@@ -126,10 +135,10 @@ describe('EventHandler', () => {
 
         const event = createEvent();
 
-        await eventHandler.subscribe(aggregate, event.type, callback);
-        await eventHandler.subscribe(aggregate, event.type, callback2);
+        await eventHandler.subscribe(aggregateName, event.type, callback);
+        await eventHandler.subscribe(aggregateName, event.type, callback2);
         await eventHandler.start();
-        const filledEvent = await eventHandler.publish(aggregate, event);
+        const filledEvent = await eventHandler.publish(aggregateName, event);
 
         expect(filledEvent).toBeInstanceOf(Object);
         expect(callback).toHaveBeenCalledTimes(1);
@@ -145,7 +154,7 @@ describe('EventHandler', () => {
         ];
 
         await eventHandler.start();
-        const filledEvents = await Promise.all(events.map(event => eventHandler.publish(aggregate, event)));
+        const filledEvents = await Promise.all(events.map(event => eventHandler.publish(aggregateName, event)));
 
         expect(eventStore.save).toHaveBeenCalledTimes(events.length);
         filledEvents.forEach((event, i) => {
@@ -160,7 +169,7 @@ describe('EventHandler', () => {
         await eventHandler.init();
         await eventHandler.start();
 
-        expect(eventHandler.publish(aggregate, createEvent())).rejects.toThrow();
+        await expect(eventHandler.publish(aggregateName, createEvent())).rejects.toThrow();
     });
 
     test('handles rejected events', async () => { 
@@ -169,7 +178,15 @@ describe('EventHandler', () => {
         await eventHandler.init();
         await eventHandler.start();
 
-        expect(eventHandler.publish(aggregate, createEvent())).rejects.toThrow();
+        await expect(eventHandler.publish(aggregateName, createEvent())).rejects.toThrow();
+    });
+
+    test(`publish executes a deletion if event type is ${TOMBSTONE_EVENT_TYPE}`, async () => {
+        const event = createEvent();
+        event.type = TOMBSTONE_EVENT_TYPE;
+
+        await expect(eventHandler.publish(aggregateName, event)).resolves.not.toThrow();
+        expect(eventStore.delete).toHaveBeenCalled();
     });
 });
 
@@ -183,13 +200,13 @@ describe('EventHandler handles replays', () => {
             events.push(createEvent());
         const eventType = events[0].type;
 
-        await eventHandler.subscribe(aggregate, eventType, callback);
+        await eventHandler.subscribe(aggregateName, eventType, callback);
         await eventHandler.start();
-        const filledEvents = await Promise.all(events.map(event => eventHandler.publish(aggregate, event)));
+        const filledEvents = await Promise.all(events.map(event => eventHandler.publish(aggregateName, event)));
         eventStore.events = filledEvents; // otherwise the EventStoreMock would have incomplete events
 
         await eventHandler.replayEvents([
-            [aggregate, [eventType]]
+            [aggregateName, [eventType]]
         ]);
 
         // due to async execution, we need to wait for the next tick 
@@ -206,11 +223,11 @@ describe('EventHandler handles replays', () => {
         const callback = jest.fn(() => {});
         const eventType = createEvent().type;
 
-        await eventHandler.subscribe(aggregate, eventType, callback);
+        await eventHandler.subscribe(aggregateName, eventType, callback);
         await eventHandler.start();
 
         await eventHandler.replayEvents([
-            [aggregate, [eventType]]
+            [aggregateName, [eventType]]
         ]);
 
         expect(callback).toHaveBeenCalledTimes(0);

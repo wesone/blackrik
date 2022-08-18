@@ -14,16 +14,16 @@ afterAll(() => {
     console.log.mockRestore();
 });
 
-test('Config is optional', () => {
+test('config is optional', () => {
     expect(() => new Server()).not.toThrow();
 });
 
-test('Unnecessary call to stop()', () => {
+test('unnecessary call to stop()', async () => {
     const server = new Server();
-    expect(server.stop()).resolves.not.toThrow();
+    await expect(server.stop()).resolves.not.toThrow();
 });
 
-test('Default middlewares secure Express', async () => {
+test('default middlewares secure Express', async () => {
     const getSampleResponse = async config => {
         const server = createServer(config);
         const path = '/test';

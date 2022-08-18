@@ -36,3 +36,4 @@ The advantage is that there is not much overhead. You wouldn't need additional s
 
 With Blackrik you can return an event with the type [`TOMBSTONE` from a command](Aggregates#tombstone-event) or you can call [deleteAggregate](Blackrik#deleteAggregate) from an API handler or as [side effect](Sagas#sideeffects) inside a saga.
 This will erase all affected events from the event store and the read model projection can listen to the Tombstone event to clear it's database accordingly.
+Keep in mind that if you created backups of your event store you would have to tidy up these backups too.

@@ -244,8 +244,8 @@ class Adapter extends EventStoreAdapterInterface
 
     async delete(aggregateId)
     {
-        const [results] = await this.execute('DELETE FROM events WHERE aggregateId = ?', [aggregateId]);
-        return results?.affectedRows ?? 0;
+        const [result] = await this.execute('DELETE FROM events WHERE aggregateId = ?', [aggregateId]);
+        return result.affectedRows;
     }
 
     async close()

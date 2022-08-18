@@ -1,239 +1,228 @@
 const Aggregate = require('../../src/core/Aggregate');
-const testEvents = [
-    {
-        type: 'USER_UPDATED',
-        payload: {
-            name: '1'
-        }
-    },
-    {
-        type: 'USER_UPDATED',
-        payload: {
-            name: '2'
-        }
-    },
-    {
-        type: 'USER_UPDATED',
-        payload: {
-            name: '3'
-        }
-    },
-    {
-        type: 'USER_UPDATED',
-        payload: {
-            name: '42'
-        }
-    }
-];
 
-describe('Testing fromArray', () => {
-    test('Create Aggregate from array', () => {
-        const toTest = [{name: 'a'}, {name: 'b'}, {name: 'c'}, {name: 'd'}];
-        const expected = {'a': {'commands': undefined, 'name': 'a', 'projection': undefined}, 
-            'b': {'commands': undefined, 'name': 'b', 'projection': undefined}, 
-            'c': {'commands': undefined, 'name': 'c', 'projection': undefined}, 
-            'd': {'commands': undefined, 'name': 'd', 'projection': undefined}};
-        expect(Aggregate.fromArray(toTest)).toEqual(expected);
+describe('isValid', () => {
+    test('Valid if aggregate has property \'name\'', () => {
+        expect(() => Aggregate.isValid({name: 'Test'})).not.toThrow();
+        expect(() => Aggregate.isValid({
+            name: 'Test',
+            commands: {},
+            projection: {}
+        })).not.toThrow();
     });
-    test('Only create aggregates with different names', () => {
-        const toTest = [{name: 'a'}, {name: 'a'}, {name: 'c'}, {name: 'd'}];
-        expect(() => Aggregate.fromArray(toTest)).toThrow();
-    });
-    test('Only create aggregates with existing name (EMPTY OBJECT)' , () => {
-        const toTest = [{}, {name: 'a'}, {name: 'c'}, {name: 'd'}];
-        expect(() => Aggregate.fromArray(toTest)).toThrow();
-    });
-    test('Only create aggregates with existing name (EMPTY STRING)', () => {
-        const toTest = [{name: ''}, {name: 'a'}, {name: 'c'}, {name: 'd'}];
-        expect(() => Aggregate.fromArray(toTest)).toThrow();
+    test('Throws for invalid objects', () => {
+        expect(() => Aggregate.isValid({})).toThrow();
+        expect(() => Aggregate.isValid({
+            commands: {},
+            projection: {}
+        })).toThrow();
     });
 });
 
-describe('Testing isValid', () => {
-    test('Check for correct name', () => {
-        expect(() => Aggregate.isValid({name: 'Test name'})).not.toThrow();
+describe('fromArray', () => {
+    test('Transforms array to object', () => {
+        const aggregates = [
+            {name: 'one'},
+            {name: 'two'},
+            {name: 'three'}
+        ];
+
+        expect(Aggregate.fromArray(aggregates)).toStrictEqual(Object.fromEntries(aggregates.map(({name}) => [name, new Aggregate({name})])));
     });
-    test('Check for correct name - throw error', () => {
-        expect(() => Aggregate.isValid({})).toThrow('Missing property \'name\' inside aggregate.');
+    test('Prevents name duplicates', () => {
+        const aggregates = [
+            {name: 'one'},
+            {name: 'two'},
+            {name: 'one'}
+        ];
+
+        expect(() => Aggregate.fromArray(aggregates)).toThrow();
     });
 });
 
-describe('Testing fromArray', () => {
-    test('Create Aggregates from array', () => {
-        let elementCount = 3;
-        const aggregates = [];
-        while(elementCount--)
-            aggregates.push({name: `Test name ${elementCount}`});
-        const result = Aggregate.fromArray(aggregates);
-        elementCount = 3;
-        const expected = {};
-        while(elementCount--) 
-            expected[`Test name ${elementCount}`] = new Aggregate({name: `Test name ${elementCount}`});
-
-        expect(result).toEqual(expected);
-    });
-    test('Create Aggregates from array with name duplicate', () => {
-        let elementCount = 3;
-        const aggregates = [{name: 'Test name 0'}];
-        while(elementCount--)
-            aggregates.push({name: `Test name ${elementCount}`});
-    
-        expect(() => Aggregate.fromArray(aggregates)).toThrow('Duplicate aggregate name \'Test name 0\'.');
-    });
-});
-
-describe('Test hasProjection', () => {
-    test('Instance has projection', () => {
-        const eventType = 'USER_CREATED';
-        const mockProjection = {
+test('hasProjection', () => {
+    const eventType = 'USER_CREATED';
+    const aggregate = new Aggregate({
+        name: 'Test',
+        projection: {
             init: ({}),
-            ['USER_CREATED']: jest.fn()
-        };
-        const testObj = new Aggregate({name: 'Test name', projection: mockProjection});
-    
-        const result = testObj.hasProjection(eventType);
-        expect(result).toBe(true);
+            [eventType]: jest.fn()
+        }
     });
-    test('Instance has no projection', () => {
-        const eventType = 'USER_CREATED';
-        const mockProjection = {
-            init: ({})
-        };
-        const testObj = new Aggregate({name: 'Test name', projection: mockProjection});
-    
-        const result = testObj.hasProjection(eventType);
-        expect(result).toBe(false);
-    });
+
+    expect(aggregate.hasProjection(eventType)).toBe(true);
+    expect(aggregate.hasProjection('invalid_type')).toBe(false);
 });
 
-describe('Testing _reduceEvents', () => {
+describe('_reduceEvents', () => {
     test('Test correct reduction of event list', async () => {
-        const mockProjection = { 
+        const projection = { 
             init: 'This is no function',
             'USER_CREATED': (state, {payload}) => ({
                 ...state,
                 ...payload,
                 registered: true
             }),
-            'USER_UPDATED': (state, {payload}) => ({
+            'USER_NAME_CHANGED': (state, {payload}) => ({
                 ...state,
                 ...payload
             })
         };
-        const testAggregate = new Aggregate({name: 'Test name', projection: mockProjection});
-        expect(await testAggregate._reduceEvents(testEvents)).toEqual({name: '42'});
-    });
-    test('Return state if no projection available', async () => {
-        const mockProjection = { 
-            init: 'This is no function',
-            'USER_CREATED': (state, {payload}) => ({
-                ...state,
-                ...payload,
-                registered: true
-            }),
-            // 'USER_UPDATED': (state, {payload}) => ({
-            //     ...state,
-            //     ...payload
-            // })
-        };
-        const testAggregate = new Aggregate({name: 'Test name', projection: mockProjection}); 
-        const result = await testAggregate._reduceEvents(testEvents);
-        expect(result).toEqual({});
+        const events = [
+            {
+                type: 'USER_CREATED',
+                payload: {
+                    name: 'Test'
+                }
+            },
+            {
+                type: 'USER_NAME_CHANGED',
+                payload: {
+                    name: 'Test 2'
+                }
+            },
+            {
+                type: 'USER_RANDOM_EVENT',
+                payload: 42
+            }
+        ];
+        const aggregate = new Aggregate({name: 'Test', projection});
+
+        await expect(aggregate._reduceEvents(events)).resolves.toStrictEqual({
+            name: 'Test 2',
+            registered: true
+        });
     });
 });
 
-describe('Testing load', () => {
-    test('Test event loading', async () => {
-        const mockProjection = {
-            init: jest.fn(() => {}),
-            'USER_CREATED': (state, {payload}) => ({
-                ...state,
-                ...payload,
-                registered: true
-            }),
-            'USER_UPDATED': (state, {payload}) => ({
-                ...state,
-                ...payload
-            })
-        };
-        const spyInit = jest.spyOn(mockProjection, 'init');
-        const testAggregate = new Aggregate({name: 'Test name', projection: mockProjection});
-        const copyEvents = JSON.parse(JSON.stringify(testEvents));
-        const copyEventsLength = copyEvents.length;
-
-        const mockEventStore = {
-            load: jest.fn(() => {
+describe('loadLatestEvent', () => {
+    const aggregateId = '42';
+    let events;
+    let eventStoreMock;
+    beforeEach(() => {
+        events = [
+            {
+                type: 'USER_CREATED',
+                payload: {
+                    name: 'Test'
+                }
+            },
+            {
+                type: 'USER_NAME_CHANGED',
+                payload: {
+                    name: 'Test 2'
+                }
+            },
+            {
+                type: 'USER_RANDOM_EVENT',
+                payload: 42
+            }
+        ];
+        eventStoreMock = {
+            load: jest.fn(filter => {
+                const copy = JSON.parse(JSON.stringify(events));
+                if(filter.reverse === true)
+                    copy.reverse();
+                if(!isNaN(filter.limit) && filter.limit !== null)
+                    copy.splice(filter.limit, copy.length - filter.limit);
                 return {
-                    events: copyEvents,
+                    events: copy,
                     cursor: null
                 };
             })
         };
-        const mockAggregateId = null;
-        
-        const result = await testAggregate.load(mockEventStore, mockAggregateId);
-        const expected = {
-            state: {name: '42'},
-            latestEvent: {type: 'USER_UPDATED', payload: {name: '42'}}
-        };
-        expect(copyEvents.length).toBe(copyEventsLength - 1);
-        expect(spyInit).toHaveBeenCalled();
-        expect(result).toEqual(expected);
     });
 
-    test('Test event loading - no init function', async () => {
-        const mockProjection = {
-            init: 'This is not a function',
-            'USER_CREATED': (state, {payload}) => ({
-                ...state,
-                ...payload,
-                registered: true
-            }),
-            'USER_UPDATED': (state, {payload}) => ({
-                ...state,
-                ...payload
-            })
-        };
-        const testAggregate = new Aggregate({name: 'Test name', projection: mockProjection});
-        const copyEvents = JSON.parse(JSON.stringify(testEvents));
-        const copyEventsLength = copyEvents.length;
+    test('Returns latest event', async () => {
+        const aggregate = new Aggregate({name: 'Test', projection: {}});
 
-        const mockEventStore = {
+        await expect(aggregate.loadLatestEvent(eventStoreMock, aggregateId)).resolves.toStrictEqual(events.pop());
+    });
+    test('Returns null if there are no events', async () => {
+        events.splice(0, events.length);
+        const aggregate = new Aggregate({name: 'Test', projection: {}});
+
+        await expect(aggregate.loadLatestEvent(eventStoreMock, aggregateId)).resolves.toBeNull();
+    });
+});
+
+describe('load', () => {
+    const aggregateId = '42';
+    const events = [
+        {
+            aggregateId,
+            type: 'USER_CREATED',
+            payload: {
+                name: 'Test'
+            }
+        },
+        {
+            aggregateId,
+            type: 'USER_NAME_CHANGED',
+            payload: {
+                name: 'Test 2'
+            }
+        },
+        {
+            aggregateId,
+            type: 'USER_RANDOM_EVENT',
+            payload: 42
+        }
+    ];
+    let eventStoreMock;
+    beforeEach(() => {
+        eventStoreMock = {
             load: jest.fn(() => {
                 return {
-                    events: copyEvents,
+                    events: JSON.parse(JSON.stringify(events)),
                     cursor: null
                 };
             })
         };
-        const mockAggregateId = null;
-        
-        const result = await testAggregate.load(mockEventStore, mockAggregateId);
-        const expected = {
-            state: {name: '42'},
-            latestEvent: {type: 'USER_UPDATED', payload: {name: '42'}}
-        };
-
-        expect(copyEvents.length).toBe(copyEventsLength - 1);
-        expect(result).toEqual(expected);
     });
 
-    test('Test event loading - empty event list', async () => {
-        const mockProjection = {
-            init: 'This is not a function',
+    test('Build state and latestEvent', async () => {
+        const projection = { 
+            init: jest.fn(() => ({initialized: true})),
             'USER_CREATED': (state, {payload}) => ({
                 ...state,
                 ...payload,
                 registered: true
             }),
-            'USER_UPDATED': (state, {payload}) => ({
+            'USER_NAME_CHANGED': (state, {payload}) => ({
                 ...state,
                 ...payload
             })
         };
-        const testAggregate = new Aggregate({name: 'Test name', projection: mockProjection});
+        const aggregate = new Aggregate({name: 'Test', projection});
 
-        const mockEventStore = {
+        await expect(aggregate.load(eventStoreMock, aggregateId)).resolves.toStrictEqual({
+            state: {
+                initialized: true,
+                name: 'Test 2',
+                registered: true
+            },
+            latestEvent: events[2]
+        });
+        expect(projection.init).toHaveBeenCalled();
+    });
+    test('Empty object as initial state if \'init\' is not a function', async () => {
+        const projection = {
+            init: 'This is not a function'
+        };
+        const aggregate = new Aggregate({name: 'Test', projection});
+        
+        await expect(aggregate.load(eventStoreMock, aggregateId)).resolves.toStrictEqual({
+            state: {},
+            latestEvent: events[2]
+        });
+    });
+
+    test('Expect null for latestEvent if there are no events', async () => {
+        const projection = {
+            init: 'This is not a function'
+        };
+        const aggregate = new Aggregate({name: 'Test', projection});
+        eventStoreMock = {
             load: jest.fn(() => {
                 return {
                     events: [],
@@ -241,14 +230,10 @@ describe('Testing load', () => {
                 };
             })
         };
-        const mockAggregateId = null;
-        
-        const result = await testAggregate.load(mockEventStore, mockAggregateId);
-        const expected = {
+
+        await expect(aggregate.load(eventStoreMock, aggregateId)).resolves.toStrictEqual({
             state: {},
             latestEvent: null
-        };
-        
-        expect(result).toEqual(expected);
+        });
     });
 });

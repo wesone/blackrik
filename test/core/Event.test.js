@@ -1,6 +1,6 @@
 const Event = require('../../src/core/Event');
 
-test('Constructor does not allow infiltrated values', () => {
+test('constructor does not allow infiltrated values', () => {
     const id = 'infiltrated';
     const timestamp = 42;
     const event = new Event({id, timestamp});
@@ -16,7 +16,7 @@ test('Event.from does allow infiltrated values', () => {
     expect(event.timestamp).toBe(timestamp);
 });
 
-test('Can be JSON serialized', () => {
+test('can be JSON serialized', () => {
     const event = new Event({});
     expect(event.toJSON()).toBeInstanceOf(Object);
 });

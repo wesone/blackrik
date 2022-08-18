@@ -1,6 +1,6 @@
 const Errors = require('../../src/core/Errors');
 
-test('All errors have the properties status (Number) and message (String)', () => {
+test('all errors have the properties status (Number) and message (String)', () => {
     Object.values(Errors).forEach(errorClass =>{
         const error = new errorClass();
         expect(error.status).toEqual(expect.any(Number));
@@ -8,7 +8,7 @@ test('All errors have the properties status (Number) and message (String)', () =
     });
 });
 
-test('All errors can have a custom message', () => {
+test('all errors can have a custom message', () => {
     const message = 'Test message';
     Object.values(Errors).forEach(errorClass =>{
         const error = new errorClass(message);

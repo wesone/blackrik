@@ -19,20 +19,20 @@ beforeEach(async () => {
     await scheduler.init();
 });
 
-test('Rejects invalid timestamps and commands', async () => {
+test('rejects invalid timestamps and commands', async () => {
     expect(await scheduler.process(Date.now()-1, {}, causationEvent)).toBe(false);
     expect(await scheduler.process('invalid', command, causationEvent)).toBe(false);
     expect(executor).toHaveBeenCalledTimes(0);
 });
 
-test('Instantly executes scheduled commands from the past', async () => {
+test('instantly executes scheduled commands from the past', async () => {
     expect(await scheduler.process(Date.now()-1, command, causationEvent)).not.toBe(false);
     expect(executor).toHaveBeenCalledTimes(1);
     expect(executor).toHaveBeenNthCalledWith(1, command, causationEvent);
     expect(store.insert).toHaveBeenCalledTimes(0);
 });
 
-test('Schedules commands and persists them', async () => {
+test('schedules commands and persists them', async () => {
     const msToWait = 5;
     await scheduler.process(Date.now()+msToWait, command, causationEvent);
     await new Promise(resolve => setTimeout(resolve, msToWait+3));
@@ -43,7 +43,7 @@ test('Schedules commands and persists them', async () => {
     expect(store.delete).toHaveBeenCalledTimes(1);
 });
 
-test('Execution can be stopped', async () => {
+test('execution can be stopped', async () => {
     const msToWait = 4;
     await scheduler.process(Date.now()+msToWait, command, causationEvent);
     scheduler.stop();
@@ -54,7 +54,7 @@ test('Execution can be stopped', async () => {
     expect(store.delete).toHaveBeenCalledTimes(0);
 });
 
-test('Loads scheduled commands and processes them', async () => {
+test('loads scheduled commands and processes them', async () => {
     const msToWait = 4;
     await scheduler.process(Date.now()+msToWait, command, causationEvent);
     await scheduler.process(Date.now()+msToWait, command, causationEvent);
@@ -73,7 +73,7 @@ test('Loads scheduled commands and processes them', async () => {
     expect(store.delete).toHaveBeenCalledTimes(2);
 });
 
-test('Does not execute persisted scheduled commands that were already handled', async () => {
+test('does not execute persisted scheduled commands that were already handled', async () => {
     const msToWait = 4;
     await scheduler.process(Date.now()+msToWait, command, causationEvent);
     await scheduler.process(Date.now()+msToWait, command, causationEvent);
