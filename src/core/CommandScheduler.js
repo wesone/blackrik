@@ -46,7 +46,7 @@ class CommandScheduler
     {
         await this.#store.defineTable(TABLE_NAME, {
             id: {
-                type: 'number',
+                type: 'string',
                 primaryKey: true
             },
             timestamp: 'number',
