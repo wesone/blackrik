@@ -1,11 +1,11 @@
 const mysql = require('mysql2/promise');
 const ReadModelStoreAdapterInterface = require('../ReadModelStoreAdapterInterface');
-const { conditionBuilder } = require('./ConditionBuilder');
-const { quoteIdentifier, convertValue, convertBinaryRows, getPositionCheckCondition } = require('./utils');
-const { createTableBuilder } = require('./CreateTableBuilder');
-const { insertIntoBuilder } = require('./InsertIntoBuilder');
-const { updateBuilder } = require('./UpdateBuilder');
-const { selectBuilder } = require('./SelectBuilder');
+const {conditionBuilder} = require('./ConditionBuilder');
+const {quoteIdentifier, convertValue, convertBinaryRows, getPositionCheckCondition} = require('./utils');
+const {createTableBuilder} = require('./CreateTableBuilder');
+const {insertIntoBuilder} = require('./InsertIntoBuilder');
+const {updateBuilder} = require('./UpdateBuilder');
+const {selectBuilder} = require('./SelectBuilder');
 
 const tableCheckTypes = {
     new: Symbol('new'),
@@ -248,7 +248,7 @@ class Adapter extends ReadModelStoreAdapterInterface
             const maxPosition = results[1]?._lastPosition ?? Number.MAX_SAFE_INTEGER;
             if(maxPosition < queryOptions.position)
             {
-                const error =  new Error('Data not yet availible');
+                const error = new Error('Data not yet availible');
                 error.status = 409;
                 throw error;
             }

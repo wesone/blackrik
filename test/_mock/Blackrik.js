@@ -1,7 +1,6 @@
 class Blackrik
 {
     eventShouldOverlap = false;
-    isFirstAggregateEvent = false;
 
     _aggregates = {
         testAggregate: {
@@ -9,12 +8,13 @@ class Blackrik
                 command: (/* command, state, context */) => {},
                 commandWithEvent: (/* command, state, context */) => this.exampleEvent
             },
-            load: (/* eventStore, aggregateId */) => ({
-                state: {},
-                latestEvent: this.isFirstAggregateEvent
-                    ? null
-                    : {aggregateVersion: 1}
-            })
+            loadLatestEvent: jest.fn((/* eventStore, aggregateId */) => ({aggregateVersion: 1})),
+            load: jest.fn((/* eventStore, aggregateId */) => (
+                {
+                    state: {},
+                    latestEvent: {aggregateVersion: 1}
+                }
+            ))
         }
     };
 

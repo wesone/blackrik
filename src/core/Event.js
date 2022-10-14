@@ -16,8 +16,15 @@ class Event
         return event;
     }
 
-    constructor(data)
+    constructor(data, causationEvent = null)
     {
+        if(causationEvent)
+        {
+            const {correlationId, id} = causationEvent;
+            data.correlationId = correlationId;
+            data.causationId = id;
+        }
+
         const {
             aggregateId,
             aggregateVersion = 0,

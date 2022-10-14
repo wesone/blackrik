@@ -1,36 +1,36 @@
 import Adapter from '../../../src/adapters/readmodelstore-mysql/Adapter';
-import { conditionBuilder } from '../../../src/adapters/readmodelstore-mysql/ConditionBuilder';
-import { createTableBuilder } from '../../../src/adapters/readmodelstore-mysql/CreateTableBuilder';
-import { insertIntoBuilder } from '../../../src/adapters/readmodelstore-mysql/InsertIntoBuilder';
-import { selectBuilder } from '../../../src/adapters/readmodelstore-mysql/SelectBuilder';
-import { updateBuilder } from '../../../src/adapters/readmodelstore-mysql/UpdateBuilder';
-import { quoteIdentifier, convertBinaryRows } from '../../../src/adapters/readmodelstore-mysql/utils';
+import {conditionBuilder} from '../../../src/adapters/readmodelstore-mysql/ConditionBuilder';
+import {createTableBuilder} from '../../../src/adapters/readmodelstore-mysql/CreateTableBuilder';
+import {insertIntoBuilder} from '../../../src/adapters/readmodelstore-mysql/InsertIntoBuilder';
+import {selectBuilder} from '../../../src/adapters/readmodelstore-mysql/SelectBuilder';
+import {updateBuilder} from '../../../src/adapters/readmodelstore-mysql/UpdateBuilder';
+import {quoteIdentifier, convertBinaryRows} from '../../../src/adapters/readmodelstore-mysql/utils';
 const tableName = 'TestTable';
 
 
 
 test('no tableName', async () => {
-    const expectedError =  new Error('Readmodelstore needs a database name.');
+    const expectedError = new Error('Readmodelstore needs a database name.');
     expect(() => new Adapter({})).toThrow(expectedError);
 });
 
 test('try to insert reserved fields', async () => {
     const adapter = new Adapter({database: 'AdapterTest'});
-    let expectedError =  new Error('_lastPosition is a reserved field name.');
+    let expectedError = new Error('_lastPosition is a reserved field name.');
     await expect(adapter.defineTable(tableName, {_lastPosition: 'string'})).rejects.toThrow(expectedError);
 
-    expectedError =  new Error('_operation is a reserved field name.');
+    expectedError = new Error('_operation is a reserved field name.');
     await expect(adapter.defineTable(tableName, {_operation: 'string'})).rejects.toThrow(expectedError);
 });
 
 test('test transaction exceptions', async () => {
     const adapter = new Adapter({database: 'AdapterTest'});
-    let expectedError =  new Error('Can only be used in a transaction');
+    let expectedError = new Error('Can only be used in a transaction');
     await expect(adapter.commit()).rejects.toThrow(expectedError);
     await expect(adapter.rollback()).rejects.toThrow(expectedError);
 
     adapter.isTransaction = true;
-    expectedError =  new Error('Transaction already started');
+    expectedError = new Error('Transaction already started');
     await expect(adapter.beginTransaction()).rejects.toThrow(expectedError);
 });
 

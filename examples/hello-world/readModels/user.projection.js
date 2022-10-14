@@ -1,6 +1,7 @@
 const {
     USER_CREATED,
-    USER_UPDATED,
+    USER_EMAIL_ADDRESS_CHANGED,
+    USER_NAME_CHANGED,
     USER_REJECTED
 } = require('../events/users');
 
@@ -29,7 +30,15 @@ module.exports = {
             updatedAt: createdAt
         });
     },
-    [USER_UPDATED]: async (store, event) => {
+    [USER_EMAIL_ADDRESS_CHANGED]: async (store, event) => {
+        await store.update(tableName, {
+            id: event.aggregateId
+        }, {
+            email: event.payload.email,
+            updatedAt: new Date(event.timestamp)
+        });
+    },
+    [USER_NAME_CHANGED]: async (store, event) => {
         await store.update(tableName, {
             id: event.aggregateId
         }, {

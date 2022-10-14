@@ -57,3 +57,21 @@ class ConflictError extends BaseError
     }
 }
 module.exports.ConflictError = ConflictError;
+
+class DuplicateAggregateError extends ConflictError
+{
+    constructor(message = 'Aggregate already created')
+    {
+        super(message);
+    }
+}
+module.exports.DuplicateAggregateError = DuplicateAggregateError;
+
+class UnalteredError extends BadRequestError
+{
+    constructor(message = 'Unaltered state')
+    {
+        super(message);
+    }
+}
+module.exports.UnalteredError = UnalteredError;

@@ -287,7 +287,7 @@ test('disconnect', async () => {
 
     await adapter.disconnect();
 
-    await Promise.all([ adapter.findOne(tableName), adapter.findOne(tableName)]);
+    await Promise.all([adapter.findOne(tableName), adapter.findOne(tableName)]);
 
     await adapter.disconnect();
 

@@ -1,5 +1,5 @@
 
-import { createTableBuilder } from '../../../src/adapters/readmodelstore-mysql/CreateTableBuilder';
+import {createTableBuilder} from '../../../src/adapters/readmodelstore-mysql/CreateTableBuilder';
 
 const tableName = 'TestTable';
 
@@ -175,7 +175,7 @@ test('variable type length', () => {
     const fieldDefinition = {
         test: 'string(10)',
         test2: 'string',
-        test3: { type: 'string(128)' },
+        test3: {type: 'string(128)'},
         test4: 'boolean'
     };
    

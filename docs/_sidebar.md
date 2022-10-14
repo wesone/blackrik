@@ -12,6 +12,8 @@
     * [EventStoreAdapter](EventStoreAdapter)
     * [EventBusAdapter](EventBusAdapter)
     * [HTTP API](HTTP-API)
+* Concepts
+    * [Sensitive data](SensitiveData)
 * Contributing
     * [Guide](CONTRIBUTING)
     * [Issues](https://github.com/wesone/blackrik/issues)

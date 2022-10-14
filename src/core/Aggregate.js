@@ -39,9 +39,22 @@ class Aggregate
         {
             const {type} = event;
             if(this.hasProjection(type))
-                state = await this.projection[type](state, event);      
+                state = await this.projection[type](state, event);
         }
         return state;
+    }
+
+    async loadLatestEvent(eventStore, aggregateId)
+    {
+        const {events} = await eventStore.load({
+            aggregateIds: [aggregateId],
+            reverse: true,
+            limit: 1
+        });
+
+        if(events.length)
+            return events.pop();
+        return null;
     }
 
     async load(eventStore, aggregateId)
@@ -67,7 +80,11 @@ class Aggregate
             }
             next = cursor;
         } while(next);
-        return {state, latestEvent};
+        
+        return {
+            state, 
+            latestEvent
+        };
     }
 }
 

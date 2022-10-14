@@ -75,13 +75,13 @@ module.exports = {
             {
                 'after': true,
                 'overrides': {
-                    'catch': { 'after': false },
-                    'do': { 'after': false },
-                    'for': { 'after': false },
-                    'function': { 'after': false },
-                    'if': { 'after': false },
-                    'while': { 'after': false },
-                    'switch': { 'after': false }
+                    'catch': {'after': false},
+                    'do': {'after': false},
+                    'for': {'after': false},
+                    'function': {'after': false},
+                    'if': {'after': false},
+                    'while': {'after': false},
+                    'switch': {'after': false}
                 }
             }
         ],
@@ -136,6 +136,14 @@ module.exports = {
                 'avoidQuotes': true
             }
         ],
+        'object-curly-spacing': [
+            'error',
+            'never'
+        ],
+        'array-bracket-spacing': [
+            'error',
+            'never'
+        ],
         'no-whitespace-before-property': [
             'error'
         ],
@@ -155,9 +163,11 @@ module.exports = {
         'no-lonely-if': [
             'error'
         ],
+        'no-multi-spaces': 'warn',
         'eol-last': [
             'error',
             'always'
-        ]
+        ],
+        'no-template-curly-in-string': 'off'
     }
 };

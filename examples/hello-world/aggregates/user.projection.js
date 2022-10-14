@@ -1,6 +1,7 @@
 const {
     USER_CREATED,
-    USER_UPDATED,
+    USER_EMAIL_ADDRESS_CHANGED,
+    USER_NAME_CHANGED,
     USER_REJECTED
 } = require('../events/users');
 
@@ -11,7 +12,11 @@ module.exports = {
         ...payload,
         registered: true
     }),
-    [USER_UPDATED]: (state, {payload}) => ({
+    [USER_EMAIL_ADDRESS_CHANGED]: (state, {payload}) => ({
+        ...state,
+        ...payload
+    }),
+    [USER_NAME_CHANGED]: (state, {payload}) => ({
         ...state,
         ...payload
     }),

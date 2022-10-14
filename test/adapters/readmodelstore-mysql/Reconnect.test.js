@@ -77,7 +77,7 @@ test('Reconnect on connection loss', async () => {
 test('Reconnect on execute', async () => {
     const testObj = new Adapter(testConfig);
 
-    testObj.connect = jest.fn(() => testObj.connection = { execute: jest.fn()});
+    testObj.connect = jest.fn(() => testObj.connection = {execute: jest.fn()});
     testObj.connection = null;
 
     await testObj.findOne('test', {id: 1});

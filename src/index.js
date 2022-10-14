@@ -74,9 +74,14 @@ class Blackrik
         return this.#blackrik.scheduleCommand(timestamp, command);
     }
 
-    get executeQuery()
+    executeQuery(readModel, resolver, query)
     {
-        return this.#blackrik.executeQuery;
+        return this.#blackrik.executeQuery(readModel, resolver, query);
+    }
+
+    deleteAggregate(aggregateName, aggregateId, eventPayload = null)
+    {
+        return this.#blackrik.deleteAggregate(aggregateName, aggregateId, eventPayload);
     }
 
     async start()

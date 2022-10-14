@@ -21,7 +21,7 @@ The request body contains the command to execute as json.
 Property | Type | Attribute | Description
 :--- | :--- | :--- | :---
 aggregateName | string | <small>can be specified inside the URL</small> | The name of the aggregate
-aggregateId | string | | The aggregateId to identify an aggregate instance<br>The client may generate a new aggregateId if the desired aggregate does not exist yet
+aggregateId | string | | The aggregate id to identify an aggregate instance<br>The client may generate a new aggregateId if the desired aggregate does not exist yet
 type | string | <small>can be specified inside the URL</small> | The name of the command to execute
 payload | object | optional | An optional payload that contains options or arguments for the command
 

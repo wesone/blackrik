@@ -1,5 +1,6 @@
 const CommandHandler = require('../../src/core/CommandHandler');
 const BlackrikMock = require('../_mock/Blackrik');
+const {TOMBSTONE_EVENT_TYPE} = require('../../src/core/Constants');
 
 const aggregateName = 'testAggregate';
 const aggregateId = '42';
@@ -12,22 +13,22 @@ describe('CommandHandler detects', () => {
     const blackrik = new BlackrikMock();
     const commandHandler = new CommandHandler(blackrik);
 
-    test('invalid aggregateNames', () => {
-        expect(commandHandler.process({aggregateId, type})).rejects.toThrow();
-        expect(commandHandler.process({aggregateName: 'invalid', aggregateId, type})).rejects.toThrow();
+    test('invalid aggregateNames', async () => {
+        await expect(commandHandler.process({aggregateId, type})).rejects.toThrow();
+        await expect(commandHandler.process({aggregateName: 'invalid', aggregateId, type})).rejects.toThrow();
     });
 
-    test('invalid aggregateIds', () => {
-        expect(commandHandler.process({aggregateName, type})).rejects.toThrow();
+    test('invalid aggregateIds', async () => {
+        await expect(commandHandler.process({aggregateName, type})).rejects.toThrow();
     });
 
-    test('invalid types', () => {
-        expect(commandHandler.process({aggregateName, aggregateId})).rejects.toThrow();
-        expect(commandHandler.process({aggregateName, aggregateId, type: 'invalid'})).rejects.toThrow();
+    test('invalid types', async () => {
+        await expect(commandHandler.process({aggregateName, aggregateId})).rejects.toThrow();
+        await expect(commandHandler.process({aggregateName, aggregateId, type: 'invalid'})).rejects.toThrow();
     });
 
-    test('valid commands', () => {
-        expect(commandHandler.process({aggregateName, aggregateId, type})).resolves.not.toThrow();
+    test('valid commands', async () => {
+        await expect(commandHandler.process({aggregateName, aggregateId, type})).resolves.not.toThrow();
         expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(0);
     });
 });
@@ -46,7 +47,10 @@ describe('CommandHandler', () => {
         expect(event).toStrictEqual(exampleEvent);
         expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(1);
 
-        blackrik.isFirstAggregateEvent = true;
+        blackrik._aggregates[aggregateName].load.mockReturnValue({
+            state: {},
+            latestEvent: null
+        });
         event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
 
         expect(event).toStrictEqual(exampleEvent);
@@ -57,7 +61,7 @@ describe('CommandHandler', () => {
         const invalidEvent = {test: 42};
         blackrik = new BlackrikMock(invalidEvent);
         commandHandler = new CommandHandler(blackrik);
-        let event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
+        const event = await commandHandler.process({aggregateName, aggregateId, type: typeWithEvent});
 
         expect(event).toBe(null);
         expect(blackrik._eventHandler.publish).toHaveBeenCalledTimes(0);
@@ -96,8 +100,28 @@ describe('CommandHandler', () => {
         });
     });
 
-    test('handles overlapping events', () => {
+    test('handles overlapping events', async () => {
         blackrik.eventShouldOverlap = true;
-        expect(commandHandler.process({aggregateName, aggregateId, type: typeWithEvent})).rejects.toThrow();
+        await expect(commandHandler.process({aggregateName, aggregateId, type: typeWithEvent})).rejects.toThrow();
+    });
+
+    describe('deleteAggregate', () => {
+        test('throws for invalid aggregate names', async () => {
+            await expect(commandHandler.deleteAggregate('invalid', aggregateId)).rejects.toThrow();
+        });
+        test('returns false for unknown aggregate ids', async () => {
+            blackrik._aggregates[aggregateName].loadLatestEvent.mockReturnValue(null);
+            await expect(commandHandler.deleteAggregate(aggregateName, aggregateId)).resolves.toBe(false);
+        });
+        test(`emits event with type ${TOMBSTONE_EVENT_TYPE}`, async () => {
+            await expect(commandHandler.deleteAggregate(aggregateName, aggregateId)).resolves.toBe(true);
+            expect(blackrik._eventHandler.publish).toHaveBeenCalledWith(
+                aggregateName, 
+                expect.objectContaining({
+                    aggregateId,
+                    type: TOMBSTONE_EVENT_TYPE
+                })
+            );
+        });
     });
 });

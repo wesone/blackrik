@@ -30,6 +30,6 @@ const config = {
     }
 };
 
-test('Validate config scheme', () => {
+test('validate config scheme', () => {
     expect(() => validateConfig(merge(config, configs))).not.toThrow();
 });

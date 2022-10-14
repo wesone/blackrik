@@ -1,5 +1,5 @@
-const { quoteIdentifier, convertValue, getPositionCheckCondition } = require('./utils');
-const { conditionBuilder } = require('./ConditionBuilder');
+const {quoteIdentifier, convertValue, getPositionCheckCondition} = require('./utils');
+const {conditionBuilder} = require('./ConditionBuilder');
 
 function updateBuilder(tableName, data, conditions, meta = null)
 {
@@ -44,6 +44,6 @@ function updateBuilder(tableName, data, conditions, meta = null)
     return {sql, parameters: values.concat(parameters)};
 }
 
-module.exports =  {
+module.exports = {
     updateBuilder,
 };

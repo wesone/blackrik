@@ -51,7 +51,7 @@ describe('ListenerMap', () => {
         const executions = listenerMap.execute(type);
 
         expect(executions).toHaveLength(3);
-        expect(Promise.all(executions)).rejects.toBe(errorMessage);
+        await expect(Promise.all(executions)).rejects.toBe(errorMessage);
     });
 
     test('handles callbacks that were added after a call to execute', async () => {

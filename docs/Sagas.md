@@ -65,6 +65,7 @@ Property | Type | Attribute | Description
 :--- | :--- | :--- | :---
 [executeCommand](Blackrik#executeCommand) | function | | Calls a command
 [scheduleCommand](Blackrik#scheduleCommand) | function | | Delays a command execution
+[deleteAggregate](Blackrik#deleteAggregate) | function | | Deletes an aggregate and emits a Tombstone event
 
 Events that will be created by using the default side effects will be linked to the event that caused them.  
 For example:

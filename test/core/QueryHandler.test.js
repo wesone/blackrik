@@ -16,7 +16,7 @@ describe('QueryHandler handles', () => {
                 resolver: 'testResolver'
             }
         };
-        expect(queryHandler.handle(req)).rejects.toThrow();
+        await expect(queryHandler.handle(req)).rejects.toThrow();
     });
 
     test('unknown resovler', async () => {
@@ -26,7 +26,7 @@ describe('QueryHandler handles', () => {
                 resolver: 'invalidResolver'
             }
         };
-        expect(queryHandler.handle(req)).rejects.toThrow();
+        await expect(queryHandler.handle(req)).rejects.toThrow();
     });
 
     test('correct execution', async () => {
@@ -44,9 +44,9 @@ describe('QueryHandler handles', () => {
                 resolver: 'testResolver'
             }
         };
-        expect(queryHandler.handle(req)).resolves.not.toThrow();
-        expect(queryHandler.handle(req2)).resolves.not.toThrow();
-        expect(queryHandler.process(req.params.readModel, req.params.resolver)).resolves.not.toThrow();
+        await expect(queryHandler.handle(req)).resolves.not.toThrow();
+        await expect(queryHandler.handle(req2)).resolves.not.toThrow();
+        await expect(queryHandler.process(req.params.readModel, req.params.resolver)).resolves.not.toThrow();
 
         const resolver = blackrik._resolvers.testReadModel.handlers.testResolver;
         expect(resolver).toHaveBeenCalledTimes(3);

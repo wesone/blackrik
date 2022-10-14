@@ -1,5 +1,6 @@
 const Event = require('./Event');
 const {BadRequestError} = require('./Errors');
+const {TOMBSTONE_EVENT_TYPE} = require('./Constants');
 
 class CommandHandler 
 {
@@ -33,17 +34,6 @@ class CommandHandler
     hasAggregate(aggregateName)
     {
         return Object.prototype.hasOwnProperty.call(this.#blackrik._aggregates, aggregateName);
-    }
-
-    async processEvent(aggregateName, event, causationEvent = null)
-    {
-        if(causationEvent)
-        {
-            const {correlationId, id} = causationEvent;
-            event.correlationId = correlationId;
-            event.causationId = id;
-        }
-        return await this.#blackrik._eventHandler.publish(aggregateName, new Event(event)); 
     }
 
     async handle(req)
@@ -89,12 +79,8 @@ class CommandHandler
             throw new BadRequestError('Unknown type');
 
         const {state, latestEvent} = await aggregate.load(this.#blackrik._eventStore, aggregateId);
-        context.aggregateVersion = latestEvent
-            ? latestEvent.aggregateVersion
-            : 0;
-        context.latestEventPosition = latestEvent
-            ? latestEvent.position
-            : null;
+        context.aggregateVersion = latestEvent?.aggregateVersion ?? 0;
+        context.latestEventPosition = latestEvent?.position ?? null;
         
         const event = await this.executeHandler(
             commands[type], 
@@ -108,7 +94,31 @@ class CommandHandler
 
         event.aggregateId = aggregateId;
         event.aggregateVersion = context.aggregateVersion + 1;
-        return await this.processEvent(aggregateName, event, context.causationEvent);
+        return await this.#blackrik._eventHandler.publish(aggregateName, new Event(event, context.causationEvent));
+    }
+
+    async deleteAggregate(aggregateName, aggregateId, payload = null, causationEvent = null)
+    {
+        if(!this.hasAggregate(aggregateName))
+            throw new BadRequestError('Invalid aggregate');
+        const aggregate = this.#blackrik._aggregates[aggregateName];
+        const latestEvent = await aggregate.loadLatestEvent(this.#blackrik._eventStore, aggregateId);
+        if(!latestEvent)
+            return false;
+
+        await this.#blackrik._eventHandler.publish(
+            aggregateName, 
+            new Event(
+                {
+                    aggregateId,
+                    aggregateVersion: latestEvent.aggregateVersion + 1,
+                    type: TOMBSTONE_EVENT_TYPE,
+                    payload
+                }, 
+                causationEvent
+            )
+        );
+        return true;
     }
 }
 

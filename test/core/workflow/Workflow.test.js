@@ -27,7 +27,7 @@ const testConfig = {
     name: 'light',
     version: 1,
     initial: 'init',
-    context: { redLights: 0 },
+    context: {redLights: 0},
     //idHandler: event => event.aggregateId,
     steps: {
         init:{

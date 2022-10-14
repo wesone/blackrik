@@ -8,6 +8,7 @@ class EventStoreAdapterInterface extends Interface
             init: 'function',
             save: 'function',
             load: 'function',
+            delete: 'function',
             close: 'function'
         });
     }

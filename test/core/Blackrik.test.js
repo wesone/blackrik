@@ -1,10 +1,7 @@
-const Blackrik = require('../../src/core/Blackrik');
-const Application = require('../../src/index');
-const exampleInstance = require('../_resources/testApp/config');
+const Blackrik = require('../../src/index');
+const _Blackrik = require('../../src/core/Blackrik');
+const exampleConfig = require('../_resources/testApp/config');
 const CONSTANTS = require('../../src/core/Constants');
-// const CommandHandler = require('../../src/core/CommandHandler');
-// const QueryHandler = require('../../src/core/QueryHandler');
-// const CommandScheduler = require('../../src/core/CommandScheduler');
 
 jest.mock('../../src/core/Adapter', () => {
     return {
@@ -54,18 +51,6 @@ jest.mock('../../src/core/workflow/index', () => {
     });
 });
 
-// jest.mock('../../src/core/workflow/index', () => {
-//     return jest.fn(() => {
-//         return {
-//             connect: jest.fn()
-//         };
-//     });
-// });
-
-// jest.mock('../../src/core/CommandHandler');
-
-// jest.mock('../../src/core/QueryHandler');
-
 jest.mock('../../src/core/CommandScheduler', () => {
     const init = jest.fn();
     return jest.fn(() => {
@@ -107,73 +92,55 @@ jest.mock('../../src/core/Server', () => {
 });
 
 
-let app;
-let testObj;
+let instance;
+let blackrik;
 beforeEach(() => {
-    app = new Application(exampleInstance);
-    testObj = new Blackrik(app);
+    jest.clearAllMocks();
+    instance = new Blackrik(exampleConfig);
+    blackrik = new _Blackrik(instance);
 });
 
 describe('Test _createReadModelStore', () => {
-    // test('Create store successfully', () => {
-    //     const result = testObj._createReadModelStore('Test adapter name');
-    //     expect(typeof result['init']).toBe('function');
-    // });
     test('Create store - invalid adapter', () => {
         const adapterName = 'bad adapter';
-        testObj.config.readModelStoreAdapters[adapterName] = adapterName;
+        blackrik.config.readModelStoreAdapters[adapterName] = adapterName;
         
-        expect(() => testObj._createReadModelStore(adapterName)).toThrow(`ReadModel adapter '${adapterName}' is invalid.`);
+        expect(() => blackrik._createReadModelStore(adapterName)).toThrow(`ReadModel adapter '${adapterName}' is invalid.`);
     });
 });
 
 describe('Test _initStore', () => {
     test('Check for correct function call - default adpater', () => {
-        testObj.config.adapter = undefined;
+        blackrik.config.adapter = undefined;
         const mockFunction = {_createReadModelStore: jest.fn()};
         const spy = jest.spyOn(mockFunction, '_createReadModelStore');
 
-        testObj._createReadModelStore = mockFunction._createReadModelStore;
-        testObj._initStore();
+        blackrik._createReadModelStore = mockFunction._createReadModelStore;
+        blackrik._initStore();
 
         expect(spy).toHaveBeenCalled();
     });
 });
 
 describe('Test _initEventStore', () => {
-    // test('Initialise event store successfully', async () => {
-    //     await testObj._initEventStore();
-    //     const initSpy = jest.spyOn(testObj._eventStore, 'init');
-
-    //     expect(typeof testObj._eventStore.init).toBe('function');
-    //     expect(initSpy).toHaveBeenCalled();
-    // });
     test('Initialise event store - throw error', async () => {
-        testObj.config.eventStoreAdapter = 'bad adapter';
-        expect(testObj._initEventStore()).rejects.toThrow();
+        blackrik.config.eventStoreAdapter = 'bad adapter';
+        await expect(blackrik._initEventStore()).rejects.toThrow();
     });
 });
 
 describe('Test _initEventHandler', () => {
-    // test('Create handler successfully', async () => {
-    //     await testObj._initEventHandler();
-    //     const initSpyEventHandler = jest.spyOn(testObj._eventHandler, 'init');
-
-    //     expect(initSpyEventHandler).toHaveBeenCalled();
-    //     expect(typeof testObj._eventHandler.init).toBe('function');
-    // });
-    
     test('Create handler - invalid eventbus adapter', async () => {
         const Adapter = require('../../src/core/Adapter.js');
         const adapterCreate = Adapter.create;
         Adapter.create = jest.fn(() => undefined);
         try
         {
-            await testObj._initEventHandler();
+            await blackrik._initEventHandler();
         } 
         catch(error)
         {
-            expect(error.message).toBe(`EventBus adapter '${testObj.config.eventBusAdapter.module || 'default'}' is invalid.`);
+            expect(error.message).toBe(`EventBus adapter '${blackrik.config.eventBusAdapter.module || 'default'}' is invalid.`);
         }
         Adapter.create = adapterCreate;
     });
@@ -190,7 +157,7 @@ describe('Test _createSubscriptions', () => {
         const testReturn = 'testReturn';
         const store = {createProxy: jest.fn(() => testReturn), config: 'test config'};
         const callback = jest.fn();
-        testObj._eventHandler = {
+        blackrik._eventHandler = {
             subscribe: jest.fn((name, eventType, callback) => {
                 callback();
             })
@@ -198,7 +165,7 @@ describe('Test _createSubscriptions', () => {
 
         const spyCreateProxy = jest.spyOn(store, 'createProxy');
 
-        await testObj._createSubscriptions('user', eventMap, store, callback);
+        await blackrik._createSubscriptions('user', eventMap, store, callback);
         expect(spyCreateProxy).toHaveBeenCalled();
         expect(callback).toHaveBeenCalledWith(eventMap['USER_CREATED'], testReturn, undefined, store.config);
     });
@@ -214,13 +181,13 @@ describe('Test _registerSubscribers', () => {
             'USER_UPDATED': jest.fn(),
             'USER_REJECTED': jest.fn(),
         };
-        testObj._createSubscriptions = jest.fn();
-        testObj._createReadModelStore = jest.fn();
-        const spyCreateSubscriptions = jest.spyOn(testObj, '_createSubscriptions');
-        const spyCreateReadModelStore = jest.spyOn(testObj, '_createReadModelStore');
+        blackrik._createSubscriptions = jest.fn();
+        blackrik._createReadModelStore = jest.fn();
+        const spyCreateSubscriptions = jest.spyOn(blackrik, '_createSubscriptions');
+        const spyCreateReadModelStore = jest.spyOn(blackrik, '_createReadModelStore');
 
         const expected = {handlers, adapter};
-        const result = await testObj._registerSubscribers('name', handlers, adapter, callback);
+        const result = await blackrik._registerSubscribers('name', handlers, adapter, callback);
 
         expect(spyCreateSubscriptions).toHaveBeenCalled();
         expect(spyCreateReadModelStore).toHaveBeenCalled();
@@ -235,13 +202,13 @@ describe('Test _registerSubscribers', () => {
             'USER_UPDATED': jest.fn(),
             'USER_REJECTED': jest.fn(),
         };
-        testObj._createSubscriptions = jest.fn();
-        testObj._createReadModelStore = jest.fn();
-        const spyCreateSubscriptions = jest.spyOn(testObj, '_createSubscriptions');
-        const spyCreateReadModelStore = jest.spyOn(testObj, '_createReadModelStore');
+        blackrik._createSubscriptions = jest.fn();
+        blackrik._createReadModelStore = jest.fn();
+        const spyCreateSubscriptions = jest.spyOn(blackrik, '_createSubscriptions');
+        const spyCreateReadModelStore = jest.spyOn(blackrik, '_createReadModelStore');
 
         const expected = {handlers, adapter: 'default'};
-        const result = await testObj._registerSubscribers('name', handlers, adapter, callback);
+        const result = await blackrik._registerSubscribers('name', handlers, adapter, callback);
 
         expect(spyCreateSubscriptions).toHaveBeenCalled();
         expect(spyCreateReadModelStore).toHaveBeenCalled();
@@ -251,46 +218,46 @@ describe('Test _registerSubscribers', () => {
 
 describe('Test _processReadModels', () => {
     test('Process read-models', async () => {
-        const {resolvers, adapter} = testObj.config.readModels[0];
-        testObj._registerSubscribers = jest.fn(() => new Promise(resolve => resolve({adapter})));
-        const spyRegisterSubscribers = jest.spyOn(testObj, '_registerSubscribers');
+        const {resolvers, adapter} = blackrik.config.readModels[0];
+        blackrik._registerSubscribers = jest.fn(() => new Promise(resolve => resolve({adapter})));
+        const spyRegisterSubscribers = jest.spyOn(blackrik, '_registerSubscribers');
 
-        const result = await testObj._processReadModels();
+        const result = await blackrik._processReadModels();
         const expected = [{handlers: resolvers, adapter}];
         const expectedResolvers = {user: {handlers: resolvers, adapter}};
         expect(spyRegisterSubscribers).toHaveBeenCalled();
         expect(result).toEqual(expected);
-        expect(testObj._resolvers).toEqual(expectedResolvers);
+        expect(blackrik._resolvers).toEqual(expectedResolvers);
     });
     test('Call callback', async () => {
         const handler = jest.fn();
-        testObj._registerSubscribers = jest.fn(async (name, projection, adapter, callback) => {
+        blackrik._registerSubscribers = jest.fn(async (name, projection, adapter, callback) => {
             await callback(handler);
             return new Promise(resolve => resolve({adapter}));
         });
 
-        await testObj._processReadModels();
+        await blackrik._processReadModels();
         expect(handler).toHaveBeenCalled();
     });
 });
 
 describe('Test _getSideEffectsProxy', () => {
     test('Return function with undefined as return', () => {
-        const sideEffects = { sendRegistrationMail: jest.fn() };
+        const sideEffects = {sendRegistrationMail: jest.fn()};
         const event = {isReplay: true};
     
-        const result = testObj._getSideEffectsProxy(sideEffects, event, testObj.config.sagas[0].source.handlers).sendRegistrationMail();
+        const result = blackrik._getSideEffectsProxy(sideEffects, event, blackrik.config.sagas[0].source.handlers).sendRegistrationMail();
     
         expect(result).toEqual(undefined);
     });
     test('Bind function', async () => {
-        const sideEffects = { sendRegistrationMail: jest.fn(() => 'testarg'), executeCommand: jest.fn() };
+        const sideEffects = {sendRegistrationMail: jest.fn(() => 'testarg'), executeCommand: jest.fn()};
         const event = {isReplay: false};
         const mockExecuteCommand = jest.fn();
-        testObj.executeCommand = mockExecuteCommand;
-        const spyExecuteCommand = jest.spyOn(testObj, 'executeCommand');
+        blackrik.executeCommand = mockExecuteCommand;
+        const spyExecuteCommand = jest.spyOn(blackrik, 'executeCommand');
     
-        const result = testObj._getSideEffectsProxy(sideEffects, event, testObj.config.sagas[0].source.handlers);
+        const result = blackrik._getSideEffectsProxy(sideEffects, event, blackrik.config.sagas[0].source.handlers);
         result.executeCommand();
 
         expect(spyExecuteCommand).toHaveBeenCalled();
@@ -300,135 +267,132 @@ describe('Test _getSideEffectsProxy', () => {
 
 describe('Test _processSagas', () => {
     test('Check for correct function call', async () => {
-        const {name, adapter} = testObj.config.sagas[0];
-        testObj._registerSubscribers = jest.fn();
-        await testObj._processSagas();
+        const {name, adapter} = blackrik.config.sagas[0];
+        blackrik._registerSubscribers = jest.fn();
+        await blackrik._processSagas();
 
-        expect(testObj._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything()
+        expect(blackrik._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything()
         );
     });
     test('Handlers and side effects from workflow', async () => {
-        testObj.config.sagas[0].source.initial = 'defined';
-        const {name, adapter} = testObj.config.sagas[0];
-        testObj._registerSubscribers = jest.fn();
-        await testObj._processSagas();
+        blackrik.config.sagas[0].source.initial = 'defined';
+        const {name, adapter} = blackrik.config.sagas[0];
+        blackrik._registerSubscribers = jest.fn();
+        await blackrik._processSagas();
 
-        expect(testObj._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything());
+        expect(blackrik._registerSubscribers).toHaveBeenCalledWith(name, expect.anything(), adapter, expect.anything());
     });
     test('Call callback', async () => {
         const handler = jest.fn();
-        testObj._getSideEffectsProxy = jest.fn();
-        testObj._registerSubscribers = jest.fn(async (name, handlers, adapter, callback) => { 
+        blackrik._getSideEffectsProxy = jest.fn();
+        blackrik._registerSubscribers = jest.fn(async (name, handlers, adapter, callback) => { 
             await callback(handler);
         });
 
-        await testObj._processSagas();
+        await blackrik._processSagas();
         expect(handler).toHaveBeenCalled();
     });
 });
 
-describe('Test buildContext', () => {
-    test('Return empty object', () => {
-        testObj.config.contextProvider = jest.fn();
-        const result = testObj.buildContext();
-        expect(result).toEqual({});
-    });
+test('buildContext returns empty object as default', () => {
+    blackrik.config.contextProvider = jest.fn();
+    expect(blackrik.buildContext()).toStrictEqual({});
 });
 
 describe('Test _registerAPI', () => {
-    test('Method not included', async () => {
-        const testMethod = 'not included';
-        testObj.config.server.routes.push({method: testMethod});
+    test('checks if method is allowed', async () => {
+        const method = 'invalid';
+        blackrik.config.server.routes.push({method});
         
-        try 
-        {
-            await testObj.start();
-        } 
-        catch(error)
-        {
-            expect(error.message).toBe(`Method '${testMethod.toUpperCase()}' is invalid.`);
-        }
+        await expect(blackrik.start()).rejects.toThrow();
     });
-    test('Path starts without / - add / to path', async () => {
+    test('prepends \'/\' to path if path does not start with \'/\'', async () => {
         const Server = require('../../src/core/Server');
         const testServer = Server();
         const testString = 'testString';
-        testObj.config.server.routes[0].path = testString;
+        blackrik.config.server.routes[0].path = testString;
         
-        await testObj.start();
+        await blackrik.start();
         expect(testServer.route).toHaveBeenCalledWith('/' + testString);
     });
 });
 
 describe('Test executeCommand', () => {
-    test('Without causationevent ', async () => {
-        testObj._commandHandler = {process: jest.fn()};
+    test('without causation event ', async () => {
+        blackrik._commandHandler = {process: jest.fn()};
         const testCommand = 'test';
         
-        const result = await testObj.executeCommand(testCommand);
+        const result = await blackrik.executeCommand(testCommand);
         expect(result).toBe(false);
     });
-    test('With causationEvent', async () => {
-        testObj._commandHandler = {process: jest.fn()};
+    test('with causation event', async () => {
+        blackrik._commandHandler = {process: jest.fn()};
         const testCommand = 'test';
         const testCausationEvent = 'causation test';
         
-        const result = await testObj.executeCommand(testCommand, testCausationEvent);
+        const result = await blackrik.executeCommand(testCommand, testCausationEvent);
         expect(result).toBe(false);
     });
 });
 
 describe('Test scheduleCommand', () => {
     test('Call process', async () => {
-        testObj._commandScheduler = {process: jest.fn()};
+        blackrik._commandScheduler = {process: jest.fn()};
 
-        const result = await testObj.scheduleCommand();
+        const result = await blackrik.scheduleCommand();
         expect(result).toBe(false);
     });
 });
 
 describe('Test executeQuery', () => {
     test('Call process', async () => {
-        testObj._queryHandler = {process: jest.fn(() => 'test')};
-        const spyBuildContext = jest.spyOn(testObj, 'buildContext');
+        blackrik._queryHandler = {process: jest.fn(() => 'test')};
+        const spyBuildContext = jest.spyOn(blackrik, 'buildContext');
 
-        const result = await testObj.executeQuery();
+        const result = await blackrik.executeQuery();
         expect(result).toBe('test');
         expect(spyBuildContext).toHaveBeenCalled();
     });
 });
 
+test('deleteAggregate forwards call to _commandHandler', async () => {
+    blackrik._commandHandler = {deleteAggregate: jest.fn(() => true)};
+
+    await blackrik.deleteAggregate('', '');
+    expect(blackrik._commandHandler.deleteAggregate).toHaveBeenCalledWith('', '', null, null);
+});
+
 describe('Test start()', () => {
-    test('Successful start', async () => {    
-        const spyCreateReadModelStore = jest.spyOn(testObj, '_createReadModelStore');
-        const spyRegisterSubscribers = jest.spyOn(testObj, '_registerSubscribers');
+    test('successful start', async () => {    
+        const spyCreateReadModelStore = jest.spyOn(blackrik, '_createReadModelStore');
+        const spyRegisterSubscribers = jest.spyOn(blackrik, '_registerSubscribers');
         
-        const result = await testObj.start();
+        const result = await blackrik.start();
         
         // _initStore
         expect(spyCreateReadModelStore).toHaveBeenCalledWith('default');
         // _initEventStore
-        expect(typeof testObj._eventStore.init).toBe('function');
+        expect(typeof blackrik._eventStore.init).toBe('function');
         // _initEventHandler
-        expect(typeof testObj._eventHandler.init).toBe('function');
-        const spyEventHandlerStart = jest.spyOn(testObj._eventHandler, 'start');
+        expect(typeof blackrik._eventHandler.init).toBe('function');
+        const spyEventHandlerStart = jest.spyOn(blackrik._eventHandler, 'start');
         // _processAggregates
-        expect(testObj._aggregates).not.toBe(undefined);
+        expect(blackrik._aggregates).not.toBe(undefined);
         // _processSubscribers - more detailed tests available 
         expect(spyRegisterSubscribers).toHaveBeenCalled();
         // this._eventHandler.start()
         expect(spyEventHandlerStart).toHaveBeenCalled();
         // _initHandlers
-        const spyCommandScheduler = jest.spyOn(testObj._commandScheduler, 'init');
+        const spyCommandScheduler = jest.spyOn(blackrik._commandScheduler, 'init');
         expect(spyCommandScheduler).toHaveBeenCalled();
-        expect(testObj._commandHandler).not.toBe(undefined);
-        expect(testObj._queryHandler).not.toBe(undefined);
-        expect(testObj._commandScheduler).not.toBe(undefined);
+        expect(blackrik._commandHandler).not.toBe(undefined);
+        expect(blackrik._queryHandler).not.toBe(undefined);
+        expect(blackrik._commandScheduler).not.toBe(undefined);
         // replay events
         const expectedReplayCall = [
             ['user', ['USER_CREATED', 'USER_UPDATED', 'USER_REJECTED']]
         ];
-        expect(testObj._eventHandler.replayEvents).toHaveBeenCalledWith(expectedReplayCall);
+        expect(blackrik._eventHandler.replayEvents).toHaveBeenCalledWith(expectedReplayCall);
         // new Server
         const Server = require('../../src/core/Server');
         expect(Server).toHaveBeenCalled();
@@ -445,17 +409,17 @@ describe('Test start()', () => {
         // return
         expect(result).not.toBe(undefined);
     });
-    test('Start with no replay events', async () => {
-        testObj._createReadModelStore = jest.fn(() => 'return false');
-        await testObj.start();
+    test('start with no replay events', async () => {
+        blackrik._createReadModelStore = jest.fn(() => 'return false');
+        await blackrik.start();
     });
 });
 
-test('Stop a running application', async () => {
-    await testObj.start();
-    await testObj.stop();
+test('stop a running application', async () => {
+    await blackrik.start();
+    await blackrik.stop();
     
     expect(serverMock.stop).toHaveBeenCalled();
-    expect(testObj._eventHandler.stop).toHaveBeenCalled();
-    expect(testObj._eventStore.close).toHaveBeenCalled();
+    expect(blackrik._eventHandler.stop).toHaveBeenCalled();
+    expect(blackrik._eventStore.close).toHaveBeenCalled();
 });

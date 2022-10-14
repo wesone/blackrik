@@ -29,9 +29,9 @@ describe('ReadModelStore init function', () => {
         expect(init).toHaveBeenNthCalledWith(1, store);
     });
 
-    test('is optional', () => {
+    test('is optional', async () => {
         const rms = new ReadModelStore(store, {});
-        expect(rms.init()).resolves.not.toThrow();
+        await expect(rms.init()).resolves.not.toThrow();
     });
 });
 

@@ -1,4 +1,4 @@
-const { quoteIdentifier, convertValue } = require('./utils');
+const {quoteIdentifier, convertValue} = require('./utils');
 
 function insertIntoBuilder(tableName, data, meta = null)
 {
@@ -43,6 +43,6 @@ function insertIntoBuilder(tableName, data, meta = null)
     return {sql, parameters};
 }
 
-module.exports =  {
+module.exports = {
     insertIntoBuilder,
 };

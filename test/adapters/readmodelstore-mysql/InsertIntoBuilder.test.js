@@ -1,5 +1,5 @@
 
-import { insertIntoBuilder } from '../../../src/adapters/readmodelstore-mysql/InsertIntoBuilder';
+import {insertIntoBuilder} from '../../../src/adapters/readmodelstore-mysql/InsertIntoBuilder';
 
 const tableName = 'TestTable';
 

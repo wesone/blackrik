@@ -225,7 +225,12 @@ class Adapter extends EventStoreAdapterInterface
                 limit.push('OFFSET ?');
             }
         }
-        const toExecute = `SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY position ASC ${limit.join(' ')}`;
+
+        const order = [
+            ['position', filter.reverse === true ? 'DESC' : 'ASC']
+        ];
+
+        const toExecute = `SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY ${order.map(sorting => sorting.join(' ')).join(', ')} ${limit.join(' ')}`;
         const events = await this.execute(toExecute, values);
         return {
             events: events[0].map(event => {
@@ -235,6 +240,12 @@ class Adapter extends EventStoreAdapterInterface
             cursor: events[0]?.length >= filter.limit ? filter.cursor + 1 : null,
             debug: {toExecute, values}
         };
+    }
+
+    async delete(aggregateId)
+    {
+        const [result] = await this.execute('DELETE FROM events WHERE aggregateId = ?', [aggregateId]);
+        return result.affectedRows;
     }
 
     async close()

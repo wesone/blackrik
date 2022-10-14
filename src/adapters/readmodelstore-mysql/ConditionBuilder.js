@@ -1,4 +1,4 @@
-const { quoteIdentifier, convertValue } = require('./utils');
+const {quoteIdentifier, convertValue} = require('./utils');
 
 const comparisonOperators = {
     $eq: '=',
@@ -189,6 +189,6 @@ function conditionBuilder(conditions)
     return {sql, parameters};
 }
 
-module.exports =  {
+module.exports = {
     conditionBuilder,
 };

@@ -1,6 +1,6 @@
 const Q = require('../../src/utils/Q');
 
-test('Correct length of queue', () => {
+test('correct length of queue', () => {
     const queue = new Q();
     queue.add(() => Promise.resolve);
     queue.add(() => Promise.resolve);
@@ -8,7 +8,7 @@ test('Correct length of queue', () => {
     expect(queue.length).toBe(2);
 });
 
-test('Items must be functions', () => {
+test('items must be functions', () => {
     const queue = new Q();
 
     expect(() => queue.add(42)).toThrow();
@@ -16,7 +16,7 @@ test('Items must be functions', () => {
     expect(() => queue.add(() => {})).not.toThrow();
 });
 
-test('Correct execution order', async () => {
+test('correct execution order', async () => {
     const queue = new Q();
     const items = {
         first: 5,
@@ -34,7 +34,7 @@ test('Correct execution order', async () => {
     Object.keys(items).forEach((value, idx) => expect(results[idx]).toBe(value));
 });
 
-test('Can recover after rejection', async () => {
+test('can recover after rejection', async () => {
     const queue = new Q();
 
     const eventHandler = jest.fn(() => {});

@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { quoteIdentifier } = require('./utils');
+const {quoteIdentifier} = require('./utils');
 
 const schemaVersion = 1;
 
@@ -196,6 +196,6 @@ function createTableBuilder(tableName, fieldDefinitions, indexes)
     return {sql, hash};
 }
 
-module.exports =  {
+module.exports = {
     createTableBuilder,
 };

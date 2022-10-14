@@ -10,6 +10,7 @@ public |     async [stop](Blackrik#stop)()<br>Stops the application
 public |     async [executeCommand](Blackrik#executeCommand)(command: object): boolean<br>Calls a command
 public |     async [scheduleCommand](Blackrik#scheduleCommand)(timestamp: number, command: object): boolean<br>Delays a command execution
 public |     async [executeQuery](Blackrik#executeQuery)(readModel: string, resolver: string, ?query: object): mixed<br>Performs a query on a resolver
+public |     async [deleteAggregate](Blackrik#deleteAggregate)(aggregateName: string, aggregateId: string, ?eventPayload: mixed): boolean<br>Deletes the specified aggregate and emits a Tombstone event
 
 # ADAPTERS
 An object containing the default adapters that can be used inside read model store adapters, event store adapter, event bus adapter.
@@ -85,11 +86,13 @@ UnauthorizedError // 401 Unauthorized
 ForbiddenError // 403 Forbidden
 NotFoundError // 404 Not Found
 ConflictError // 409 Conflict
+DuplicateAggregateError // 409 Aggregate already created
+UnalteredError // 400 Unaltered state
 ```
 
 ### Examples
 ```javascript
-const {BadRequestError, BaseError} = require('blackrik').ERRORS
+const {BadRequestError, BaseError} = require('blackrik').ERRORS;
 
 if(!isValidRequest())
     throw new BadRequestError();
@@ -208,4 +211,33 @@ May throw an error
 ### Examples
 ```javascript
 const response = await executeQuery('users', 'get', {id: 42});
+```
+
+# deleteAggregate
+`async deleteAggregate(aggregateName: string, aggregateId: string, ?eventPayload: mixed): boolean`  
+Deletes the specified aggregate and emits a Tombstone event with an optional payload. [More information on why this exists](SensitiveData).
+
+### Parameters
+Name | Type | Attribute | Description
+:--- | :--- | :--- | :---
+aggregateName | string | | The name of the aggregate
+aggregateId | string | | The aggregate id to identify an aggregate instance
+eventPayload | object | optional<br>default: `null` | An optional payload for the resulting Tombstone event
+
+### Return
+`true` if the deletion was successful, otherwise `false`  
+May throw an error
+
+### Examples
+```javascript
+// inside a saga
+'USER_GDPR_DELETION_REQUESTED': async (store, {aggregateId}, sideEffects) => {
+    await sideEffects.deleteAggregate('User', aggregateId, {reason: 'GDPR'});
+}
+
+// inside the read model projection
+'TOMBSTONE': async (store, {aggregateId: id, payload: {reason}}) => {
+    if(reason === 'GDPR')
+        await store.delete('Users', {id});
+}
 ```

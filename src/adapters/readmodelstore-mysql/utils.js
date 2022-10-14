@@ -94,7 +94,7 @@ function convertBinaryRows(rows)
     return rows.map(row => ({...row}));
 }
 
-module.exports =  {
+module.exports = {
     validateIdentifier,
     quoteIdentifier,
     convertValue,
