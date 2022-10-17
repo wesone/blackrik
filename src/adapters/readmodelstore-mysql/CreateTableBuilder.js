@@ -9,7 +9,7 @@ const types = {
     'json' : 'JSON',
     'boolean': 'TINYINT(1)', 
     'number': 'DOUBLE',  
-    'date': 'TIMESTAMP', 
+    'date': 'DATETIME', 
     'uuid': 'CHAR(36)'
 };
 
