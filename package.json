@@ -1,6 +1,6 @@
 {
   "name": "blackrik",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "CQRS and Event-Sourcing Framework",
   "main": "src/index.js",
   "scripts": {
